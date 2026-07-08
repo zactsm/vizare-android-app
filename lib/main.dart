@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'pages/utils/api_service.dart';
 
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
@@ -19,6 +21,11 @@ void main() async {
   await Firebase.initializeApp();
 
   await dotenv.load(fileName: ".env");
+
+  await Supabase.initialize(
+    url: ApiService.supabaseUrl,
+    anonKey: ApiService.supabaseAnonKey,
+  );
 
   // Check for existing session
   final prefs = await SharedPreferences.getInstance();

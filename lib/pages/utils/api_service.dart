@@ -1,14 +1,39 @@
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static final Logger _logger = Logger();
 
   static String get baseUrl => dotenv.env['BACKEND_URL'] ?? '';
 
-  static String get cloudinaryCloudName => dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
-  static String get cloudinaryUploadPreset => dotenv.env['CLOUDINARY_UPLOAD_PRESET'] ?? '';
+  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  static Future<String?> uploadFile(File file, String bucket) async {
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      await Supabase.instance.client.storage
+          .from(bucket)
+          .upload(fileName, file);
+
+      return Supabase.instance.client.storage.from(bucket).getPublicUrl(fileName);
+    } catch (e) {
+      _logger.e("Supabase Upload Error", error: e);
+      return null;
+    }
+  }
+
+  static Future<void> deleteFile(String url, String bucket) async {
+    try {
+      final fileName = url.split('/').last;
+      await Supabase.instance.client.storage.from(bucket).remove([fileName]);
+    } catch (e) {
+      _logger.e("Supabase Delete Error", error: e);
+    }
+  }
 
   static Uri getUri(String path, [Map<String, dynamic>? queryParameters]) {
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;

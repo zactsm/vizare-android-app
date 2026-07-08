@@ -1,0 +1,7 @@
+runtime: php82 # or php81
+
+instance_class: F1
+
+handlers:
+  - url: /.*
+    script: auto

@@ -35,8 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _networkImage; // To show existing profile pic URL
   bool _isSaving = false;
 
-  final String _cloudName = ApiService.cloudinaryCloudName;
-  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
+  final String _profileBucket = 'profile-pictures';
 
   @override
   void initState() {
@@ -124,27 +123,8 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String?> _uploadToCloudinary(File image) async {
-    try {
-      final url = Uri.parse('https://api.cloudinary.com/v1_1/$_cloudName/image/upload');
-      final request = http.MultipartRequest('POST', url)
-        ..fields['upload_preset'] = _uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', image.path));
-
-      final response = await request.send();
-      final responseData = await http.Response.fromStream(response);
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseData.body);
-        return jsonResponse['secure_url'];
-      } else {
-        _logger.e("Cloudinary Upload Failed: ${responseData.body}");
-        return null;
-      }
-    } catch (e) {
-      _logger.e("Error uploading to Cloudinary", error: e);
-      return null;
-    }
+  Future<String?> _uploadToSupabase(File image) async {
+    return await ApiService.uploadFile(image, _profileBucket);
   }
 
   // --- LOGIC: Save Profile ---
@@ -155,7 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // 1. If user picked a NEW image, upload it first
     if (_selectedImage != null) {
-      final uploadedUrl = await _uploadToCloudinary(_selectedImage!);
+      final uploadedUrl = await _uploadToSupabase(_selectedImage!);
       if (uploadedUrl != null) {
         finalImageUrl = uploadedUrl;
       } else {

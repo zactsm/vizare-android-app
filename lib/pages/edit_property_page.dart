@@ -35,9 +35,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   bool _isForSale = true;
   bool _isUploading = false;
 
-  // --- ☁️ CLOUDINARY CONFIG ---
-  final String _cloudName = ApiService.cloudinaryCloudName;
-  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
+  // --- SUPABASE STORAGE BUCKETS ---
+  final String _imageBucket = 'property-images';
 
   @override
   void initState() {
@@ -80,25 +79,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToCloudinary(File image) async {
-    try {
-      final url = Uri.parse('https://api.cloudinary.com/v1_1/$_cloudName/image/upload');
-      final request = http.MultipartRequest('POST', url)
-        ..fields['upload_preset'] = _uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', image.path));
-
-      final response = await request.send();
-      final responseData = await http.Response.fromStream(response);
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseData.body);
-        return jsonResponse['secure_url'];
-      }
-      return null;
-    } catch (e) {
-      _logger.e("Upload error", error: e);
-      return null;
-    }
+  Future<String?> _uploadToSupabase(File image) async {
+    return await ApiService.uploadFile(image, _imageBucket);
   }
 
   // --- 3. SUBMIT LOGIC (UPDATE) ---
@@ -118,7 +100,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
       // A. If a NEW image was picked, upload it
       if (_newSelectedImages.isNotEmpty) {
-        final newUrl = await _uploadToCloudinary(_newSelectedImages.first);
+        final newUrl = await _uploadToSupabase(_newSelectedImages.first);
         if (newUrl != null) {
           finalImageUrl = newUrl;
         } else {

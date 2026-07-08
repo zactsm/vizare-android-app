@@ -33,9 +33,9 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   bool _isForSale = true;
   bool _isUploading = false;
 
-  // --- CLOUDINARY CONFIG ---
-  final String _cloudName = ApiService.cloudinaryCloudName;
-  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
+  // --- SUPABASE STORAGE BUCKETS ---
+  final String _imageBucket = 'property-images';
+  final String _modelBucket = 'property-models';
 
   @override
   void dispose() {
@@ -93,28 +93,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToCloudinary(File file) async {
-    try {
-      // Use 'auto' to support both Images (.jpg) and Raw Files (.glb)
-      final url = Uri.parse('https://api.cloudinary.com/v1_1/$_cloudName/auto/upload');
-
-      final request = http.MultipartRequest('POST', url)
-        ..fields['upload_preset'] = _uploadPreset
-        ..files.add(await http.MultipartFile.fromPath('file', file.path));
-
-      final response = await request.send();
-      final responseData = await http.Response.fromStream(response);
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseData.body);
-        return jsonResponse['secure_url'];
-      }
-      _logger.e("Cloudinary Error: ${responseData.body}");
-      return null;
-    } catch (e) {
-      _logger.e("Upload error", error: e);
-      return null;
-    }
+  Future<String?> _uploadToSupabase(File file, String bucket) async {
+    return await ApiService.uploadFile(file, bucket);
   }
 
   // --- 3. SUBMIT LOGIC (Updated) ---
@@ -141,7 +121,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       List<String> uploadedUrls = [];
 
       for (File img in _selectedImages) {
-        final url = await _uploadToCloudinary(img);
+        final url = await _uploadToSupabase(img, _imageBucket);
         if (url != null) {
           uploadedUrls.add(url);
         }
@@ -160,7 +140,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       // 4. Upload 3D Model (Optional)
       String modelUrl = '';
       if (_selectedModel != null) {
-        final url = await _uploadToCloudinary(_selectedModel!);
+        final url = await _uploadToSupabase(_selectedModel!, _modelBucket);
         if (url != null) {
           modelUrl = url;
         } else {
