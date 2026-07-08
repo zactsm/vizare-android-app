@@ -23,7 +23,6 @@ class HomeBuyerPage extends StatefulWidget {
 class _HomeBuyerPageState extends State<HomeBuyerPage> {
   // State variables for loading and storing properties
   bool _isLoading = true;
-  List<Property> _allProperties = [];
   List<Property> _featuredProperties = [];
   List<Property> _nearbyProperties = [];
   List<Property> _popularProperties = [];
@@ -93,7 +92,6 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
 
         // Update the state
         setState(() {
-          _allProperties = properties;
           // Filter properties into different lists (you can change this logic)
           _featuredProperties = properties.where((p) => p.isFeatured).toList();
           _nearbyProperties = properties.where((p) => !p.isFeatured).toList();
