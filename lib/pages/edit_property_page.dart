@@ -29,7 +29,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   // State
   List<File> _newSelectedImages = []; // Only for NEW files
-  List<String> _tags = ['lorem', 'ipsum'];
+  final List<String> _tags = ['lorem', 'ipsum'];
 
   bool _isForRent = false;
   bool _isForSale = true;
