@@ -1,6 +1,6 @@
-# VIZARE - AR Real Estate Application
+# ARRealEstateApp-Muazz - AR Real Estate Application
 
-VIZARE is a cutting-edge real estate platform built with Flutter that integrates Augmented Reality (AR) to provide an immersive property viewing experience. The application supports multiple user roles (Homebuyer, Homeowner, Admin) and features a robust backend architecture.
+ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter that integrates Augmented Reality (AR) to provide an immersive property viewing experience. The application supports multiple user roles (Homebuyer, Homeowner, Admin) and features a robust backend architecture.
 
 ## 🚀 Features
 
