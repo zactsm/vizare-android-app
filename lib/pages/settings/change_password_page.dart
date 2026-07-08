@@ -135,6 +135,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final responseData = jsonDecode(response.body);
       final message = responseData['message'] ?? 'Unknown error';
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         // Success
         _logger.i('Password changed successfully: $message');

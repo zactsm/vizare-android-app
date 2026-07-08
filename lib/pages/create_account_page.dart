@@ -99,6 +99,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         await prefs.setBool('has_password', hasPassword);
       }
 
+      if (!mounted) return;
+
       // 5. Navigate
       if (userType == 'homeowner') {
         Navigator.pushNamedAndRemoveUntil(
@@ -169,6 +171,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         await prefs.setString('user_email', email);
         await prefs.setString('user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
         await prefs.setBool('has_password', true);
+
+        if (!mounted) return;
 
         if (isHomeBuyer) {
           Navigator.pushNamedAndRemoveUntil(

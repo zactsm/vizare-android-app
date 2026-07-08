@@ -25,9 +25,9 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   final _tagInputController = TextEditingController();
 
   // State
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   File? _selectedModel; // Stores the 3D file (.glb)
-  List<String> _tags = ['bungalow', 'garage']; // Default tags
+  final List<String> _tags = ['bungalow', 'garage']; // Default tags
 
   bool _isForRent = false;
   bool _isForSale = true;

@@ -129,7 +129,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         // Clear saved email
         await prefs.remove('user_email');
 
-        if (!context.mounted) return;
+        if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const WelcomePage()),
               (Route<dynamic> route) => false,
@@ -137,16 +137,18 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       } else {
         // 4. Deletion Failed (e.g., wrong password)
         _logger.w('Deletion failed: $message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $message'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       _logger.e('Error during deactivation', error: e);
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('An error occurred. Please try again.'),

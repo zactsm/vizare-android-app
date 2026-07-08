@@ -50,6 +50,7 @@ class _AdminPageState extends State<AdminPage> {
           'status': newStatus,
         },
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Property $newStatus!'),
@@ -58,10 +59,12 @@ class _AdminPageState extends State<AdminPage> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update status')),
-      );
-      _fetchPendingProperties(); // Revert if failed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update status')),
+        );
+        _fetchPendingProperties(); // Revert if failed
+      }
     }
   }
 

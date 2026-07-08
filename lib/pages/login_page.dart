@@ -68,6 +68,8 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setBool('has_password', hasPassword);
       }
 
+      if (!mounted) return;
+
       if (userType == 'admin') {
         Navigator.pushAndRemoveUntil(
             context,
@@ -136,6 +138,8 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         await prefs.setBool('has_password', hasPassword);
+
+        if (!mounted) return;
 
         if (userType == 'admin') {
           Navigator.pushAndRemoveUntil(
