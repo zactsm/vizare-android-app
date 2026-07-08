@@ -53,10 +53,10 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
   }
 
   Future<void> _submitToFirebase() async {
-    // --- 1. CONFIGURATION (PASTE YOUR KEYS HERE) ---
-    final serviceId = dotenv.env['service_2ylg77g'] ?? '';
-    final templateId = dotenv.env['template_nx9wxpa'] ?? '';
-    final publicKey = dotenv.env['V2ezTSxB5WBTTZoJ-'] ?? '';
+    // --- 1. CONFIGURATION ---
+    final serviceId = dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
+    final templateId = dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
+    final publicKey = dotenv.env['EMAILJS_PUBLIC_KEY'] ?? '';
 
     // --- 2. VALIDATION ---
     if (_subjectController.text.trim().isEmpty ||

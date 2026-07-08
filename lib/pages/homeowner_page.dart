@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/add_property_page.dart';
@@ -57,10 +57,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
     final email = prefs.getString('user_email');
 
     if (email != null) {
-      final url =
-          'https://formidable-fort-475806-q1.et.r.appspot.com/get_user_profile.php?email=$email';
       try {
-        final response = await http.get(Uri.parse(url));
+        final response = await ApiService.get('get_user_profile.php', {'email': email});
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (mounted) {
@@ -115,8 +113,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
 
       if (email == null) throw Exception("User not logged in");
 
-      final response = await http.post(
-        Uri.parse('https://formidable-fort-475806-q1.et.r.appspot.com/delete_property.php'),
+      final response = await ApiService.post(
+        'delete_property.php',
         body: {
           'email': email,
           'property_id': propertyId.toString(),
@@ -158,11 +156,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
       return;
     }
 
-    final url =
-        'https://formidable-fort-475806-q1.et.r.appspot.com/get_my_properties.php?email=$email';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_my_properties.php', {'email': email});
       if (!mounted) return;
 
       if (response.statusCode == 200) {

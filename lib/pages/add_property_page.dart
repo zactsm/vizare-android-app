@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class AddPropertyPage extends StatefulWidget {
   const AddPropertyPage({super.key});
@@ -33,8 +34,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   bool _isUploading = false;
 
   // --- CLOUDINARY CONFIG ---
-  final String _cloudName = "dmfxdzzjd";
-  final String _uploadPreset = "vizare_preset";
+  final String _cloudName = ApiService.cloudinaryCloudName;
+  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
 
   @override
   void dispose() {
@@ -173,8 +174,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       if (email == null) throw Exception("User not logged in.");
 
       // 6. Send to PHP
-      final response = await http.post(
-        Uri.parse('https://formidable-fort-475806-q1.et.r.appspot.com/add_property.php'),
+      final response = await ApiService.post(
+        'add_property.php',
         body: {
           'email': email,
           'name': _titleController.text,

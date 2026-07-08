@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:untitled/models/property_model.dart'; // Make sure this import is correct
+import 'package:untitled/models/property_model.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -21,11 +21,8 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Future<void> _fetchPendingProperties() async {
-
-    final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/get_pending_properties.php';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_pending_properties.php');
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -45,11 +42,9 @@ class _AdminPageState extends State<AdminPage> {
       _pendingProperties.removeWhere((p) => p.id == propertyId);
     });
 
-    final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/update_property_status.php';
-
     try {
-      await http.post(
-        Uri.parse(url),
+      await ApiService.post(
+        'update_property_status.php',
         body: {
           'property_id': propertyId.toString(),
           'status': newStatus,

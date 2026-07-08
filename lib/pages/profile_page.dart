@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:untitled/welcome_page.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -34,8 +35,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _networkImage; // To show existing profile pic URL
   bool _isSaving = false;
 
-  final String _cloudName = "dmfxdzzjd";
-  final String _uploadPreset = "vizare_preset";
+  final String _cloudName = ApiService.cloudinaryCloudName;
+  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
 
   @override
   void initState() {
@@ -56,10 +57,8 @@ class _ProfilePageState extends State<ProfilePage> {
     // Pre-fill email from local storage immediately
     _emailController.text = email;
 
-    final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/get_user_profile.php?email=$email';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_user_profile.php', {'email': email});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -175,8 +174,8 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       // Using the controller text for email ensures we target the right user
       // (Assumes email is read-only or matches the logged-in user)
-      final response = await http.post(
-        Uri.parse('https://formidable-fort-475806-q1.et.r.appspot.com/update_profile.php'),
+      final response = await ApiService.post(
+        'update_profile.php',
         body: {
           'email': _emailController.text,
           'name': _nameController.text,

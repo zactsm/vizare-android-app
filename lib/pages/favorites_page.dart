@@ -1,11 +1,11 @@
 import 'dart:convert'; // For jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http; // For http requests
 import 'package:logger/logger.dart'; // For logging
 import 'package:shared_preferences/shared_preferences.dart'; // For user email
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/property_details_page.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 
 // --- CONVERTED TO STATEFULWIDGET ---
@@ -47,10 +47,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
       return;
     }
 
-    final url = 'http://formidable-fort-475806-q1.et.r.appspot.com/get_favorites.php?email=$email';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_favorites.php', {'email': email});
       if (!mounted) return;
 
       if (response.statusCode == 200) {

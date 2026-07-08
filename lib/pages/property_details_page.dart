@@ -5,7 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/gallery_view_page.dart';
-import 'package:http/http.dart' as http;
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/send_inquiry_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 
@@ -50,21 +50,18 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   // --- LOGIC: Fetch Gallery Images ---
   Future<void> _fetchGalleryImages() async {
     try {
-      // Make sure this matches your actual PHP filename
-      final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/get_property_images.php?property_id=${widget.property.id}';
-
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_property_images.php', {'property_id': widget.property.id});
 
       print("Server Response: ${response.body}");
 
       if (response.statusCode == 200) {
-
-        if (response.body.trim().startsWith("<")){
-          print("ERROR: Server returned HTML instead of JSON. Check PHP script.");
+        final body = response.body.trim();
+        if (body.startsWith("<") || body.isEmpty) {
+          print("ERROR: Server returned HTML or empty response instead of JSON.");
           return;
         }
 
-        final List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(body);
 
         if (mounted && data.isNotEmpty) {
           setState(() {
@@ -73,15 +70,15 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               String imgUrl = imgObj.toString();
 
               // Only add if it's not already the cover image
-              if (imgUrl != widget.property.imagePath) {
+              if (imgUrl != widget.property.imagePath && !_galleryImages.contains(imgUrl)) {
                 _galleryImages.add(imgUrl);
               }
             }
           });
-          print("Gallery updated. Total images: ${_galleryImages.length}");
+          _logger.i("Gallery updated. Total images: ${_galleryImages.length}");
         }
       } else {
-        print("Server Error: ${response.statusCode}");
+        _logger.w("Server Error: ${response.statusCode}");
       }
     } catch (e) {
       _logger.e("Error fetching gallery images", error: e);
@@ -100,10 +97,11 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
       return;
     }
 
-    final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/check_favorite.php?email=$_userEmail&property_id=${widget.property.id}';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('check_favorite.php', {
+        'email': _userEmail,
+        'property_id': widget.property.id,
+      });
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
@@ -131,11 +129,10 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
     setState(() => _isFavorited = !_isFavorited);
 
     final script = _isFavorited ? 'add_favorite.php' : 'remove_favorite.php';
-    final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/$script';
 
     try {
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        script,
         body: {
           'email': _userEmail!,
           'property_id': widget.property.id.toString(),

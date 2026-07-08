@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'admin_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -38,9 +38,8 @@ class _LoginPageState extends State<LoginPage> {
       await FirebaseAuth.instance.signInWithCredential(credential);
 
       // 2. "Find or Create" user in MySQL database ---
-      const url = 'https://formidable-fort-475806-q1.et.r.appspot.com/google_login.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'google_login.php',
         body: {
           'email': googleUser.email,
           'name': googleUser.displayName ?? 'Google User', // Use Google name
@@ -114,11 +113,9 @@ class _LoginPageState extends State<LoginPage> {
     logger.d("📧 Sending email: [$email]");
     logger.d("🔑 Sending password: [$password]");
 
-    const url = 'http://formidable-fort-475806-q1.et.r.appspot.com/login.php';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'login.php',
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: {'email': email, 'password': password},
       );

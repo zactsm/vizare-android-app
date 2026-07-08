@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,9 +31,8 @@ class _ToRespondPageState extends State<ToRespondPage> {
     final email = prefs.getString('user_email');
 
     if (email != null) {
-      final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/get_user_profile.php?email=$email';
       try {
-        final response = await http.get(Uri.parse(url));
+        final response = await ApiService.get('get_user_profile.php', {'email': email});
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           setState(() {

@@ -1,10 +1,10 @@
 import 'dart:convert'; // for jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http; // for http
 import 'package:logger/logger.dart'; // for logging
 import 'package:untitled/models/property_model.dart'; // Property model
 import 'package:untitled/pages/property_details_page.dart'; // details page
+import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 
 class SearchPage extends StatefulWidget {
@@ -60,10 +60,8 @@ class _SearchPageState extends State<SearchPage> {
       _hasSearched = true;
     });
 
-    final url = 'http://formidable-fort-475806-q1.et.r.appspot.com/search_properties.php?term=$query';
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('search_properties.php', {'term': query});
 
       if (!mounted) return;
 

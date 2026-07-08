@@ -1,12 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -69,9 +69,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       await FirebaseAuth.instance.signInWithCredential(credential);
 
       // 2. "Find or Create" user in your MySQL database ---
-      const url = 'https://formidable-fort-475806-q1.et.r.appspot.com/google_login.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'google_login.php',
         body: {
           'email': googleUser.email,
           'name': googleUser.displayName ?? 'Google User', // Use Google name
@@ -152,10 +151,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     }
     // --- End Validation ---
 
-    const url = 'http://formidable-fort-475806-q1.et.r.appspot.com/create_account.php';
     try {
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'create_account.php',
         body: {
           'name': name,
           'email': email,

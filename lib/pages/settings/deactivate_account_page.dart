@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http;
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -105,9 +105,8 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
 
       // 2. Call the PHP script
       // (This script now performs a DELETE as we discussed)
-      const url = 'http://formidable-fort-475806-q1.et.r.appspot.com/deactivate_account.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'deactivate_account.php',
         body: {
           'email': email,
           'password': password,

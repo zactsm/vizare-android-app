@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:http/http.dart' as http; // Import http
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 import 'dart:convert';
 
@@ -119,9 +119,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         return;
       }
 
-      const url = 'http://formidable-fort-475806-q1.et.r.appspot.com/change_password.php';
-      final response = await http.post(
-        Uri.parse(url),
+      final response = await ApiService.post(
+        'change_password.php',
         body: {
           'email': email,
           'current_password': currentPassword,

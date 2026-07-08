@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/models/property_model.dart';
 
 class EditPropertyPage extends StatefulWidget {
@@ -35,8 +36,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   bool _isUploading = false;
 
   // --- ☁️ CLOUDINARY CONFIG ---
-  final String _cloudName = "dmfxdzzjd";
-  final String _uploadPreset = "vizare_preset";
+  final String _cloudName = ApiService.cloudinaryCloudName;
+  final String _uploadPreset = ApiService.cloudinaryUploadPreset;
 
   @override
   void initState() {
@@ -131,8 +132,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       if (email == null) throw Exception("User not logged in");
 
       // C. Send to PHP (Edit Endpoint)
-      final response = await http.post(
-        Uri.parse('https://formidable-fort-475806-q1.et.r.appspot.com/edit_property.php'),
+      final response = await ApiService.post(
+        'edit_property.php',
         body: {
           'email': email,
           'property_id': widget.property.id.toString(), // Critical

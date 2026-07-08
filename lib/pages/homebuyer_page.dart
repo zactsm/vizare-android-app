@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'dart:convert'; // For jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:logger/logger.dart'; // For logging
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
@@ -10,6 +9,7 @@ import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/search_page.dart';
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/page_transitions.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 
@@ -56,9 +56,8 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
     final email = prefs.getString('user_email');
 
     if (email != null) {
-      final url = 'https://formidable-fort-475806-q1.et.r.appspot.com/get_user_profile.php?email=$email';
       try {
-        final response = await http.get(Uri.parse(url));
+        final response = await ApiService.get('get_user_profile.php', {'email': email});
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (mounted) {
@@ -80,9 +79,8 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
 
   // --- Data Fetching Logic ---
   Future<void> _fetchProperties() async {
-    const url = 'http://formidable-fort-475806-q1.et.r.appspot.com/get_all_listings.php';
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await ApiService.get('get_all_listings.php');
 
       if (!mounted) return;
 
