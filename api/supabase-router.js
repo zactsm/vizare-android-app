@@ -14,7 +14,12 @@ function corsHeaders(request) {
 
 function requiredEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
+  if (!value) {
+    throw Object.assign(
+      new Error(`Missing required environment variable: ${name}`),
+      { code: 'SERVER_CONFIGURATION_ERROR' },
+    );
+  }
   return value;
 }
 
@@ -505,6 +510,12 @@ module.exports = async function handler(request, response) {
     return response.status(status).json(payload);
   } catch (error) {
     console.error(`API route ${name} failed:`, error);
+    if (error.code === 'SERVER_CONFIGURATION_ERROR') {
+      return response.status(503).json({
+        message:
+          'The API is not configured. Check the Supabase environment variables in Vercel.',
+      });
+    }
     return response.status(error.status || 500).json({
       message: error.status
         ? error.message

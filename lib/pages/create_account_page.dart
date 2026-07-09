@@ -203,9 +203,16 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           'Failed to create account: ${response.statusCode} ${response.body}',
         );
         if (mounted) {
-          final message = response.statusCode == 503
-              ? 'Registration service is temporarily unavailable. Please try again later.'
-              : 'Failed to create account. Please try again.';
+          var message = 'Failed to create account. Please try again.';
+          try {
+            final responseData = jsonDecode(response.body);
+            message = responseData['message'] as String? ?? message;
+          } catch (_) {
+            if (response.statusCode == 503) {
+              message =
+                  'Registration service is temporarily unavailable. Please try again later.';
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
