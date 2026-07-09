@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 import 'admin_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,51 +23,9 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // User cancelled
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // 1. Sign in to Firebase
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // 2. "Find or Create" user in MySQL database ---
-      final response = await ApiService.post(
-        'google_login.php',
-        body: {
-          'email': googleUser.email,
-          'name': googleUser.displayName ?? 'Google User', // Use Google name
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode != 200) {
-        // Failed to create user in your backend
-        throw Exception('Failed to sign in with your server: ${response.body}');
-      }
-
-      // 3. Get user_type from your server's response
-      final responseData = jsonDecode(response.body);
-      final userType = responseData['user_type'] as String?;
-      final hasPassword = responseData['has_password'] as bool?;
-
-      // 4. Save session data
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_email', googleUser.email);
-      if (userType != null) {
-        await prefs.setString('user_type', userType);
-      }
-      if (hasPassword != null){
-        await prefs.setBool('has_password', hasPassword);
-      }
-
-      if (!mounted) return;
+      final result = await GoogleAuthService.signIn();
+      if (result == null || !mounted) return;
+      final userType = result.userType;
 
       if (userType == 'admin') {
         Navigator.pushAndRemoveUntil(
@@ -128,6 +85,10 @@ class _LoginPageState extends State<LoginPage> {
         logger.i("✅ Login success: ${response.body}");
 
         final responseData = jsonDecode(response.body);
+        await ApiService.restoreSession(
+          responseData['access_token'] as String?,
+          responseData['refresh_token'] as String?,
+        );
         final userType = responseData['user_type'] as String?;
         final hasPassword = true;
 

@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:untitled/pages/utils/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
-// ignore: depend_on_referenced_packages
-import 'package:intl/intl.dart'; // ensure intl is in pubspec.yaml
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ToRespondPage extends StatefulWidget {
@@ -16,36 +12,44 @@ class ToRespondPage extends StatefulWidget {
 }
 
 class _ToRespondPageState extends State<ToRespondPage> {
-  int? _myUserId;
-  bool _isLoadingUser = true;
+  List<Map<String, dynamic>> _inquiries = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _fetchMyUserId();
+    _fetchInquiries();
   }
 
-  // 1. Get My MySQL ID so I can find my messages
-  Future<void> _fetchMyUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString('user_email');
-
-    if (email != null) {
-      try {
-        final response = await ApiService.get('get_user_profile.php', {'email': email});
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          setState(() {
-            _myUserId = data['id']; // This relies on Step 1 being done!
-            _isLoadingUser = false;
-          });
-        }
-      } catch (e) {
-        debugPrint("Error fetching user ID: $e");
-      }
+  Future<void> _fetchInquiries() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
     }
-    // If failed, stop loading anyway so we don't hang
-    if (mounted && _myUserId == null) setState(() => _isLoadingUser = false);
+
+    try {
+      final response = await ApiService.get('get_inquiries.php');
+      if (response.statusCode != 200) {
+        throw Exception('Could not load inquiries: ${response.body}');
+      }
+      final data = jsonDecode(response.body) as List<dynamic>;
+      if (!mounted) return;
+      setState(() {
+        _inquiries = data
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -58,94 +62,99 @@ class _ToRespondPageState extends State<ToRespondPage> {
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: _isLoadingUser
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : _myUserId == null
-          ? const Center(child: Text("Could not verify user identity.", style: TextStyle(color: Colors.grey)))
-          : _buildInquiryList(),
+          : _error != null
+              ? Center(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : _buildInquiryList(),
     );
   }
 
   Widget _buildInquiryList() {
-    // 2. Listen to Firestore
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instanceFor(app: Firebase.app(), databaseId: 'vizare-native')
-          .collection('inquiries')
-          .where('homeowner_id', isEqualTo: _myUserId) // Filter by MY ID
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.white));
-        }
+    if (_inquiries.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox, size: 60, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No inquiries yet.',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
 
-        final docs = snapshot.data?.docs ?? [];
+    return RefreshIndicator(
+      onRefresh: _fetchInquiries,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _inquiries.length,
+        itemBuilder: (context, index) {
+          final data = _inquiries[index];
+          var timeString = 'Just now';
+          final createdAt = DateTime.tryParse(
+            data['created_at']?.toString() ?? '',
+          );
+          if (createdAt != null) {
+            timeString = DateFormat('MMM d, h:mm a').format(createdAt.toLocal());
+          }
 
-        if (docs.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.inbox, size: 60, color: Colors.grey),
-                SizedBox(height: 16),
-                Text('No inquiries yet.', style: TextStyle(color: Colors.grey, fontSize: 16)),
-              ],
+          return Card(
+            color: Colors.white.withValues(alpha: 0.05),
+            margin: const EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              title: Text(
+                data['property_name'] ?? 'Unknown Property',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    "From: ${data['buyer_email']}",
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    data['message'] ?? '',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    timeString,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                  ),
+                ],
+              ),
+              onTap: () => _showInquiryDetails(
+                context,
+                data,
+                data['id'].toString(),
+              ),
             ),
           );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final data = docs[index].data() as Map<String, dynamic>;
-            final docId = docs[index].id;
-
-            // Format Timestamp
-            String timeString = "Just now";
-            if (data['timestamp'] != null) {
-              final ts = (data['timestamp'] as Timestamp).toDate();
-              timeString = DateFormat('MMM d, h:mm a').format(ts);
-            }
-
-            return Card(
-              color: Colors.white.withValues(alpha: (0.05)),
-              margin: const EdgeInsets.only(bottom: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(
-                  data['property_name'] ?? 'Unknown Property',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text("From: ${data['buyer_email']}", style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-                    const SizedBox(height: 8),
-                    Text(
-                      data['message'] ?? '',
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(timeString, style: TextStyle(color: Colors.grey[600], fontSize: 10)),
-                  ],
-                ),
-                onTap: () {
-                  // TODO: Navigate to full chat/detail view
-                  _showInquiryDetails(context, data, docId);
-                },
-              ),
-            );
-          },
-        );
-      },
+        },
+      ),
     );
   }
 

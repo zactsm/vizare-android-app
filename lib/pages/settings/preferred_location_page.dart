@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/location_geocoder.dart';
 
 class PreferredLocationPage extends StatefulWidget {
   const PreferredLocationPage({super.key});
@@ -108,25 +108,14 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
     _mapController?.animateCamera(CameraUpdate.newLatLng(position));
 
     try {
-      // Find the address name for this new spot
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude
+      final formattedName = await reverseGeocode(
+        position.latitude,
+        position.longitude,
       );
-
-      if (placemarks.isNotEmpty) {
-        final address = placemarks.first;
-        final formattedName = [
-          address.street,
-          address.locality,
-          address.administrativeArea
-        ].where((element) => element != null && element.isNotEmpty).join(', ');
-
-        setState(() {
-          _selectedLocationName = formattedName;
-          _updateMarker(); // Update marker label
-        });
-      }
+      setState(() {
+        _selectedLocationName = formattedName;
+        _updateMarker();
+      });
     } catch (e) {
       _logger.e('Error finding address for tapped location', error: e);
       setState(() {
@@ -140,30 +129,24 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
     if (query.isEmpty) return;
 
     try {
-      List<Location> locations = await locationFromAddress(query);
-      if (locations.isNotEmpty) {
-        final location = locations.first;
-        final coords = LatLng(location.latitude, location.longitude);
+      final location = await geocodeAddress(query);
+      final coords = LatLng(
+        location['latitude'] as double,
+        location['longitude'] as double,
+      );
 
-        List<Placemark> placemarks = await placemarkFromCoordinates(
-            location.latitude, location.longitude);
-        final address = placemarks.first;
-        final formattedName =
-            "${address.name}, ${address.locality}, ${address.administrativeArea}";
+      setState(() {
+        _selectedLocationCoords = coords;
+        _selectedLocationName = location['name'] as String;
+        _showConfirmation = true;
+        _updateMarker();
+      });
 
-        setState(() {
-          _selectedLocationCoords = coords;
-          _selectedLocationName = formattedName;
-          _showConfirmation = true;
-          _updateMarker();
-        });
-
-        _mapController?.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(target: coords, zoom: 14.0),
-          ),
-        );
-      }
+      _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: coords, zoom: 14.0),
+        ),
+      );
     } catch (e) {
       _logger.e('Error searching location', error: e);
       if (!mounted) return;

@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
@@ -28,15 +26,12 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   final _tagInputController = TextEditingController();
 
   // State
-  List<File> _newSelectedImages = []; // Only for NEW files
+  List<PlatformFile> _newSelectedImages = [];
   final List<String> _tags = ['lorem', 'ipsum'];
 
   bool _isForRent = false;
   bool _isForSale = true;
   bool _isUploading = false;
-
-  // --- SUPABASE STORAGE BUCKETS ---
-  final String _imageBucket = 'property-images';
 
   @override
   void initState() {
@@ -65,13 +60,17 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        allowMultiple: false, // Keeping it simple: replace the single cover image
+        allowMultiple: false,
+        withData: true,
       );
-      if (result != null) {
-        setState(() {
-          _newSelectedImages = [File(result.files.single.path!)];
-        });
+      final selectedFile = result?.files.single;
+      if (!mounted || selectedFile == null) {
+        return;
       }
+
+      setState(() {
+        _newSelectedImages = [selectedFile];
+      });
     } catch (e) {
       _logger.e("Error picking images", error: e);
     }
@@ -79,9 +78,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToSupabase(File image) async {
-    return await ApiService.uploadFile(image, _imageBucket);
-  }
+  Future<String?> _uploadToSupabase(PlatformFile image) =>
+      ApiService.uploadPropertyAsset(image);
 
   // --- 3. SUBMIT LOGIC (UPDATE) ---
 
@@ -96,6 +94,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     setState(() => _isUploading = true);
 
     try {
+      final previousImageUrl = widget.property.imagePath;
       String finalImageUrl = widget.property.imagePath; // Default to OLD URL
 
       // A. If a NEW image was picked, upload it
@@ -128,6 +127,9 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       );
 
       if (response.statusCode == 200) {
+        if (previousImageUrl.isNotEmpty && previousImageUrl != finalImageUrl) {
+          await ApiService.deletePropertyAssetByUrl(previousImageUrl);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Property updated!'), backgroundColor: Colors.green),
@@ -279,7 +281,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     // Logic: Show NEW file if picked, else show EXISTING network url
     ImageProvider imageProvider;
     if (_newSelectedImages.isNotEmpty) {
-      imageProvider = FileImage(_newSelectedImages.first);
+      final selected = _newSelectedImages.first;
+      imageProvider = selected.bytes != null
+          ? MemoryImage(selected.bytes!)
+          : FileImage(File(selected.path!));
     } else {
       imageProvider = NetworkImage(widget.property.imagePath);
     }

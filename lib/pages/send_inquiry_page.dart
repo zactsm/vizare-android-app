@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class SendInquiryPage extends StatefulWidget {
   final Property property;
@@ -45,26 +43,18 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // 1. Save to Firestore (The "Inbox" System)
-      // use the 'vizare-native' database
-      await FirebaseFirestore.instanceFor(
-          app: Firebase.app(),
-          databaseId: 'vizare-native'
-      ).collection('inquiries').add({
-        'homeowner_id': widget.property.homeownerId, // Critical: Who receives this?
-        'property_id': widget.property.id,
-        'property_name': widget.property.name,
-        'property_image': widget.property.imagePath,
-        'buyer_email': _userEmail, // Who sent it?
-        'message': _messageController.text.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'is_read': false, // For notification badges later
-      });
+      final response = await ApiService.post(
+        'send_inquiry.php',
+        body: {
+          'property_id': widget.property.id.toString(),
+          'message': _messageController.text.trim(),
+        },
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Server rejected inquiry: ${response.body}');
+      }
 
-      // 2. (Optional) Keep EmailJS code here if still want email alerts
-      // ... (Your existing EmailJS code can stay here) ...
-
-      _logger.i("Inquiry saved to database");
+      _logger.i("Inquiry saved to Supabase");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -6,19 +8,68 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static final Logger _logger = Logger();
+  static const String avatarsBucket = 'avatars';
+  static const String propertyAssetsBucket = 'property-assets';
+  static const String supportAttachmentsBucket = 'support-attachments';
 
-  static String get baseUrl => dotenv.env['BACKEND_URL'] ?? '';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return '/api';
+    }
+
+    return dotenv.env['API_BASE_URL'] ?? '';
+  }
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get supabasePublishableKey =>
+      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
 
-  static Future<String?> uploadFile(File file, String bucket) async {
+  static Future<String?> uploadAvatar(PlatformFile file) =>
+      _uploadFile(file, avatarsBucket);
+
+  static Future<String?> uploadPropertyAsset(PlatformFile file) =>
+      _uploadFile(file, propertyAssetsBucket);
+
+  static Future<String?> uploadSupportAttachment(PlatformFile file) =>
+      _uploadFile(file, supportAttachmentsBucket, signedUrl: true);
+
+  static Future<void> deleteAvatarByUrl(String url) =>
+      _deleteFileByUrl(url, avatarsBucket);
+
+  static Future<void> deletePropertyAssetByUrl(String url) =>
+      _deleteFileByUrl(url, propertyAssetsBucket);
+
+  static Future<String?> _uploadFile(
+    PlatformFile file,
+    String bucket, {
+    bool signedUrl = false,
+  }) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        throw StateError('A Supabase session is required to upload files.');
+      }
+      final bytes = file.bytes ??
+          (file.path == null ? null : await File(file.path!).readAsBytes());
+      if (bytes == null) {
+        throw StateError('The selected file could not be read.');
+      }
+      final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+      final fileName =
+          '$userId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await Supabase.instance.client.storage
           .from(bucket)
-          .upload(fileName, file);
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: FileOptions(contentType: _contentType(file.name)),
+          );
 
+      if (signedUrl) {
+        return await Supabase.instance.client.storage
+            .from(bucket)
+            .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+      }
       return Supabase.instance.client.storage.from(bucket).getPublicUrl(fileName);
     } catch (e) {
       _logger.e("Supabase Upload Error", error: e);
@@ -26,13 +77,51 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteFile(String url, String bucket) async {
+  static String _contentType(String fileName) {
+    final extension = fileName.toLowerCase().split('.').last;
+    return switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      'glb' => 'model/gltf-binary',
+      'gltf' => 'model/gltf+json',
+      'pdf' => 'application/pdf',
+      _ => 'application/octet-stream',
+    };
+  }
+
+  static Future<void> _deleteFileByUrl(String url, String bucket) async {
+    final objectPath = _extractObjectPath(url, bucket);
+    if (objectPath == null) {
+      _logger.w('Skipping delete for non-matching or invalid storage URL: $url');
+      return;
+    }
+
     try {
-      final fileName = url.split('/').last;
-      await Supabase.instance.client.storage.from(bucket).remove([fileName]);
+      await Supabase.instance.client.storage.from(bucket).remove([objectPath]);
     } catch (e) {
       _logger.e("Supabase Delete Error", error: e);
     }
+  }
+
+  static String? _extractObjectPath(String url, String expectedBucket) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      return null;
+    }
+
+    final bucketIndex = uri.pathSegments.indexOf(expectedBucket);
+    if (bucketIndex == -1 || bucketIndex + 1 >= uri.pathSegments.length) {
+      return null;
+    }
+
+    final objectPath = uri.pathSegments.sublist(bucketIndex + 1).join('/');
+    if (objectPath.isEmpty) {
+      return null;
+    }
+
+    return objectPath;
   }
 
   static Uri getUri(String path, [Map<String, dynamic>? queryParameters]) {
@@ -47,11 +136,31 @@ class ApiService {
     }
   }
 
+  static Map<String, String> _authenticatedHeaders(
+      [Map<String, String>? headers]) {
+    final accessToken =
+        Supabase.instance.client.auth.currentSession?.accessToken;
+    return {
+      ...?headers,
+      if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+    };
+  }
+
+  static Future<void> restoreSession(
+      String? accessToken, String? refreshToken) async {
+    if (accessToken == null || refreshToken == null) return;
+    await Supabase.instance.client.auth.setSession(refreshToken);
+  }
+
   static Future<http.Response> post(String script, {Map<String, String>? body, Map<String, String>? headers}) async {
     final url = Uri.parse('$baseUrl/$script');
     _logger.d('POST to $url with body: $body');
     try {
-      final response = await http.post(url, body: body, headers: headers);
+      final response = await http.post(
+        url,
+        body: body,
+        headers: _authenticatedHeaders(headers),
+      );
       _logResponse(response);
       return response;
     } catch (e) {
@@ -69,7 +178,7 @@ class ApiService {
     
     _logger.d('GET to $url');
     try {
-      final response = await http.get(url);
+      final response = await http.get(url, headers: _authenticatedHeaders());
       _logResponse(response);
       return response;
     } catch (e) {

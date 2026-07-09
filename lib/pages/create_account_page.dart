@@ -3,10 +3,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -55,53 +54,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // User cancelled
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      final result = await GoogleAuthService.signIn(
+        requestedRole: _isHomeBuyer ? 'homebuyer' : 'homeowner',
       );
+      if (result == null || !mounted) return;
+      final userType = result.userType;
 
-      // 1. Sign in to Firebase
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // 2. "Find or Create" user in your MySQL database ---
-      final response = await ApiService.post(
-        'google_login.php',
-        body: {
-          'email': googleUser.email,
-          'name': googleUser.displayName ?? 'Google User', // Use Google name
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode != 200) {
-        // Failed to create user in your backend
-        throw Exception('Failed to sign in with your server: ${response.body}');
-      }
-
-      // 3. Get user_type from your server's response
-      final responseData = jsonDecode(response.body);
-      final userType = responseData['user_type'] as String?;
-      final hasPassword = responseData['has_password'] as bool?;
-
-      // 4. Save session data
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_email', googleUser.email);
-      if (userType != null) {
-        await prefs.setString('user_type', userType);
-      }
-      if (hasPassword != null){
-        await prefs.setBool('has_password', hasPassword);
-      }
-
-      if (!mounted) return;
-
-      // 5. Navigate
       if (userType == 'homeowner') {
         Navigator.pushNamedAndRemoveUntil(
             context, '/homeowner', (Route<dynamic> route) => false);
@@ -167,6 +125,22 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       if (response.statusCode == 200) {
         _logger.i('Account created: ${response.body}');
 
+        final responseData = jsonDecode(response.body);
+        if (responseData['requires_email_confirmation'] == true) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message']),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
+        await ApiService.restoreSession(
+          responseData['access_token'] as String?,
+          responseData['refresh_token'] as String?,
+        );
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
         await prefs.setString('user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
@@ -182,11 +156,23 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               context, '/homeowner', (Route<dynamic> route) => false);
         }
       } else {
-        _logger.w('Failed to create account: ${response.statusCode}');
+        _logger.w(
+          'Failed to create account: ${response.statusCode} ${response.body}',
+        );
         if (mounted) {
+          var message = 'Failed to create account. Please try again.';
+          try {
+            final responseData = jsonDecode(response.body);
+            message = responseData['message'] as String? ?? message;
+          } catch (_) {
+            if (response.statusCode == 503) {
+              message =
+                  'Registration service is temporarily unavailable. Please try again later.';
+            }
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to create account. Please try again.'),
+            SnackBar(
+              content: Text(message),
               backgroundColor: Colors.red,
             ),
           );

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+<<<<<<< HEAD
 import 'package:google_fonts/google_fonts.dart';
 import 'pages/utils/api_service.dart';
 
+=======
+import 'google_maps_loader_stub.dart'
+    if (dart.library.html) 'google_maps_loader_web.dart';
+>>>>>>> b62a1a2415bb31ce04cf2468c21214ae1f09c178
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
@@ -19,14 +24,35 @@ import 'pages/admin_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
 
-  await dotenv.load(fileName: ".env");
+  // Load the environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (error) {
+    debugPrint('Unable to load .env asset: $error');
+  }
 
-  await Supabase.initialize(
-    url: ApiService.supabaseUrl,
-    anonKey: ApiService.supabaseAnonKey,
-  );
+  try {
+    await loadGoogleMapsApi(
+      fallbackApiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
+    );
+  } catch (error) {
+    debugPrint('Google Maps initialization failed: $error');
+  }
+
+  // Safely extract the variables
+  final String? supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final String? supabaseAnonKey = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
+
+  // Initialize Supabase only when the credentials are available.
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    debugPrint('Supabase credentials are missing; continuing without backend initialization.');
+  } else {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  }
 
   // Check for existing session
   final prefs = await SharedPreferences.getInstance();
@@ -36,7 +62,9 @@ void main() async {
   // Decide where to start
   String startRoute = '/'; // Default to Welcome Page
 
-  if (userEmail != null) {
+  final hasSupabaseSession =
+      Supabase.instance.client.auth.currentSession != null;
+  if (userEmail != null && hasSupabaseSession) {
     // User is logged in, check type
     if (userType == 'admin'){
       startRoute = '/admin';

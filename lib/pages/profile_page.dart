@@ -1,15 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/welcome_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,11 +29,10 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isHomebuyer = false;
   bool _isHomeowner = false;
   String _dateJoined = "...";
-  File? _selectedImage;
+  PlatformFile? _selectedImage;
   String? _networkImage; // To show existing profile pic URL
   bool _isSaving = false;
-
-  final String _profileBucket = 'profile-pictures';
+  bool _avatarMarkedForRemoval = false;
 
   @override
   void initState() {
@@ -58,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final response = await ApiService.get('get_user_profile.php', {'email': email});
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -93,18 +91,28 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       _logger.e("Error fetching profile", error: e);
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _logout() async {
     try {
-      await FirebaseAuth.instance.signOut();
-      await GoogleSignIn().signOut();
+      await Supabase.instance.client.auth.signOut(
+        scope: SignOutScope.local,
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
+      // These providers are optional on web, so their cleanup must not block
+      // the app's Supabase logout flow.
+      try {
+        await GoogleAuthService.signOut();
+      } catch (error) {
+        _logger.d('Google session was not active during logout: $error');
+      }
       _logger.i('User logged out successfully.');
 
       if (mounted) {
@@ -123,15 +131,15 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String?> _uploadToSupabase(File image) async {
-    return await ApiService.uploadFile(image, _profileBucket);
-  }
+  Future<String?> _uploadToSupabase(PlatformFile image) async =>
+      ApiService.uploadAvatar(image);
 
   // --- LOGIC: Save Profile ---
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
 
-    String? finalImageUrl = _networkImage; // Default to existing URL
+    final previousImageUrl = _networkImage;
+    String? finalImageUrl = _avatarMarkedForRemoval ? null : _networkImage;
 
     // 1. If user picked a NEW image, upload it first
     if (_selectedImage != null) {
@@ -166,6 +174,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
       if (response.statusCode == 200) {
         _logger.i("Profile Updated: ${response.body}");
+        if (previousImageUrl != null &&
+            previousImageUrl.isNotEmpty &&
+            previousImageUrl != finalImageUrl) {
+          await ApiService.deleteAvatarByUrl(previousImageUrl);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -196,13 +209,17 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
+        withData: true,
       );
-      if (result != null) {
-        setState(() {
-          _selectedImage = File(result.files.single.path!);
-          _networkImage = null; // Clear network image to show new file
-        });
+      final selectedFile = result?.files.single;
+      if (!mounted || selectedFile == null) {
+        return;
       }
+
+      setState(() {
+        _selectedImage = selectedFile;
+        _avatarMarkedForRemoval = false;
+      });
     } catch (e) {
       _logger.e("Error picking image", error: e);
     }
@@ -212,8 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _deleteImage() {
     setState(() {
       _selectedImage = null;
-      _networkImage = null;
-      // TODO: Call PHP to remove from DB if needed
+      _avatarMarkedForRemoval = true;
     });
   }
 
@@ -262,7 +278,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     )
                     : null,
               ),
-              child: (_selectedImage == null && _networkImage == null)
+              child: (_getImageProvider() == null)
                   ? const Icon(Icons.person, size: 80, color: Colors.grey)
                   : null,
             ),
@@ -432,8 +448,11 @@ class _ProfilePageState extends State<ProfilePage> {
   // Helper to decide which image to show
   ImageProvider? _getImageProvider() {
     if (_selectedImage != null) {
-      return FileImage(_selectedImage!);
-    } else if (_networkImage != null) {
+      final selected = _selectedImage!;
+      return selected.bytes != null
+          ? MemoryImage(selected.bytes!)
+          : FileImage(File(selected.path!));
+    } else if (!_avatarMarkedForRemoval && _networkImage != null) {
       return NetworkImage(_networkImage!);
     }
     return null; // Will show fallback icon
