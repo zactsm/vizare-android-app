@@ -37,7 +37,7 @@ class Property {
       imagePath: json['image_path'],
       modelPath: json['model_path'] ?? '',
       // Convert 0 or 1 from database to true/false
-      isFeatured: json['is_featured'] == 1,
+      isFeatured: json['is_featured'] == 1 || json['is_featured'] == true,
       createdAt: json['created_at'],
       status: json['status'] ?? 'pending',
     );

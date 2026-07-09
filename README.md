@@ -17,11 +17,11 @@ ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter 
 ## 🛠️ Tech Stack
 
 -   **Frontend**: Flutter (Dart)
--   **Backend**: PHP (Deployed on Google App Engine)
+-   **Backend**: Vercel compatibility routes backed by Supabase
 -   **Database**: 
-    -   Aiven MySQL (User and Property data)
+    -   Supabase Postgres (users, profiles, properties, and favorites)
     -   Firebase Firestore (Real-time inquiries and support tickets)
--   **Storage**: Firebase Storage & Cloudinary
+-   **Storage**: Supabase Storage, plus Firebase Storage for support attachments
 -   **APIs**: Google Maps API, Google Sign-In, EmailJS
 
 ## 📦 Prerequisites
@@ -57,14 +57,23 @@ ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter 
     CLOUDINARY_CLOUD_NAME=your_cloud_name
     CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 
-    BACKEND_URL=https://your-app-engine-url.appspot.com
+    SUPABASE_URL=https://your-project.supabase.co
+    SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+    API_BASE_URL=https://your-vercel-project.vercel.app/api
     ```
 
-4.  **Firebase Setup**:
+4.  **Supabase and Vercel Setup**:
+    -   Run `supabase/schema.sql` in the Supabase SQL editor.
+    -   Enable Email and Google providers under Supabase Authentication.
+    -   Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and
+        `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project environment.
+    -   Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter's `.env`.
+
+5.  **Firebase Setup**:
     -   Place your `google-services.json` in `android/app/`.
     -   Place your `GoogleService-Info.plist` in `ios/Runner/`.
 
-5.  **Run the App**:
+6.  **Run the App**:
     ```bash
     flutter run
     ```
@@ -78,7 +87,9 @@ ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter 
 
 ## 🛡️ Security
 
-Sensitive keys and backend URLs are managed via `flutter_dotenv` to ensure they are not hardcoded in the source code. Always use the `ApiService` for backend communication to maintain consistent error handling and security standards.
+Only public client keys belong in Flutter's `.env`. The Supabase service-role key
+must remain in Vercel's server-side environment. Google App Engine is not required
+after the Supabase schema and Vercel environment variables are deployed.
 
 ---
 Developed by Muazz for the VIZARE Real Estate Platform.

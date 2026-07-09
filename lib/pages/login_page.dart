@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'admin_page.dart';
 
@@ -29,13 +29,14 @@ class _LoginPageState extends State<LoginPage> {
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      final credential = GoogleAuthProvider.credential(
+      if (googleAuth.idToken == null) {
+        throw const AuthException('Google did not return an ID token.');
+      }
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: googleAuth.idToken!,
         accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
       );
-
-      // 1. Sign in to Firebase
-      await FirebaseAuth.instance.signInWithCredential(credential);
 
       // 2. "Find or Create" user in MySQL database ---
       final response = await ApiService.post(
@@ -128,6 +129,10 @@ class _LoginPageState extends State<LoginPage> {
         logger.i("✅ Login success: ${response.body}");
 
         final responseData = jsonDecode(response.body);
+        await ApiService.restoreSession(
+          responseData['access_token'] as String?,
+          responseData['refresh_token'] as String?,
+        );
         final userType = responseData['user_type'] as String?;
         final hasPassword = true;
 

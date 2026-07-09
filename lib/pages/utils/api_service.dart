@@ -16,7 +16,7 @@ class ApiService {
       return '/api';
     }
 
-    return dotenv.env['BACKEND_URL'] ?? '';
+    return dotenv.env['API_BASE_URL'] ?? '';
   }
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
@@ -37,8 +37,12 @@ class ApiService {
 
   static Future<String?> _uploadFile(File file, String bucket) async {
     try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        throw StateError('A Supabase session is required to upload files.');
+      }
       final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
+          '$userId/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
       await Supabase.instance.client.storage
           .from(bucket)
           .upload(fileName, file);
@@ -95,11 +99,31 @@ class ApiService {
     }
   }
 
+  static Map<String, String> _authenticatedHeaders(
+      [Map<String, String>? headers]) {
+    final accessToken =
+        Supabase.instance.client.auth.currentSession?.accessToken;
+    return {
+      ...?headers,
+      if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+    };
+  }
+
+  static Future<void> restoreSession(
+      String? accessToken, String? refreshToken) async {
+    if (accessToken == null || refreshToken == null) return;
+    await Supabase.instance.client.auth.setSession(refreshToken);
+  }
+
   static Future<http.Response> post(String script, {Map<String, String>? body, Map<String, String>? headers}) async {
     final url = Uri.parse('$baseUrl/$script');
     _logger.d('POST to $url with body: $body');
     try {
-      final response = await http.post(url, body: body, headers: headers);
+      final response = await http.post(
+        url,
+        body: body,
+        headers: _authenticatedHeaders(headers),
+      );
       _logResponse(response);
       return response;
     } catch (e) {
@@ -117,7 +141,7 @@ class ApiService {
     
     _logger.d('GET to $url');
     try {
-      final response = await http.get(url);
+      final response = await http.get(url, headers: _authenticatedHeaders());
       _logResponse(response);
       return response;
     } catch (e) {

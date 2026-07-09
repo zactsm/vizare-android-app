@@ -53,7 +53,9 @@ void main() async {
   // Decide where to start
   String startRoute = '/'; // Default to Welcome Page
 
-  if (userEmail != null) {
+  final hasSupabaseSession =
+      Supabase.instance.client.auth.currentSession != null;
+  if (userEmail != null && hasSupabaseSession) {
     // User is logged in, check type
     if (userType == 'admin'){
       startRoute = '/admin';

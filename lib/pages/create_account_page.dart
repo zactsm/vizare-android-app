@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 
 class CreateAccountPage extends StatefulWidget {
@@ -60,13 +60,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      final credential = GoogleAuthProvider.credential(
+      if (googleAuth.idToken == null) {
+        throw const AuthException('Google did not return an ID token.');
+      }
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: googleAuth.idToken!,
         accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
       );
-
-      // 1. Sign in to Firebase
-      await FirebaseAuth.instance.signInWithCredential(credential);
 
       // 2. "Find or Create" user in your MySQL database ---
       final response = await ApiService.post(
@@ -167,6 +168,22 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       if (response.statusCode == 200) {
         _logger.i('Account created: ${response.body}');
 
+        final responseData = jsonDecode(response.body);
+        if (responseData['requires_email_confirmation'] == true) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message']),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
+        await ApiService.restoreSession(
+          responseData['access_token'] as String?,
+          responseData['refresh_token'] as String?,
+        );
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
         await prefs.setString('user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
@@ -182,11 +199,16 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               context, '/homeowner', (Route<dynamic> route) => false);
         }
       } else {
-        _logger.w('Failed to create account: ${response.statusCode}');
+        _logger.w(
+          'Failed to create account: ${response.statusCode} ${response.body}',
+        );
         if (mounted) {
+          final message = response.statusCode == 503
+              ? 'Registration service is temporarily unavailable. Please try again later.'
+              : 'Failed to create account. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to create account. Please try again.'),
+            SnackBar(
+              content: Text(message),
               backgroundColor: Colors.red,
             ),
           );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
@@ -124,6 +125,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
 
         // Sign out from Firebase & Google (if they were used)
         await FirebaseAuth.instance.signOut();
+        await Supabase.instance.client.auth.signOut();
         await GoogleSignIn().signOut();
 
         // Clear saved email
