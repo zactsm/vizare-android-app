@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,11 +16,9 @@ import 'package:untitled/pages/settings/privacy_policy_page.dart';
 import 'package:untitled/pages/settings/tos_page.dart';
 
 import 'utils/floating_bottom_nav_bar.dart';
+import 'utils/google_auth_service.dart';
 
 import 'package:untitled/welcome_page.dart';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 //--- CONVERTED TO STATEFULWIDGET ---
 class SettingsPage extends StatefulWidget {
@@ -60,21 +59,20 @@ class _SettingsPageState extends State<SettingsPage> {
   // Moved logout logic inside the class ---
   Future<void> _logout(BuildContext context) async {
     try {
-      await FirebaseAuth.instance.signOut();
-      await GoogleSignIn().signOut();
+      await Supabase.instance.client.auth.signOut(
+        scope: SignOutScope.local,
+      );
 
-      // Clear all saved user data on logout
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('user_email');
-      await prefs.remove('user_type');
-      await prefs.remove('has_password'); // <-- Important!
+      await prefs.clear();
+      await GoogleAuthService.signOut();
 
       _logger.i('User logged out successfully.');
 
-      if (mounted) { // 'mounted' is available in the State
-        Navigator.of(context).pushAndRemoveUntil( // 'context' is available in the State
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const WelcomePage()),
-              (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
         );
       }
     } catch (e) {

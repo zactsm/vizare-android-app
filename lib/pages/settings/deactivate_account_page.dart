@@ -3,7 +3,6 @@ import 'package:logger/logger.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 import '/welcome_page.dart';
@@ -131,12 +130,6 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         } catch (error) {
           _logger.d('Google session was not active: $error');
         }
-        try {
-          await FirebaseAuth.instance.signOut();
-        } catch (error) {
-          _logger.d('Firebase session was not active: $error');
-        }
-
         await prefs.clear();
 
         if (!mounted) return;
