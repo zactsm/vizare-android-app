@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
@@ -10,7 +11,13 @@ class ApiService {
   static const String avatarsBucket = 'avatars';
   static const String propertyAssetsBucket = 'property-assets';
 
-  static String get baseUrl => dotenv.env['BACKEND_URL'] ?? '';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return '/api';
+    }
+
+    return dotenv.env['BACKEND_URL'] ?? '';
+  }
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabasePublishableKey =>
