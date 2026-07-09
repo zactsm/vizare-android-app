@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // For EmailJS
 import 'dart:convert'; // For jsonEncode
@@ -21,7 +19,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
   final _descriptionController = TextEditingController();
   final _logger = Logger();
 
-  List<File> _attachedFiles = [];
+  final List<PlatformFile> _attachedFiles = [];
   bool _isSubmitting = false;
 
   @override
@@ -36,12 +34,12 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.any,
+        withData: true,
       );
 
       if (result != null) {
         setState(() {
-          _attachedFiles
-              .addAll(result.paths.map((path) => File(path!)).toList());
+          _attachedFiles.addAll(result.files);
         });
       }
     } catch (e) {
@@ -315,10 +313,9 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         spacing: 8.0,
         runSpacing: 8.0,
         children: _attachedFiles.map((file) {
-          final fileName = p.basename(file.path);
           return Chip(
             label: Text(
-              fileName,
+              file.name,
               style: const TextStyle(
                   fontFamily: 'Poppins', color: Colors.black87),
             ),

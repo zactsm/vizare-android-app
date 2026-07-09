@@ -29,7 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isHomebuyer = false;
   bool _isHomeowner = false;
   String _dateJoined = "...";
-  File? _selectedImage;
+  PlatformFile? _selectedImage;
   String? _networkImage; // To show existing profile pic URL
   bool _isSaving = false;
   bool _avatarMarkedForRemoval = false;
@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String?> _uploadToSupabase(File image) async =>
+  Future<String?> _uploadToSupabase(PlatformFile image) async =>
       ApiService.uploadAvatar(image);
 
   // --- LOGIC: Save Profile ---
@@ -209,18 +209,17 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
+        withData: true,
       );
-      final selectedPath = result?.files.single.path;
-      if (!mounted || selectedPath == null) {
+      final selectedFile = result?.files.single;
+      if (!mounted || selectedFile == null) {
         return;
       }
 
-      if (result != null) {
-        setState(() {
-          _selectedImage = File(selectedPath);
-          _avatarMarkedForRemoval = false;
-        });
-      }
+      setState(() {
+        _selectedImage = selectedFile;
+        _avatarMarkedForRemoval = false;
+      });
     } catch (e) {
       _logger.e("Error picking image", error: e);
     }
@@ -449,7 +448,10 @@ class _ProfilePageState extends State<ProfilePage> {
   // Helper to decide which image to show
   ImageProvider? _getImageProvider() {
     if (_selectedImage != null) {
-      return FileImage(_selectedImage!);
+      final selected = _selectedImage!;
+      return selected.bytes != null
+          ? MemoryImage(selected.bytes!)
+          : FileImage(File(selected.path!));
     } else if (!_avatarMarkedForRemoval && _networkImage != null) {
       return NetworkImage(_networkImage!);
     }

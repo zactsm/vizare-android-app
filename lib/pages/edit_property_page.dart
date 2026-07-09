@@ -26,7 +26,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   final _tagInputController = TextEditingController();
 
   // State
-  List<File> _newSelectedImages = []; // Only for NEW files
+  List<PlatformFile> _newSelectedImages = [];
   final List<String> _tags = ['lorem', 'ipsum'];
 
   bool _isForRent = false;
@@ -60,18 +60,17 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        allowMultiple: false, // Keeping it simple: replace the single cover image
+        allowMultiple: false,
+        withData: true,
       );
-      final selectedPath = result?.files.single.path;
-      if (!mounted || selectedPath == null) {
+      final selectedFile = result?.files.single;
+      if (!mounted || selectedFile == null) {
         return;
       }
 
-      if (result != null) {
-        setState(() {
-          _newSelectedImages = [File(selectedPath)];
-        });
-      }
+      setState(() {
+        _newSelectedImages = [selectedFile];
+      });
     } catch (e) {
       _logger.e("Error picking images", error: e);
     }
@@ -79,7 +78,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToSupabase(File image) =>
+  Future<String?> _uploadToSupabase(PlatformFile image) =>
       ApiService.uploadPropertyAsset(image);
 
   // --- 3. SUBMIT LOGIC (UPDATE) ---
@@ -280,7 +279,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     // Logic: Show NEW file if picked, else show EXISTING network url
     ImageProvider imageProvider;
     if (_newSelectedImages.isNotEmpty) {
-      imageProvider = FileImage(_newSelectedImages.first);
+      final selected = _newSelectedImages.first;
+      imageProvider = selected.bytes != null
+          ? MemoryImage(selected.bytes!)
+          : FileImage(File(selected.path!));
     } else {
       imageProvider = NetworkImage(widget.property.imagePath);
     }

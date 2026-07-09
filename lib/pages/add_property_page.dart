@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:logger/logger.dart';
-import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 
@@ -25,8 +24,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   final _tagInputController = TextEditingController();
 
   // State
-  final List<File> _selectedImages = [];
-  File? _selectedModel; // Stores the 3D file (.glb)
+  final List<PlatformFile> _selectedImages = [];
+  PlatformFile? _selectedModel;
   final List<String> _tags = ['bungalow', 'garage']; // Default tags
 
   bool _isForRent = false;
@@ -50,15 +49,15 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: true,
+        withData: true,
       );
       if (!mounted || result == null) {
         return;
       }
 
-      final pickedPaths = result.paths.whereType<String>().toList();
-      if (pickedPaths.isNotEmpty) {
+      if (result.files.isNotEmpty) {
         setState(() {
-          _selectedImages.addAll(pickedPaths.map(File.new));
+          _selectedImages.addAll(result.files);
         });
       }
     } catch (e) {
@@ -69,16 +68,17 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   Future<void> _pickModel() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
+        type: FileType.custom,
+        allowedExtensions: const ['glb', 'gltf'],
+        withData: true,
       );
-      final selectedPath = result?.files.single.path;
-      if (!mounted || selectedPath == null) {
+      final file = result?.files.single;
+      if (!mounted || file == null) {
         return;
       }
 
-      final file = File(selectedPath);
-      final lowerPath = file.path.toLowerCase();
-      if (lowerPath.endsWith('.glb') || lowerPath.endsWith('.gltf')) {
+      final lowerName = file.name.toLowerCase();
+      if (lowerName.endsWith('.glb') || lowerName.endsWith('.gltf')) {
         setState(() {
           _selectedModel = file;
         });
@@ -94,7 +94,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToSupabase(File file) =>
+  Future<String?> _uploadToSupabase(PlatformFile file) =>
       ApiService.uploadPropertyAsset(file);
 
   // --- 3. SUBMIT LOGIC (Updated) ---
@@ -120,7 +120,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       // 2. Upload ALL Images Loop
       List<String> uploadedUrls = [];
 
-      for (File img in _selectedImages) {
+      for (PlatformFile img in _selectedImages) {
         final url = await _uploadToSupabase(img);
         if (url != null) {
           uploadedUrls.add(url);
@@ -249,7 +249,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                     Expanded(
                       child: Text(
                           _selectedModel != null
-                              ? "Model ready: ${path.basename(_selectedModel!.path)}"
+                              ? "Model ready: ${_selectedModel!.name}"
                               : "Upload 3D Model (.glb)",
                           style: TextStyle(
                             color: _selectedModel != null ? Colors.green : Colors.white54,
@@ -556,7 +556,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   image: DecorationImage(
-                    image: FileImage(_selectedImages[index]),
+                    image: _imageProvider(_selectedImages[index]),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -585,5 +585,10 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
         },
       ),
     );
+  }
+
+  ImageProvider _imageProvider(PlatformFile file) {
+    if (file.bytes != null) return MemoryImage(file.bytes!);
+    return FileImage(File(file.path!));
   }
 }

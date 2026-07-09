@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
-import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
@@ -24,13 +24,13 @@ class ApiService {
   static String get supabasePublishableKey =>
       dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
 
-  static Future<String?> uploadAvatar(File file) =>
+  static Future<String?> uploadAvatar(PlatformFile file) =>
       _uploadFile(file, avatarsBucket);
 
-  static Future<String?> uploadPropertyAsset(File file) =>
+  static Future<String?> uploadPropertyAsset(PlatformFile file) =>
       _uploadFile(file, propertyAssetsBucket);
 
-  static Future<String?> uploadSupportAttachment(File file) =>
+  static Future<String?> uploadSupportAttachment(PlatformFile file) =>
       _uploadFile(file, supportAttachmentsBucket, signedUrl: true);
 
   static Future<void> deleteAvatarByUrl(String url) =>
@@ -40,7 +40,7 @@ class ApiService {
       _deleteFileByUrl(url, propertyAssetsBucket);
 
   static Future<String?> _uploadFile(
-    File file,
+    PlatformFile file,
     String bucket, {
     bool signedUrl = false,
   }) async {
@@ -49,11 +49,21 @@ class ApiService {
       if (userId == null) {
         throw StateError('A Supabase session is required to upload files.');
       }
+      final bytes = file.bytes ??
+          (file.path == null ? null : await File(file.path!).readAsBytes());
+      if (bytes == null) {
+        throw StateError('The selected file could not be read.');
+      }
+      final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
       final fileName =
-          '$userId/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
+          '$userId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await Supabase.instance.client.storage
           .from(bucket)
-          .upload(fileName, file);
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: FileOptions(contentType: _contentType(file.name)),
+          );
 
       if (signedUrl) {
         return await Supabase.instance.client.storage
@@ -65,6 +75,20 @@ class ApiService {
       _logger.e("Supabase Upload Error", error: e);
       return null;
     }
+  }
+
+  static String _contentType(String fileName) {
+    final extension = fileName.toLowerCase().split('.').last;
+    return switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      'glb' => 'model/gltf-binary',
+      'gltf' => 'model/gltf+json',
+      'pdf' => 'application/pdf',
+      _ => 'application/octet-stream',
+    };
   }
 
   static Future<void> _deleteFileByUrl(String url, String bucket) async {
