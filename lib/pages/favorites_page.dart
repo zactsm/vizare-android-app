@@ -95,23 +95,17 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 left: 16,
                 child: ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                     colors: [
-                      Color(0xFF5A62F1),
-                      Color(0xFF548FEE),
-                      Color(0xFF9FD0F6),
-                      Color(0xFFD6B3F9),
-                      Color(0xFFB191FA),
+                      Colors.white,
+                      Color(0xFFFFF200),
                     ],
-                    stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                   ).createShader(bounds),
                   child: const Text(
                     'Favorites',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       color: Colors.white,
                     ),
                   ),
@@ -172,7 +166,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
           trailing: Text(
             property.price,
-            style: const TextStyle(color: Color(0xFF5E17EB), fontFamily: 'Poppins', fontSize: 12),
+            style: const TextStyle(color: Color(0xFFFFF200), fontFamily: 'Poppins', fontSize: 12),
           ),
           onTap: () {
             Navigator.push(

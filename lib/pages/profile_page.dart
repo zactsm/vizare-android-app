@@ -417,15 +417,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD6B3F9),
-                      foregroundColor: const Color(0xFF121212),
+                      backgroundColor: const Color(0xFFFFF200),
+                      foregroundColor: const Color(0xFF0D0D0D),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: _isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFF121212), strokeWidth: 2))
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFF0D0D0D), strokeWidth: 2))
                         : const Text(
                       "Save",
                       style: TextStyle(
@@ -461,13 +461,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildGradientTitle(String title) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFF5A62F1), Color(0xFF548FEE), Color(0xFF9FD0F6), Color(0xFFD6B3F9), Color(0xFFB191FA)],
+        colors: [
+          Colors.white,
+          Color(0xFFFFF200),
+        ],
       ).createShader(bounds),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 32, fontFamily: 'Inter', fontWeight: FontWeight.bold, color: Colors.white),
+        style: const TextStyle(fontSize: 32, fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }

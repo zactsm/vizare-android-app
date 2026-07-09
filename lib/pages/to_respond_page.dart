@@ -182,8 +182,8 @@ class _ToRespondPageState extends State<ToRespondPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD6B3F9),
-                    foregroundColor: const Color(0xFF121212),
+                    backgroundColor: const Color(0xFFFFF200),
+                    foregroundColor: const Color(0xFF0D0D0D),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

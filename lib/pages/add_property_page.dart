@@ -349,8 +349,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFD6B3F9),
-                      side: const BorderSide(color: Color(0xFFD6B3F9), width: 1.5),
+                      foregroundColor: const Color(0xFFFFF200),
+                      side: const BorderSide(color: Color(0xFFFFF200), width: 1.5),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -364,13 +364,13 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   child: ElevatedButton(
                     onPressed: _isUploading ? null : _submitProperty,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD6B3F9),
-                      foregroundColor: const Color(0xFF121212),
+                      backgroundColor: const Color(0xFFFFF200),
+                      foregroundColor: const Color(0xFF0D0D0D),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _isUploading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Color(0xFF121212), strokeWidth: 2))
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Color(0xFF0D0D0D), strokeWidth: 2))
                         : const Text("Save", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
                   ),
                 ),
@@ -388,13 +388,14 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   Widget _buildGradientTitle(String title) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: [Color(0xFF5A62F1), Color(0xFF548FEE), Color(0xFF9FD0F6), Color(0xFFD6B3F9), Color(0xFFB191FA)],
+        colors: [
+          Colors.white,
+          Color(0xFFFFF200),
+        ],
       ).createShader(bounds),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 32, fontFamily: 'Inter', fontWeight: FontWeight.bold, color: Colors.white, height: 1.0),
+        style: const TextStyle(fontSize: 32, fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white, height: 1.0),
       ),
     );
   }

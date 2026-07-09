@@ -252,14 +252,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 left: 16,
                 child: ShaderMask(
                   shaderCallback: (bounds) => const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
                     colors: [
-                      Color(0xFF5A62F1),
-                      Color(0xFF548FEE),
-                      Color(0xFF9FD0F6),
-                      Color(0xFFD6B3F9),
-                      Color(0xFFB191FA),
+                      Colors.white,
+                      Color(0xFFFFF200),
                     ],
                   ).createShader(bounds),
                   child: const Text(
@@ -267,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       color: Colors.white,
                     ),
                   ),

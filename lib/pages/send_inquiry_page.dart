@@ -114,7 +114,7 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
-                border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
+                border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -183,14 +183,14 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitInquiry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD6B3F9),
-                  foregroundColor: const Color(0xFF121212),
+                  backgroundColor: const Color(0xFFFFF200),
+                  foregroundColor: const Color(0xFF0D0D0D),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Color(0xFF121212))
+                    ? const CircularProgressIndicator(color: Color(0xFF0D0D0D))
                     : const Text(
                   'Submit',
                   style: TextStyle(
@@ -212,21 +212,16 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
   Widget _buildGradientTitle(String title) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
         colors: [
-          Color(0xFF5A62F1),
-          Color(0xFF548FEE),
-          Color(0xFF9FD0F6),
-          Color(0xFFD6B3F9),
-          Color(0xFFB191FA),
+          Colors.white,
+          Color(0xFFFFF200),
         ],
       ).createShader(bounds),
       child: Text(
         title,
         style: const TextStyle(
           fontSize: 32,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           fontWeight: FontWeight.bold,
           height: 1.1,
           color: Colors.white,

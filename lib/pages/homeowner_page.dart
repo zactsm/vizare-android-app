@@ -207,7 +207,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF0D0D0D),
       // --- MODIFIED: Removed AppBar, added Stack ---
       body: Stack(
         children: [
@@ -235,7 +235,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
             padding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E).withOpacity(0.85),
+              color: const Color(0xFF1C1C1E).withOpacity(0.85),
               borderRadius: BorderRadius.circular(40.0),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
@@ -267,7 +267,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                           color: Colors.white.withOpacity(0.4), fontSize: 14),
                       prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
                       filled: true,
-                      fillColor: const Color(0xFF262626),
+                      fillColor: const Color(0xFF0D0D0D),
                       isDense: true,
                       prefixIconConstraints: const BoxConstraints(
                         minWidth: 40,
@@ -355,7 +355,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFD6B3F9),
+          Color(0xFFFFF200),
         ],
       ).createShader(bounds),
       child: Text(
@@ -372,18 +372,18 @@ class _HomeownerPageState extends State<HomeownerPage> {
   }
 
   Widget _buildButtonRow() {
-    final Color pastelPurple = const Color(0xFFD6B3F9);
+    final Color neonYellow = const Color(0xFFFFF200);
     return Row(
       children: [
-        // "+ Add new property" button (Pastel purple)
+        // "+ Add new property" button (Neon yellow)
         Expanded(
           child: ElevatedButton(
             onPressed: () {
               _navigateToAddProperty();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: pastelPurple,
-              foregroundColor: const Color(0xFF121212),
+              backgroundColor: neonYellow,
+              foregroundColor: const Color(0xFF0D0D0D),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -402,7 +402,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
         ),
         const SizedBox(width: 12),
 
-        // "To respond" button (Outlined pastel purple)
+        // "To respond" button (Outlined neon yellow)
         Expanded(
           child: OutlinedButton(
             onPressed: () {
@@ -412,8 +412,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
               );
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: pastelPurple,
-              side: BorderSide(color: pastelPurple, width: 1.5),
+              foregroundColor: neonYellow,
+              side: BorderSide(color: neonYellow, width: 1.5),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

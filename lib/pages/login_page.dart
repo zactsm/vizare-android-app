@@ -156,16 +156,16 @@ class _LoginPageState extends State<LoginPage> {
     return const LinearGradient(
       colors: [
         Colors.white,
-        Color(0xFFD6B3F9),
+        Color(0xFFFFF200),
       ],
     ).createShader(bounds);
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color pastelPurple = const Color(0xFFD6B3F9);
+    final Color neonYellow = const Color(0xFFFFF200);
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF0D0D0D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -270,8 +270,8 @@ class _LoginPageState extends State<LoginPage> {
                     login(_emailController.text, _passwordController.text);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: pastelPurple,
-                    foregroundColor: const Color(0xFF121212),
+                    backgroundColor: neonYellow,
+                    foregroundColor: const Color(0xFF0D0D0D),
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -321,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () => Navigator.pushNamed(context, '/create-account'),
                     child: Text(
                       'Sign up',
-                      style: TextStyle(color: pastelPurple, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: neonYellow, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

@@ -71,7 +71,7 @@ class _AdminPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Black background
+      backgroundColor: const Color(0xFF0D0D0D),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -137,9 +137,9 @@ class _AdminPageState extends State<AdminPage> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFE0E0E0), // Light grey card background
+        color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: (0.1))),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Column(
         children: [
@@ -173,7 +173,7 @@ class _AdminPageState extends State<AdminPage> {
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -181,10 +181,10 @@ class _AdminPageState extends State<AdminPage> {
                     const SizedBox(height: 4),
                     Text(
                       property.description,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
-                        color: Colors.black54,
+                        color: Colors.grey[400],
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -196,7 +196,7 @@ class _AdminPageState extends State<AdminPage> {
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.black,
+                        color: Color(0xFFFFF200),
                       ),
                     ),
                   ],
@@ -217,10 +217,11 @@ class _AdminPageState extends State<AdminPage> {
                   width: 50,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[600],
+                    color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
-                  child: const Icon(Icons.close, color: Colors.white),
+                  child: const Icon(Icons.close, color: Colors.white70),
                 ),
               ),
               const SizedBox(width: 12),
@@ -232,10 +233,10 @@ class _AdminPageState extends State<AdminPage> {
                   width: 50,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.cyan[400], // Matches your design gradient
+                    color: const Color(0xFFFFF200),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.check, color: Colors.white),
+                  child: const Icon(Icons.check, color: Color(0xFF0D0D0D)),
                 ),
               ),
             ],
@@ -248,7 +249,7 @@ class _AdminPageState extends State<AdminPage> {
   Widget _buildGradientTitle(String text) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        colors: [Colors.yellowAccent, Colors.cyanAccent],
+        colors: [Colors.white, Color(0xFFFFF200)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(bounds),

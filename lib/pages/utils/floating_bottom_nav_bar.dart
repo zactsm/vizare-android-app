@@ -146,7 +146,7 @@ class _ActiveFooterIcon extends StatelessWidget {
         vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFD6B3F9),
+        color: const Color(0xFFFFF200),
         borderRadius: BorderRadius.circular(40),
       ),
       child: Row(
@@ -156,7 +156,7 @@ class _ActiveFooterIcon extends StatelessWidget {
             icon,
             width: isMainMenu ? 24 : 19.5,
             height: 28,
-            color: const Color(0xFF121212),
+            color: const Color(0xFF0D0D0D),
           ),
           const SizedBox(width: 8),
           Text(
@@ -165,7 +165,7 @@ class _ActiveFooterIcon extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.bold,
               fontFamily: 'Poppins',
-              color: Color(0xFF121212),
+              color: Color(0xFF0D0D0D),
             ),
           )
         ],

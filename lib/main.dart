@@ -3,14 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-<<<<<<< HEAD
 import 'package:google_fonts/google_fonts.dart';
-import 'pages/utils/api_service.dart';
-
-=======
 import 'google_maps_loader_stub.dart'
     if (dart.library.html) 'google_maps_loader_web.dart';
->>>>>>> b62a1a2415bb31ce04cf2468c21214ae1f09c178
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
@@ -87,9 +82,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color pastelPurple = const Color(0xFFD6B3F9);
-    final Color darkBackground = const Color(0xFF121212);
-    final Color surfaceColor = const Color(0xFF1E1E1E);
+    final Color neonYellow = const Color(0xFFFFF200);
+    final Color darkBackground = const Color(0xFF0D0D0D);
+    final Color surfaceColor = const Color(0xFF1C1C1E);
 
     return MaterialApp(
       title: 'AR Real Estate',
@@ -97,10 +92,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: darkBackground,
-        primaryColor: pastelPurple,
+        primaryColor: neonYellow,
         colorScheme: ColorScheme.dark(
-          primary: pastelPurple,
-          secondary: pastelPurple,
+          primary: neonYellow,
+          secondary: neonYellow,
           surface: surfaceColor,
           error: Colors.redAccent,
         ),
@@ -118,15 +113,15 @@ class MyApp extends StatelessWidget {
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
-          iconTheme: IconThemeData(color: pastelPurple),
+          iconTheme: IconThemeData(color: neonYellow),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: pastelPurple,
-            foregroundColor: const Color(0xFF121212),
+            backgroundColor: neonYellow,
+            foregroundColor: const Color(0xFF0D0D0D),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -136,11 +131,11 @@ class MyApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: pastelPurple,
-            side: BorderSide(color: pastelPurple, width: 1.5),
+            foregroundColor: neonYellow,
+            side: BorderSide(color: neonYellow, width: 1.5),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -150,7 +145,7 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: pastelPurple,
+            foregroundColor: neonYellow,
             textStyle: const TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -160,19 +155,19 @@ class MyApp extends StatelessWidget {
           filled: true,
           fillColor: surfaceColor,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
-          labelStyle: TextStyle(color: pastelPurple, fontSize: 14),
+          labelStyle: TextStyle(color: neonYellow, fontSize: 14),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: pastelPurple, width: 1.5),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: neonYellow, width: 1.5),
           ),
         ),
       ),

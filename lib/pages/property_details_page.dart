@@ -223,14 +223,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   Widget _buildGradientTitle(String title) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
         colors: [
-          Color(0xFF5A62F1),
-          Color(0xFF548FEE),
-          Color(0xFF9FD0F6),
-          Color(0xFFD6B3F9),
-          Color(0xFFB191FA),
+          Colors.white,
+          Color(0xFFFFF200),
         ],
       ).createShader(bounds),
       child: Text(
@@ -238,7 +233,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
         style: const TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           color: Colors.white,
         ),
       ),
@@ -374,9 +369,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               }
                   : null, // Disable button if no model
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD6B3F9),
+                backgroundColor: const Color(0xFFFFF200),
                 disabledBackgroundColor: Colors.white.withOpacity(0.05),
-                foregroundColor: const Color(0xFF121212),
+                foregroundColor: const Color(0xFF0D0D0D),
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -387,7 +382,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                 children: [
                   Icon(
                       hasModel ? Icons.view_in_ar : Icons.block,
-                      color: hasModel ? const Color(0xFF121212) : Colors.white30,
+                      color: hasModel ? const Color(0xFF0D0D0D) : Colors.white30,
                       size: 20
                   ),
                   const SizedBox(width: 8),
@@ -397,7 +392,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: hasModel ? const Color(0xFF121212) : Colors.white30,
+                      color: hasModel ? const Color(0xFF0D0D0D) : Colors.white30,
                     ),
                   ),
                 ],
@@ -412,13 +407,13 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
+              border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
             ),
             child: IconButton(
               icon: Image.asset(
                 'assets/images/white_chat_icon.png',
                 width: 20,
-                color: const Color(0xFFD6B3F9),
+                color: const Color(0xFFFFF200),
               ),
               onPressed: () {
                 Navigator.push(
@@ -438,17 +433,17 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
+              border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
             ),
             child: _isLoadingFavorite
                 ? const Padding(
               padding: EdgeInsets.all(14.0),
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD6B3F9)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFF200)),
             )
                 : IconButton(
               icon: Icon(
                 _isFavorited ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorited ? Colors.red : const Color(0xFFD6B3F9),
+                color: _isFavorited ? Colors.red : const Color(0xFFFFF200),
                 size: 24,
               ),
               onPressed: _toggleFavorite,

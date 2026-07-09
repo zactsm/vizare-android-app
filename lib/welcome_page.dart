@@ -104,7 +104,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                 end: Alignment.bottomRight,
                                 colors: [
                                   Colors.white,
-                                  Color(0xFFD6B3F9),
+                                  Color(0xFFFFF200),
                                 ],
                               ).createShader(const Rect.fromLTWH(0, 0, 350, 150)),
                           ),
@@ -123,8 +123,8 @@ class _WelcomePageState extends State<WelcomePage> {
                           Navigator.pushNamed(context, '/create-account');
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD6B3F9),
-                          foregroundColor: const Color(0xFF121212),
+                          backgroundColor: const Color(0xFFFFF200),
+                          foregroundColor: const Color(0xFF0D0D0D),
                           minimumSize: const Size(200, 56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -149,8 +149,8 @@ class _WelcomePageState extends State<WelcomePage> {
                           Navigator.pushNamed(context, '/login');
                         },
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFD6B3F9), width: 1.5),
-                          foregroundColor: const Color(0xFFD6B3F9),
+                          side: const BorderSide(color: Color(0xFFFFF200), width: 1.5),
+                          foregroundColor: const Color(0xFFFFF200),
                           minimumSize: const Size(200, 56),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),

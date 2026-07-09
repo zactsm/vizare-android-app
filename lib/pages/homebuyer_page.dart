@@ -123,7 +123,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFF0D0D0D),
         body: SafeArea(
           // bottom: false,
           child: Stack(
@@ -281,9 +281,9 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                       }
                           : null, // Disables button if no model exists
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD6B3F9),
+                        backgroundColor: const Color(0xFFFFF200),
                         disabledBackgroundColor: Colors.white.withOpacity(0.05),
-                        foregroundColor: const Color(0xFF121212),
+                        foregroundColor: const Color(0xFF0D0D0D),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -295,7 +295,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: hasModel ? const Color(0xFF121212) : Colors.white30),
+                            color: hasModel ? const Color(0xFF0D0D0D) : Colors.white30),
                       ),
                     ),
                   ],
@@ -407,7 +407,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
           shaderCallback: (bounds) => const LinearGradient(
             colors: [
               Colors.white,
-              Color(0xFFD6B3F9),
+              Color(0xFFFFF200),
             ],
           ).createShader(bounds),
           child: Text(
@@ -434,7 +434,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E).withOpacity(0.85),
+              color: const Color(0xFF1C1C1E).withOpacity(0.85),
               borderRadius: BorderRadius.circular(40.0),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
@@ -468,7 +468,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                           hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
                           prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
                           filled: true,
-                          fillColor: const Color(0xFF262626),
+                          fillColor: const Color(0xFF0D0D0D),
                           isDense: true,
                           prefixIconConstraints: const BoxConstraints(
                             minWidth: 40,

@@ -24,12 +24,8 @@ dependencies:
   photo_view: ^0.15.0
   url_launcher: ^6.3.2
   flutter_dotenv: ^6.0.0
-<<<<<<< HEAD
   supabase_flutter: ^2.15.4
   google_fonts: ^6.2.1
-=======
-  supabase_flutter: ^2.16.0
->>>>>>> b62a1a2415bb31ce04cf2468c21214ae1f09c178
 
 dev_dependencies:
   flutter_test:
