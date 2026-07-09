@@ -24,7 +24,7 @@ void main() async {
 
   await Supabase.initialize(
     url: ApiService.supabaseUrl,
-    anonKey: ApiService.supabaseAnonKey,
+    anonKey: ApiService.supabasePublishableKey,
   );
 
   // Check for existing session

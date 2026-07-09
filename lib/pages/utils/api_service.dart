@@ -2,19 +2,36 @@ import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static final Logger _logger = Logger();
+  static const String avatarsBucket = 'avatars';
+  static const String propertyAssetsBucket = 'property-assets';
 
   static String get baseUrl => dotenv.env['BACKEND_URL'] ?? '';
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get supabasePublishableKey =>
+      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
 
-  static Future<String?> uploadFile(File file, String bucket) async {
+  static Future<String?> uploadAvatar(File file) =>
+      _uploadFile(file, avatarsBucket);
+
+  static Future<String?> uploadPropertyAsset(File file) =>
+      _uploadFile(file, propertyAssetsBucket);
+
+  static Future<void> deleteAvatarByUrl(String url) =>
+      _deleteFileByUrl(url, avatarsBucket);
+
+  static Future<void> deletePropertyAssetByUrl(String url) =>
+      _deleteFileByUrl(url, propertyAssetsBucket);
+
+  static Future<String?> _uploadFile(File file, String bucket) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
       await Supabase.instance.client.storage
           .from(bucket)
           .upload(fileName, file);
@@ -26,13 +43,37 @@ class ApiService {
     }
   }
 
-  static Future<void> deleteFile(String url, String bucket) async {
+  static Future<void> _deleteFileByUrl(String url, String bucket) async {
+    final objectPath = _extractObjectPath(url, bucket);
+    if (objectPath == null) {
+      _logger.w('Skipping delete for non-matching or invalid storage URL: $url');
+      return;
+    }
+
     try {
-      final fileName = url.split('/').last;
-      await Supabase.instance.client.storage.from(bucket).remove([fileName]);
+      await Supabase.instance.client.storage.from(bucket).remove([objectPath]);
     } catch (e) {
       _logger.e("Supabase Delete Error", error: e);
     }
+  }
+
+  static String? _extractObjectPath(String url, String expectedBucket) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      return null;
+    }
+
+    final bucketIndex = uri.pathSegments.indexOf(expectedBucket);
+    if (bucketIndex == -1 || bucketIndex + 1 >= uri.pathSegments.length) {
+      return null;
+    }
+
+    final objectPath = uri.pathSegments.sublist(bucketIndex + 1).join('/');
+    if (objectPath.isEmpty) {
+      return null;
+    }
+
+    return objectPath;
   }
 
   static Uri getUri(String path, [Map<String, dynamic>? queryParameters]) {

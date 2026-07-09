@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
@@ -35,9 +33,6 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   bool _isForSale = true;
   bool _isUploading = false;
 
-  // --- SUPABASE STORAGE BUCKETS ---
-  final String _imageBucket = 'property-images';
-
   @override
   void initState() {
     super.initState();
@@ -67,9 +62,14 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         type: FileType.image,
         allowMultiple: false, // Keeping it simple: replace the single cover image
       );
+      final selectedPath = result?.files.single.path;
+      if (!mounted || selectedPath == null) {
+        return;
+      }
+
       if (result != null) {
         setState(() {
-          _newSelectedImages = [File(result.files.single.path!)];
+          _newSelectedImages = [File(selectedPath)];
         });
       }
     } catch (e) {
@@ -79,9 +79,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToSupabase(File image) async {
-    return await ApiService.uploadFile(image, _imageBucket);
-  }
+  Future<String?> _uploadToSupabase(File image) =>
+      ApiService.uploadPropertyAsset(image);
 
   // --- 3. SUBMIT LOGIC (UPDATE) ---
 
@@ -96,6 +95,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     setState(() => _isUploading = true);
 
     try {
+      final previousImageUrl = widget.property.imagePath;
       String finalImageUrl = widget.property.imagePath; // Default to OLD URL
 
       // A. If a NEW image was picked, upload it
@@ -128,6 +128,9 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       );
 
       if (response.statusCode == 200) {
+        if (previousImageUrl.isNotEmpty && previousImageUrl != finalImageUrl) {
+          await ApiService.deletePropertyAssetByUrl(previousImageUrl);
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Property updated!'), backgroundColor: Colors.green),

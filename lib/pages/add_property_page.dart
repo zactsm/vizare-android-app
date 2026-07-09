@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 
@@ -33,10 +33,6 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
   bool _isForSale = true;
   bool _isUploading = false;
 
-  // --- SUPABASE STORAGE BUCKETS ---
-  final String _imageBucket = 'property-images';
-  final String _modelBucket = 'property-models';
-
   @override
   void dispose() {
     _titleController.dispose();
@@ -55,9 +51,14 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
         type: FileType.image,
         allowMultiple: true,
       );
-      if (result != null) {
+      if (!mounted || result == null) {
+        return;
+      }
+
+      final pickedPaths = result.paths.whereType<String>().toList();
+      if (pickedPaths.isNotEmpty) {
         setState(() {
-          _selectedImages.addAll(result.paths.map((path) => File(path!)).toList());
+          _selectedImages.addAll(pickedPaths.map(File.new));
         });
       }
     } catch (e) {
@@ -70,21 +71,21 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
       );
+      final selectedPath = result?.files.single.path;
+      if (!mounted || selectedPath == null) {
+        return;
+      }
 
-      if (result != null) {
-        final file = File(result.files.single.path!);
-        // Simple validation check
-        if (file.path.endsWith('.glb') || file.path.endsWith('.gltf')) {
-          setState(() {
-            _selectedModel = file;
-          });
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Please select a valid .glb 3D file")),
-            );
-          }
-        }
+      final file = File(selectedPath);
+      final lowerPath = file.path.toLowerCase();
+      if (lowerPath.endsWith('.glb') || lowerPath.endsWith('.gltf')) {
+        setState(() {
+          _selectedModel = file;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please select a valid .glb 3D file")),
+        );
       }
     } catch (e) {
       _logger.e("Error picking model", error: e);
@@ -93,9 +94,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
 
   // --- 2. UPLOAD LOGIC ---
 
-  Future<String?> _uploadToSupabase(File file, String bucket) async {
-    return await ApiService.uploadFile(file, bucket);
-  }
+  Future<String?> _uploadToSupabase(File file) =>
+      ApiService.uploadPropertyAsset(file);
 
   // --- 3. SUBMIT LOGIC (Updated) ---
 
@@ -121,7 +121,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       List<String> uploadedUrls = [];
 
       for (File img in _selectedImages) {
-        final url = await _uploadToSupabase(img, _imageBucket);
+        final url = await _uploadToSupabase(img);
         if (url != null) {
           uploadedUrls.add(url);
         }
@@ -140,7 +140,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       // 4. Upload 3D Model (Optional)
       String modelUrl = '';
       if (_selectedModel != null) {
-        final url = await _uploadToSupabase(_selectedModel!, _modelBucket);
+        final url = await _uploadToSupabase(_selectedModel!);
         if (url != null) {
           modelUrl = url;
         } else {
@@ -249,7 +249,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                     Expanded(
                       child: Text(
                           _selectedModel != null
-                              ? "Model ready: ${_selectedModel!.path.split('/').last}"
+                              ? "Model ready: ${path.basename(_selectedModel!.path)}"
                               : "Upload 3D Model (.glb)",
                           style: TextStyle(
                             color: _selectedModel != null ? Colors.green : Colors.white54,
