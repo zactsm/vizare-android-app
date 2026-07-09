@@ -10,6 +10,7 @@ class ApiService {
   static final Logger _logger = Logger();
   static const String avatarsBucket = 'avatars';
   static const String propertyAssetsBucket = 'property-assets';
+  static const String supportAttachmentsBucket = 'support-attachments';
 
   static String get baseUrl {
     if (kIsWeb) {
@@ -29,13 +30,20 @@ class ApiService {
   static Future<String?> uploadPropertyAsset(File file) =>
       _uploadFile(file, propertyAssetsBucket);
 
+  static Future<String?> uploadSupportAttachment(File file) =>
+      _uploadFile(file, supportAttachmentsBucket, signedUrl: true);
+
   static Future<void> deleteAvatarByUrl(String url) =>
       _deleteFileByUrl(url, avatarsBucket);
 
   static Future<void> deletePropertyAssetByUrl(String url) =>
       _deleteFileByUrl(url, propertyAssetsBucket);
 
-  static Future<String?> _uploadFile(File file, String bucket) async {
+  static Future<String?> _uploadFile(
+    File file,
+    String bucket, {
+    bool signedUrl = false,
+  }) async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
@@ -47,6 +55,11 @@ class ApiService {
           .from(bucket)
           .upload(fileName, file);
 
+      if (signedUrl) {
+        return await Supabase.instance.client.storage
+            .from(bucket)
+            .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+      }
       return Supabase.instance.client.storage.from(bucket).getPublicUrl(fileName);
     } catch (e) {
       _logger.e("Supabase Upload Error", error: e);

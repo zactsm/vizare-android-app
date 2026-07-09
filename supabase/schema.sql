@@ -195,7 +195,8 @@ for each row execute function public.handle_new_auth_user();
 insert into storage.buckets (id, name, public)
 values
   ('avatars', 'avatars', true),
-  ('property-assets', 'property-assets', true)
+  ('property-assets', 'property-assets', true),
+  ('support-attachments', 'support-attachments', false)
 on conflict (id) do update
 set public = excluded.public;
 
@@ -211,6 +212,16 @@ create policy "Public read property assets"
 on storage.objects
 for select
 using (bucket_id = 'property-assets');
+
+drop policy if exists "Authenticated read support attachments" on storage.objects;
+create policy "Authenticated read support attachments"
+on storage.objects
+for select
+to authenticated
+using (
+  bucket_id = 'support-attachments'
+  and (storage.foldername(name))[1] = (select auth.uid()::text)
+);
 
 -- Users write only inside a folder named after their Supabase user id.
 drop policy if exists "Anon upload avatars" on storage.objects;
@@ -284,6 +295,26 @@ for delete
 to authenticated
 using (
   bucket_id = 'property-assets'
+  and (storage.foldername(name))[1] = (select auth.uid()::text)
+);
+
+drop policy if exists "Authenticated upload support attachments" on storage.objects;
+create policy "Authenticated upload support attachments"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'support-attachments'
+  and (storage.foldername(name))[1] = (select auth.uid()::text)
+);
+
+drop policy if exists "Authenticated delete support attachments" on storage.objects;
+create policy "Authenticated delete support attachments"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'support-attachments'
   and (storage.foldername(name))[1] = (select auth.uid()::text)
 );
 

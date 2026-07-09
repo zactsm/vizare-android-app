@@ -6,11 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // For EmailJS
 import 'dart:convert'; // For jsonEncode
-// Firebase Imports
-import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 
 class ContactSupportPage extends StatefulWidget {
   const ContactSupportPage({super.key});
@@ -52,7 +49,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
     }
   }
 
-  Future<void> _submitToFirebase() async {
+  Future<void> _submitSupportTicket() async {
     // --- 1. CONFIGURATION ---
     final serviceId = dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
     final templateId = dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
@@ -75,36 +72,30 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
       final prefs = await SharedPreferences.getInstance();
       final userEmail = prefs.getString('user_email') ?? 'Anonymous';
 
-      // --- 4. UPLOAD FILES TO FIREBASE STORAGE ---
+      // --- 4. UPLOAD FILES TO SUPABASE STORAGE ---
       List<String> fileUrls = [];
       if (_attachedFiles.isNotEmpty) {
         for (var file in _attachedFiles) {
-          final fileName = p.basename(file.path);
-          // Use a simple timestamp to ensure unique names
-          final storageRef = FirebaseStorage.instance.ref().child(
-              'support_attachments/${DateTime.now().millisecondsSinceEpoch}_$fileName');
-
-          await storageRef.putFile(file);
-          final downloadUrl = await storageRef.getDownloadURL();
+          final downloadUrl = await ApiService.uploadSupportAttachment(file);
+          if (downloadUrl == null) {
+            throw Exception('An attachment could not be uploaded.');
+          }
           fileUrls.add(downloadUrl);
         }
       }
 
-      // --- 5. SAVE TO FIRESTORE (DATABASE) ---
-      // We save it to DB first as a backup
-      final firestore = FirebaseFirestore.instanceFor(
-        app: Firebase.app(),
-        databaseId: 'vizare-native',
+      // --- 5. SAVE TO SUPABASE THROUGH THE AUTHENTICATED API ---
+      final ticketResponse = await ApiService.post(
+        'create_support_ticket.php',
+        body: {
+          'subject': _subjectController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'attachment_urls': jsonEncode(fileUrls),
+        },
       );
-
-      await firestore.collection('support_tickets').add({
-        'user_email': userEmail,
-        'subject': _subjectController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'attachment_urls': fileUrls,
-        'created_at': FieldValue.serverTimestamp(),
-        'status': 'new',
-      });
+      if (ticketResponse.statusCode != 200) {
+        throw Exception('Could not save ticket: ${ticketResponse.body}');
+      }
 
       // --- 6. SEND EMAIL VIA EMAILJS ---
       final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
@@ -136,7 +127,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         _logger.i("Email sent successfully via EmailJS");
       } else {
         _logger.w("EmailJS Failed: ${response.body}");
-        // We continue anyway because the data IS saved in Firestore
+        // The ticket remains safely stored in Supabase.
       }
 
       // --- 7. SUCCESS UI ---
@@ -246,7 +237,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _submitToFirebase,
+            onPressed: _isSubmitting ? null : _submitSupportTicket,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5E17EB),
               foregroundColor: Colors.white,

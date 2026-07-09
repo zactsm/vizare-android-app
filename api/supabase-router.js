@@ -326,6 +326,68 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, result.data.map(propertyJson)];
   }
 
+  if (name === 'send_inquiry.php') {
+    const message = String(input.message || '').trim();
+    if (!message) return [400, { message: 'A message is required.' }];
+
+    const propertyResult = await admin
+      .from('properties')
+      .select('id,homeowner_id,name,image_path')
+      .eq('id', input.property_id)
+      .single();
+    failOn(propertyResult.error);
+    const property = propertyResult.data;
+
+    const result = await admin.from('inquiries').insert({
+      homeowner_id: property.homeowner_id,
+      property_id: property.id,
+      property_name: property.name,
+      property_image: property.image_path,
+      buyer_email: profile.email,
+      message,
+    });
+    failOn(result.error);
+    return [200, { message: 'Inquiry sent successfully.' }];
+  }
+
+  if (name === 'get_inquiries.php') {
+    const result = await admin
+      .from('inquiries')
+      .select('*')
+      .eq('homeowner_id', profile.id)
+      .order('created_at', { ascending: false });
+    failOn(result.error);
+    return [200, result.data];
+  }
+
+  if (name === 'create_support_ticket.php') {
+    const subject = String(input.subject || '').trim();
+    const description = String(input.description || '').trim();
+    if (!subject || !description) {
+      return [400, { message: 'Subject and description are required.' }];
+    }
+
+    let attachmentUrls = [];
+    try {
+      attachmentUrls = JSON.parse(input.attachment_urls || '[]');
+    } catch (_) {
+      return [400, { message: 'Invalid attachment list.' }];
+    }
+    if (!Array.isArray(attachmentUrls)) {
+      return [400, { message: 'Invalid attachment list.' }];
+    }
+
+    const result = await admin.from('support_tickets').insert({
+      profile_id: profile.id,
+      user_email: profile.email,
+      subject,
+      description,
+      attachment_urls: attachmentUrls,
+    });
+    failOn(result.error);
+    return [200, { message: 'Support ticket created successfully.' }];
+  }
+
   if (name === 'add_property.php') {
     if (!['homeowner', 'admin'].includes(profile.role)) {
       return [403, { message: 'Only homeowners can add properties.' }];
