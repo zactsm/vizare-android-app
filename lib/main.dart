@@ -3,8 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'pages/utils/api_service.dart';
-
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
@@ -20,11 +18,22 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  // Load the environment variables
   await dotenv.load(fileName: ".env");
 
+  // Safely extract the variables
+  final String? supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final String? supabaseAnonKey = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
+
+  // Safety check to ensure keys were found
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    throw Exception('Missing Supabase credentials. Check your .env file!');
+  }
+
+  // Initialize Supabase dynamically
   await Supabase.initialize(
-    url: ApiService.supabaseUrl,
-    anonKey: ApiService.supabasePublishableKey,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   // Check for existing session
