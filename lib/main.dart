@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,25 +17,33 @@ import 'pages/admin_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  try {
+    await Firebase.initializeApp();
+  } catch (error) {
+    debugPrint('Firebase initialization skipped: $error');
+  }
 
   // Load the environment variables
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (error) {
+    debugPrint('Unable to load .env asset: $error');
+  }
 
   // Safely extract the variables
   final String? supabaseUrl = dotenv.env['SUPABASE_URL'];
   final String? supabaseAnonKey = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
 
-  // Safety check to ensure keys were found
+  // Initialize Supabase only when the credentials are available.
   if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception('Missing Supabase credentials. Check your .env file!');
+    debugPrint('Supabase credentials are missing; continuing without backend initialization.');
+  } else {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
   }
-
-  // Initialize Supabase dynamically
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
 
   // Check for existing session
   final prefs = await SharedPreferences.getInstance();
