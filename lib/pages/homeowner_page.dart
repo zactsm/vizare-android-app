@@ -235,9 +235,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
             padding:
             const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: (0.1)),
+              color: const Color(0xFF1E1E1E).withOpacity(0.85),
               borderRadius: BorderRadius.circular(40.0),
-              border: Border.all(color: Colors.white.withValues(alpha: (0.2))),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: Row(
               children: [
@@ -257,26 +257,24 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 ),
                 // --- 2. Search Bar (MODIFIED) ---
                 Expanded(
-                  // REMOVED GestureDetector and AbsorbPointer so it is typeable
                   child: TextField(
-                    controller: _searchController, // <-- USES YOUR CONTROLLER
-                    enabled: true, // <-- SET TO TRUE
-                    style: const TextStyle(
-                        color: Colors.black, fontFamily: 'Inter'),
+                    controller: _searchController,
+                    enabled: true,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Search your properties...',
                       hintStyle: TextStyle(
-                          color: Colors.grey[800], fontFamily: 'Inter'),
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[800]),
+                          color: Colors.white.withOpacity(0.4), fontSize: 14),
+                      prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: const Color(0xFF262626),
                       isDense: true,
                       prefixIconConstraints: const BoxConstraints(
                         minWidth: 40,
                         minHeight: 40,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12.0, horizontal: 10.0),
+                          vertical: 10.0, horizontal: 10.0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                         borderSide: BorderSide.none,
@@ -355,94 +353,79 @@ class _HomeownerPageState extends State<HomeownerPage> {
   Widget _buildGradientTitle(String title) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
         colors: [
-          Color(0xFF5A62F1),
-          Color(0xFF548FEE),
-          Color(0xFF9FD0F6),
+          Colors.white,
           Color(0xFFD6B3F9),
-          Color(0xFFB191FA),
         ],
       ).createShader(bounds),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 32,
+          fontSize: 30,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           color: Colors.white,
-          height: 1.05,
+          height: 1.1,
         ),
       ),
     );
   }
 
   Widget _buildButtonRow() {
+    final Color pastelPurple = const Color(0xFFD6B3F9);
     return Row(
       children: [
-        // "+ Add new property" button (Always purple)
+        // "+ Add new property" button (Pastel purple)
         Expanded(
           child: ElevatedButton(
             onPressed: () {
               _navigateToAddProperty();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5E17EB), // Always purple
-              foregroundColor: Colors.white,
+              backgroundColor: pastelPurple,
+              foregroundColor: const Color(0xFF121212),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-                side: BorderSide.none, // No border
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: const Text(
-              '+ Add new property',
+              '+ Add property',
               softWrap: false,
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 13,
               ),
             ),
           ),
         ),
         const SizedBox(width: 12),
 
-        // "To respond" button (Always white outline)
+        // "To respond" button (Outlined pastel purple)
         Expanded(
-          child: ElevatedButton(
+          child: OutlinedButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ToRespondPage()),
               );
-
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white, // Always white
-              foregroundColor: Colors.black, // Text is black
+            style: OutlinedButton.styleFrom(
+              foregroundColor: pastelPurple,
+              side: BorderSide(color: pastelPurple, width: 1.5),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-                // Always show border
-                side: const BorderSide(color: Colors.white54, width: 1),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Text(
-                  'To respond',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-                // Notification Badge Logic (optional)
-                // Positioned(...)
-              ],
+            child: const Text(
+              'To respond',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
           ),
         ),

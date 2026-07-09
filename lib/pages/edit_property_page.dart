@@ -237,29 +237,31 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
               children: [
                 Expanded(
                   flex: 1,
-                  child: ElevatedButton(
+                  child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF3D00), // Orange/Red
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFD6B3F9),
+                      side: const BorderSide(color: Color(0xFFD6B3F9), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text("Cancel", style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                    child: const Text("Cancel", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
-                    onPressed: _isUploading ? null : _updateProperty, // Call Update
+                    onPressed: _isUploading ? null : _updateProperty,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5E17EB), // Purple
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      backgroundColor: const Color(0xFFD6B3F9),
+                      foregroundColor: const Color(0xFF121212),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _isUploading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("Update", style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Color(0xFF121212), strokeWidth: 2))
+                        : const Text("Update", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

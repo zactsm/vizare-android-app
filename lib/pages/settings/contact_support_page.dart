@@ -248,12 +248,13 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
           child: ElevatedButton(
             onPressed: _isSubmitting ? null : _submitToFirebase,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5E17EB),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey[800],
+              backgroundColor: const Color(0xFFD6B3F9),
+              foregroundColor: const Color(0xFF121212),
+              disabledBackgroundColor: Colors.grey[900],
+              disabledForegroundColor: Colors.white30,
               minimumSize: const Size(200, 60),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: _isSubmitting

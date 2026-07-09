@@ -123,7 +123,8 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF5E17EB),
+                color: const Color(0xFF1E1E1E),
+                border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -140,7 +141,7 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
                   Text(
                     '($_userEmail)',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: (0.7)),
+                      color: Colors.white.withOpacity(0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -157,25 +158,28 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
               ),
             ),
             const SizedBox(height: 8),
             Container(
               height: 250,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: TextField(
                 controller: _messageController,
                 maxLines: null,
-                style: const TextStyle(color: Colors.black, fontFamily: 'Inter'),
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+                decoration: InputDecoration(
                   hintText: 'Message here...',
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
             ),
@@ -189,20 +193,20 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitInquiry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5E17EB),
+                  backgroundColor: const Color(0xFFD6B3F9),
+                  foregroundColor: const Color(0xFF121212),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
                 child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CircularProgressIndicator(color: Color(0xFF121212))
                     : const Text(
                   'Submit',
                   style: TextStyle(
-                    fontSize: 16,
                     fontFamily: 'Poppins',
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 16,
                   ),
                 ),
               ),

@@ -279,11 +279,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         child: ElevatedButton(
           onPressed: _savePassword, // calls the async function
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5E17EB),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFFD6B3F9),
+            foregroundColor: const Color(0xFF121212),
             minimumSize: const Size(200, 60),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           child: const Text(

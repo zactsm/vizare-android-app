@@ -374,28 +374,30 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               }
                   : null, // Disable button if no model
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5E17EB),
-                disabledBackgroundColor: Colors.grey.withValues(alpha: (0.3)), // Style for disabled
-                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFFD6B3F9),
+                disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                foregroundColor: const Color(0xFF121212),
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                      hasModel ? Icons.view_in_ar : Icons.block, // Change icon
+                      hasModel ? Icons.view_in_ar : Icons.block,
+                      color: hasModel ? const Color(0xFF121212) : Colors.white30,
                       size: 20
                   ),
                   const SizedBox(width: 8),
                   Text(
                     hasModel ? 'View in AR' : 'No AR Model',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: hasModel ? const Color(0xFF121212) : Colors.white30,
                     ),
                   ),
                 ],
@@ -410,10 +412,14 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF5E17EB), width: 2),
+              border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
             ),
             child: IconButton(
-              icon: Image.asset('assets/images/white_chat_icon.png', width: 20),
+              icon: Image.asset(
+                'assets/images/white_chat_icon.png',
+                width: 20,
+                color: const Color(0xFFD6B3F9),
+              ),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -432,17 +438,17 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF5E17EB), width: 2),
+              border: Border.all(color: const Color(0xFFD6B3F9), width: 1.5),
             ),
             child: _isLoadingFavorite
                 ? const Padding(
               padding: EdgeInsets.all(14.0),
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD6B3F9)),
             )
                 : IconButton(
               icon: Icon(
                 _isFavorited ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorited ? Colors.red : Colors.white,
+                color: _isFavorited ? Colors.red : const Color(0xFFD6B3F9),
                 size: 24,
               ),
               onPressed: _toggleFavorite,

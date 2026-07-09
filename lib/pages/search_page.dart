@@ -210,7 +210,12 @@ class _SearchPageState extends State<SearchPage> {
           ),
           trailing: Text(
             property.price,
-            style: const TextStyle(color: Color(0xFF5E17EB), fontFamily: 'Poppins', fontSize: 12),
+            style: const TextStyle(
+              color: Color(0xFFD6B3F9),
+              fontFamily: 'Poppins',
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           onTap: () {
             Navigator.push(

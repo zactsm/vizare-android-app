@@ -93,22 +93,20 @@ class _WelcomePageState extends State<WelcomePage> {
                           _messages[_currentIndex],
                           key: ValueKey(_messages[_currentIndex]),
                           style: TextStyle(
-                            fontSize: 45,
-                            height: 1.0,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                            fontSize: 42,
+                            height: 1.1,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -1.0,
                             foreground: Paint()
                               ..shader = const LinearGradient(
-                                begin: Alignment(-1.0, 0.0),
-                                end: Alignment(1.0, -0.2),
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF5E17EB),
+                                  Colors.white,
                                   Color(0xFFD6B3F9),
-                                  Color(0xFF4AE4FF),
                                 ],
-                                stops: [0.0, 0.5, 1.0],
-                              ).createShader(const Rect.fromLTWH(0, 0, 300, 70)),
+                              ).createShader(const Rect.fromLTWH(0, 0, 350, 150)),
                           ),
                           textAlign: TextAlign.left,
                         ),
@@ -125,24 +123,25 @@ class _WelcomePageState extends State<WelcomePage> {
                           Navigator.pushNamed(context, '/create-account');
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5E17EB),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(200, 60),
+                          backgroundColor: const Color(0xFFD6B3F9),
+                          foregroundColor: const Color(0xFF121212),
+                          minimumSize: const Size(200, 56),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                          elevation: 0,
                         ),
                         child: const Text(
                             'Create account',
                             style: TextStyle(
                               fontSize: 16,
                               fontFamily: 'Poppins',
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             )
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
@@ -150,11 +149,11 @@ class _WelcomePageState extends State<WelcomePage> {
                           Navigator.pushNamed(context, '/login');
                         },
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(200, 60),
+                          side: const BorderSide(color: Color(0xFFD6B3F9), width: 1.5),
+                          foregroundColor: const Color(0xFFD6B3F9),
+                          minimumSize: const Size(200, 56),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: const Text(
@@ -162,7 +161,7 @@ class _WelcomePageState extends State<WelcomePage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontFamily: 'Poppins',
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                         ),
                       ),

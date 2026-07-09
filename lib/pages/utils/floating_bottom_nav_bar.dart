@@ -36,11 +36,9 @@ class FloatingBottomNavBar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
               decoration: BoxDecoration(
-                // Correct way to get 10% white
-                color: Colors.white.withValues(alpha: (0.1)),
+                color: const Color(0xFF1E1E1E).withOpacity(0.85),
                 borderRadius: BorderRadius.circular(40),
-                // Correct way to get 20% white
-                border: Border.all(color: Colors.white.withValues(alpha: (0.2))),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -49,7 +47,7 @@ class FloatingBottomNavBar extends StatelessWidget {
                   if (activeIndex == NavPageIndex.home)
                     const _ActiveFooterIcon(
                       icon: 'assets/images/home_icon.png',
-                      label: ' Main Menu',
+                      label: 'Main Menu',
                     )
                   else
                     _FooterIcon(
@@ -62,7 +60,7 @@ class FloatingBottomNavBar extends StatelessWidget {
                   if (activeIndex == NavPageIndex.search)
                     const _ActiveFooterIcon(
                       icon: 'assets/images/search_icon.png',
-                      label: '        Search        ',
+                      label: 'Search',
                     )
                   else
                     _FooterIcon(
@@ -75,7 +73,7 @@ class FloatingBottomNavBar extends StatelessWidget {
                   if (activeIndex == NavPageIndex.favorites)
                     const _ActiveFooterIcon(
                       icon: 'assets/images/fav_icon.png',
-                      label: '     Favorites     ',
+                      label: 'Favorites',
                     )
                   else
                     _FooterIcon(
@@ -88,7 +86,7 @@ class FloatingBottomNavBar extends StatelessWidget {
                   if (activeIndex == NavPageIndex.settings)
                     const _ActiveFooterIcon(
                       icon: 'assets/images/settings_icon.png',
-                      label: '      Settings      ',
+                      label: 'Settings',
                     )
                   else
                     _FooterIcon(
@@ -106,8 +104,6 @@ class FloatingBottomNavBar extends StatelessWidget {
   }
 }
 
-// --- Helper widgets are now part of this file ---
-
 class _FooterIcon extends StatelessWidget {
   final String imagePath;
   final VoidCallback onTap;
@@ -118,13 +114,18 @@ class _FooterIcon extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          color: Color(0xFF7A4EF1),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.04),
           shape: BoxShape.circle,
         ),
-        child:
-        Image.asset(imagePath, width: 26, height: 26, fit: BoxFit.contain),
+        child: Image.asset(
+          imagePath,
+          width: 22,
+          height: 22,
+          fit: BoxFit.contain,
+          color: Colors.white.withOpacity(0.6),
+        ),
       ),
     );
   }
@@ -137,32 +138,34 @@ class _ActiveFooterIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This logic ensures the 'Main Menu' text fits
     final bool isMainMenu = label.contains('Main');
 
     return Container(
-      padding: EdgeInsets.symmetric( // size white selected oval
+      padding: EdgeInsets.symmetric(
         horizontal: isMainMenu ? 16.5 : 12,
-        vertical: 9, // ori 12
+        vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFD6B3F9),
         borderRadius: BorderRadius.circular(40),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(icon, width: isMainMenu ? 24 : 19.5, height: 36),
-          const SizedBox(width: 10),
+          Image.asset(
+            icon,
+            width: isMainMenu ? 24 : 19.5,
+            height: 28,
+            color: const Color(0xFF121212),
+          ),
+          const SizedBox(width: 8),
           Text(
-            label,
+            label.trim(),
             style: const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Inter',
-              height: 1.2,
-              color: Color(0xFF7A4EF1),
-              overflow: TextOverflow.ellipsis,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Color(0xFF121212),
             ),
           )
         ],

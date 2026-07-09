@@ -172,7 +172,13 @@ class _ToRespondPageState extends State<ToRespondPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5E17EB)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD6B3F9),
+                    foregroundColor: const Color(0xFF121212),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                   onPressed: () async {
                     final String recipient = data['buyer_email'];
                     final String subject = 'Re: Inquiry about ${data['property_name']}';

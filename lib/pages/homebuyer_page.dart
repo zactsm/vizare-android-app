@@ -281,13 +281,13 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                       }
                           : null, // Disables button if no model exists
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5E17EB),
-                        disabledBackgroundColor: Colors.white.withValues(alpha: (0.1)), // Grey style when disabled
-                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFFD6B3F9),
+                        disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                        foregroundColor: const Color(0xFF121212),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       ),
                       child: Text(
                         hasModel ? 'View in AR' : 'No AR', // Changes text if unavailable
@@ -295,7 +295,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: hasModel ? Colors.white : Colors.white38),
+                            color: hasModel ? const Color(0xFF121212) : Colors.white30),
                       ),
                     ),
                   ],
@@ -405,22 +405,17 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
             colors: [
-              Color(0xFF5A62F1),
-              Color(0xFF548FEE),
-              Color(0xFF9FD0F6),
+              Colors.white,
               Color(0xFFD6B3F9),
-              Color(0xFFB191FA),
             ],
           ).createShader(bounds),
           child: Text(
             title,
             style: const TextStyle(
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Inter',
+              fontFamily: 'Poppins',
               color: Colors.white,
             ),
           )),
@@ -439,9 +434,9 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: (0.1)),
+              color: const Color(0xFF1E1E1E).withOpacity(0.85),
               borderRadius: BorderRadius.circular(40.0),
-              border: Border.all(color: Colors.white.withValues(alpha: (0.2))),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: Row(
               children: [
@@ -467,19 +462,19 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                     child: AbsorbPointer(
                       child: TextField(
                         enabled: false,
-                        style: const TextStyle(color: Colors.black, fontFamily: 'Inter'),
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Search properties...',
-                          hintStyle: TextStyle(color: Colors.grey[800], fontFamily: 'Inter'),
-                          prefixIcon: Icon(Icons.search, color: Colors.grey[800]),
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                          prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: const Color(0xFF262626),
                           isDense: true,
                           prefixIconConstraints: const BoxConstraints(
                             minWidth: 40,
                             minHeight: 40,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 10.0),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30.0),
                             borderSide: BorderSide.none,

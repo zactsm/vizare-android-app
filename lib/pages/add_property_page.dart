@@ -346,14 +346,15 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                 // Discard
                 Expanded(
                   flex: 1,
-                  child: ElevatedButton(
+                  child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF3D00),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFD6B3F9),
+                      side: const BorderSide(color: Color(0xFFD6B3F9), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text("Discard", style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                    child: const Text("Discard", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -363,13 +364,14 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   child: ElevatedButton(
                     onPressed: _isUploading ? null : _submitProperty,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5E17EB),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      backgroundColor: const Color(0xFFD6B3F9),
+                      foregroundColor: const Color(0xFF121212),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _isUploading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("Save", style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Color(0xFF121212), strokeWidth: 2))
+                        : const Text("Save", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

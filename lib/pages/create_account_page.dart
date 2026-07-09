@@ -208,14 +208,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   // --- Gradient for Title ---
   Shader _buildGradientShader(Rect bounds) {
     return const LinearGradient(
-      begin: Alignment(-1.0, 0.0),
-      end: Alignment(1.0, -0.2),
       colors: [
-        Color(0xFF5E17EB),
+        Colors.white,
         Color(0xFFD6B3F9),
-        Color(0xFF4AE4FF),
       ],
-      stops: [0.0, 0.5, 1.0],
     ).createShader(bounds);
   }
 
@@ -223,199 +219,202 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final Color pastelPurple = const Color(0xFFD6B3F9);
     return Scaffold(
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          color: Colors.white70,
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 50,
+                  height: 50,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ShaderMask(
+                shaderCallback: (bounds) => _buildGradientShader(bounds),
+                child: const Text(
+                  'Sign Up',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -1.0,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Create an account to explore properties in AR.',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 32),
 
-      body: Stack(
-        children: [
-          SizedBox.expand(
-            child: Image.asset(
-              'assets/images/bg.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Container(
-            color: Colors.black.withAlpha(153), // The dark overlay
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // --- Full Name ---
+              _buildTextField(
+                controller: _nameController,
+                hintText: 'Full Name',
+              ),
+              const SizedBox(height: 16),
+
+              // --- Email ---
+              _buildTextField(
+                controller: _emailController,
+                hintText: 'Email address',
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+
+              // --- Password ---
+              _buildPasswordField(
+                controller: _passwordController,
+                hintText: 'Password',
+                isVisible: _isPasswordVisible,
+                onToggleVisibility: () {
+                  setState(() => _isPasswordVisible = !_isPasswordVisible);
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // --- Confirm Password ---
+              _buildPasswordField(
+                controller: _confirmPasswordController,
+                hintText: 'Confirm password',
+                isVisible: _isConfirmPasswordVisible,
+                onToggleVisibility: () {
+                  setState(() =>
+                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // --- Homebuyer Checkbox ---
+              _buildCheckbox(
+                label: 'I am a homebuyer',
+                value: _isHomeBuyer,
+                onChanged: (val) {
+                  setState(() => _isHomeBuyer = val ?? false);
+                },
+              ),
+
+              // --- Policy Checkbox ---
+              _buildCheckbox(
+                richLabel: _buildPolicyLink(),
+                value: _agreedToPolicy,
+                onChanged: (val) {
+                  setState(() => _agreedToPolicy = val ?? false);
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // --- Register Button ---
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _agreedToPolicy ? _createAccount : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: pastelPurple,
+                    foregroundColor: const Color(0xFF121212),
+                    disabledBackgroundColor: Colors.grey.shade800,
+                    disabledForegroundColor: Colors.white30,
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Register',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              _buildSeparator(),
+              const SizedBox(height: 16),
+
+              // --- Sign in with Google Button ---
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: signInWithGoogle,
+                  icon: Image.asset(
+                    'assets/images/google_logo.png',
+                    height: 20,
+                    width: 20,
+                  ),
+                  label: const Text(
+                    'Continue with Google',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withOpacity(0.15), width: 1.5),
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Transform.translate(
-                      offset: const Offset(-14, 0),
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        width: 60,
-                        height: 60,
-                      ),
-                    ),
+                  Text(
+                    "Already have an account? ",
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.6), fontFamily: 'Poppins'),
                   ),
-                  const SizedBox(height: 0),
-                  ShaderMask(
-                    shaderCallback: (bounds) => _buildGradientShader(bounds),
-                    child: const Text(
-                      'Sign up',
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: Text(
+                      'Log in',
                       style: TextStyle(
-                        fontSize: 45,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -1.0,
-                        color: Colors.white, // Color is masked by shader
+                        color: pastelPurple,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 32), // Increased spacing
-
-                  // --- Full Name ---
-                  _buildTextField(
-                    controller: _nameController,
-                    hintText: 'Name',
-                  ),
-                  const SizedBox(height: 16),
-
-                  // --- Email ---
-                  _buildTextField(
-                    controller: _emailController,
-                    hintText: 'Email address',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // --- Password ---
-                  _buildPasswordField(
-                    controller: _passwordController,
-                    hintText: 'Password',
-                    isVisible: _isPasswordVisible,
-                    onToggleVisibility: () {
-                      setState(() => _isPasswordVisible = !_isPasswordVisible);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // --- Confirm Password ---
-                  _buildPasswordField(
-                    controller: _confirmPasswordController,
-                    hintText: 'Confirm password',
-                    isVisible: _isConfirmPasswordVisible,
-                    onToggleVisibility: () {
-                      setState(() =>
-                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // --- Homebuyer Checkbox ---
-                  _buildCheckbox(
-                    label: 'I am a homebuyer',
-                    value: _isHomeBuyer,
-                    onChanged: (val) {
-                      setState(() => _isHomeBuyer = val ?? false);
-                    },
-                  ),
-
-                  // --- Policy Checkbox ---
-                  _buildCheckbox(
-                    richLabel: _buildPolicyLink(),
-                    value: _agreedToPolicy,
-                    onChanged: (val) {
-                      setState(() => _agreedToPolicy = val ?? false);
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // --- Register Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _agreedToPolicy ? _createAccount : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5E17EB),
-                        disabledBackgroundColor: Colors.grey.shade600,
-                        padding: const EdgeInsets.symmetric(vertical: 18), // Taller
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30), // Rounded
-                        ),
-                      ),
-                      child: const Text(
-                        'Register',
-
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  _buildSeparator(),
-                  const SizedBox(height: 24),
-
-                  // --- Sign in with Google Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: signInWithGoogle,
-                      icon: Image.asset(
-                        'assets/images/google_logo.png',
-                        height: 24,
-                        width: 24,
-                      ),
-                      label: const Text(
-                        'Sign in with Google',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 18), // Taller
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30), // Rounded
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Already have an account?",
-
-                        style: TextStyle(
-                            color: Colors.white70, fontFamily: 'Poppins'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/login');
-                        },
-                        child: const Text(
-                          'Log in',
-
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
+                  )
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -431,27 +430,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.black, fontFamily: 'Inter'),
+      style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
         hintText: hintText,
-
-        hintStyle: TextStyle(color: Colors.grey[600], fontFamily: 'Inter'),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        border: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF5E17EB), width: 2),
-          borderRadius: BorderRadius.circular(30),
-        ),
       ),
     );
   }
@@ -466,31 +447,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     return TextField(
       controller: controller,
       obscureText: !isVisible,
-      style: const TextStyle(color: Colors.black, fontFamily: 'Inter'),
+      style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
         hintText: hintText,
-
-        hintStyle: TextStyle(color: Colors.grey[600], fontFamily: 'Inter'),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-        border: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide.none,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF5E17EB), width: 2),
-          borderRadius: BorderRadius.circular(30),
-        ),
         suffixIcon: IconButton(
           icon: Icon(
-            isVisible ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey[600],
+            isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: Colors.white70,
+            size: 20,
           ),
           onPressed: onToggleVisibility,
         ),
@@ -503,17 +467,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     return Row(
       children: [
         Expanded(
-          child: Divider(color: Colors.white.withValues(alpha: (0.3))),
+          child: Divider(color: Colors.white.withOpacity(0.15)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Text(
             'or',
-            style: TextStyle(color: Colors.white.withValues(alpha: (0.7))),
+            style: TextStyle(color: Colors.white.withOpacity(0.5)),
           ),
         ),
         Expanded(
-          child: Divider(color: Colors.white.withValues(alpha: (0.3))),
+          child: Divider(color: Colors.white.withOpacity(0.15)),
         ),
       ],
     );
@@ -521,22 +485,20 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   /// Builds the "I agree to terms & policy" RichText
   Widget _buildPolicyLink() {
+    final Color pastelPurple = const Color(0xFFD6B3F9);
     return RichText(
       text: TextSpan(
-
-        style: const TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            letterSpacing: 0.1,
-            fontSize: 14.0,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.7),
+          fontFamily: 'Poppins',
+          fontSize: 14.0,
         ),
         children: [
           const TextSpan(text: 'I agree to the '),
           TextSpan(
             text: 'terms & policy',
-            style: const TextStyle(
-
-              color: Color(0xFF5E17EB),
+            style: TextStyle(
+              color: pastelPurple,
               decoration: TextDecoration.underline,
             ),
             recognizer: TapGestureRecognizer()
@@ -557,11 +519,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     required bool value,
     required ValueChanged<bool?> onChanged,
   }) {
+    final Color pastelPurple = const Color(0xFFD6B3F9);
     return Theme(
       data: Theme.of(context).copyWith(
         checkboxTheme: CheckboxThemeData(
-          fillColor: WidgetStateProperty.all(Colors.white),
-          checkColor: WidgetStateProperty.all(Colors.black),
+          fillColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return pastelPurple;
+            }
+            return Colors.white.withOpacity(0.1);
+          }),
+          checkColor: WidgetStateProperty.all(const Color(0xFF121212)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
@@ -571,12 +539,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         title: richLabel ??
             Text(
               label ?? '',
-
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Poppins',
-                  letterSpacing: 0.1,
-                  fontSize: 14.0,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontFamily: 'Poppins',
+                fontSize: 14.0,
               ),
             ),
         controlAffinity: ListTileControlAffinity.leading,
