@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'google_maps_loader_stub.dart'
+    if (dart.library.html) 'google_maps_loader_web.dart';
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
@@ -29,6 +31,14 @@ void main() async {
     await dotenv.load(fileName: ".env");
   } catch (error) {
     debugPrint('Unable to load .env asset: $error');
+  }
+
+  try {
+    await loadGoogleMapsApi(
+      fallbackApiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
+    );
+  } catch (error) {
+    debugPrint('Google Maps initialization failed: $error');
   }
 
   // Safely extract the variables

@@ -3,10 +3,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -55,54 +54,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   Future<void> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // User cancelled
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      if (googleAuth.idToken == null) {
-        throw const AuthException('Google did not return an ID token.');
-      }
-      await Supabase.instance.client.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: googleAuth.idToken!,
-        accessToken: googleAuth.accessToken,
+      final result = await GoogleAuthService.signIn(
+        requestedRole: _isHomeBuyer ? 'homebuyer' : 'homeowner',
       );
+      if (result == null || !mounted) return;
+      final userType = result.userType;
 
-      // 2. "Find or Create" user in your MySQL database ---
-      final response = await ApiService.post(
-        'google_login.php',
-        body: {
-          'email': googleUser.email,
-          'name': googleUser.displayName ?? 'Google User', // Use Google name
-        },
-      );
-
-      if (!mounted) return;
-
-      if (response.statusCode != 200) {
-        // Failed to create user in your backend
-        throw Exception('Failed to sign in with your server: ${response.body}');
-      }
-
-      // 3. Get user_type from your server's response
-      final responseData = jsonDecode(response.body);
-      final userType = responseData['user_type'] as String?;
-      final hasPassword = responseData['has_password'] as bool?;
-
-      // 4. Save session data
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_email', googleUser.email);
-      if (userType != null) {
-        await prefs.setString('user_type', userType);
-      }
-      if (hasPassword != null){
-        await prefs.setBool('has_password', hasPassword);
-      }
-
-      if (!mounted) return;
-
-      // 5. Navigate
       if (userType == 'homeowner') {
         Navigator.pushNamedAndRemoveUntil(
             context, '/homeowner', (Route<dynamic> route) => false);

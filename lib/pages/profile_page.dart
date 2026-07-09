@@ -6,9 +6,9 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:untitled/welcome_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -100,12 +100,25 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _logout() async {
     try {
-      await FirebaseAuth.instance.signOut();
-      await GoogleSignIn().signOut();
-      await Supabase.instance.client.auth.signOut();
+      await Supabase.instance.client.auth.signOut(
+        scope: SignOutScope.local,
+      );
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
+
+      // These providers are optional on web, so their cleanup must not block
+      // the app's Supabase logout flow.
+      try {
+        await GoogleAuthService.signOut();
+      } catch (error) {
+        _logger.d('Google session was not active during logout: $error');
+      }
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (error) {
+        _logger.d('Firebase session was not active during logout: $error');
+      }
 
       _logger.i('User logged out successfully.');
 

@@ -60,13 +60,15 @@ ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter 
     SUPABASE_URL=https://your-project.supabase.co
     SUPABASE_PUBLISHABLE_KEY=your_publishable_key
     API_BASE_URL=https://your-vercel-project.vercel.app/api
+    GOOGLE_OAUTH_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
     ```
 
 4.  **Supabase and Vercel Setup**:
     -   Run `supabase/schema.sql` in the Supabase SQL editor.
     -   Enable Email and Google providers under Supabase Authentication.
-    -   Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and
-        `SUPABASE_SERVICE_ROLE_KEY` to the Vercel project environment.
+    -   Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+        `SUPABASE_SERVICE_ROLE_KEY`, and `GOOGLE_OAUTH_CLIENT_ID` to the
+        Vercel project environment.
     -   Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter's `.env`.
 
 5.  **Firebase Setup**:

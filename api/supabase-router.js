@@ -267,10 +267,23 @@ async function dispatch(name, request, admin, publicClient) {
   const { user, profile } = await requireProfile(request, admin, publicClient);
 
   if (name === 'google_login.php') {
-    const current = await ensureProfile(admin, user, {
+    let current = await ensureProfile(admin, user, {
       full_name: input.name,
       has_password: false,
     });
+    if (
+      current.role !== 'admin' &&
+      ['homebuyer', 'homeowner'].includes(input.role)
+    ) {
+      const roleResult = await admin
+        .from('profiles')
+        .update({ role: input.role })
+        .eq('id', current.id)
+        .select('*')
+        .single();
+      failOn(roleResult.error);
+      current = roleResult.data;
+    }
     return [200, authPayload(null, current)];
   }
 
@@ -500,6 +513,15 @@ module.exports = async function handler(request, response) {
 
   const name = routeName(request);
   try {
+    if (name === 'client_config.php') {
+      return response.status(200).json({
+        google_maps_api_key: process.env.GOOGLE_MAPS_API_KEY || '',
+        google_oauth_client_id:
+          process.env.GOOGLE_OAUTH_CLIENT_ID ||
+          process.env.GOOGLE_CLIENT_ID ||
+          '',
+      });
+    }
     const { admin, publicClient } = createClients();
     const [status, payload] = await dispatch(
       name,
