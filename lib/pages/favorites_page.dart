@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:convert'; // For jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,37 +81,59 @@ class _FavoritesPageState extends State<FavoritesPage> {
           child: Stack(
             fit: StackFit.expand, // Make stack fill the screen
             children: [
-              // 1. "Favorites" Title using w300/w900 Poppins Header
-              Positioned(
-                top: 24,
-                left: 18,
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 32,
-                      color: Colors.white,
-                      height: 1.2,
-                    ),
-                    children: [
-                      TextSpan(text: 'MY ', style: TextStyle(fontWeight: FontWeight.w300)),
-                      TextSpan(text: 'FAVORITES', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
-                    ],
-                  ),
-                ),
-              ),
+              // 1. Scrollable Content (starts from top to scroll behind bars)
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: pastelPurple))
+                  : _buildFavoritesList(),
 
-              // 2. Scrollable Content
-              Padding(
-                padding: const EdgeInsets.only(top: 88.0, bottom: 100.0),
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: pastelPurple))
-                    : _buildFavoritesList(), // Show list or empty message
-              ),
+              // 2. Liquid Glass Top Header Bar
+              _buildTopHeader(context),
 
               // 3. Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Glassmorphic Top Header Bar ---
+  Widget _buildTopHeader(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 80,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+          child: Container(
+            padding: const EdgeInsets.only(left: 18, bottom: 12),
+            alignment: Alignment.bottomLeft,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.4),
+              border: Border(
+                bottom: BorderSide(
+                  color: pastelPurple.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 24,
+                  color: Colors.white,
+                ),
+                children: [
+                  TextSpan(text: 'MY ', style: TextStyle(fontWeight: FontWeight.w300)),
+                  TextSpan(text: 'FAVORITES', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -130,7 +153,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 96, bottom: 110),
       itemCount: _favorites.length,
       itemBuilder: (context, index) {
         final property = _favorites[index];

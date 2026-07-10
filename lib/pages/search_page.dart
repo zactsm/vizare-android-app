@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:convert'; // for jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,42 +103,45 @@ class _SearchPageState extends State<SearchPage> {
           child: Stack(
             fit: StackFit.expand, // Make stack fill the screen
             children: [
-              // 1. Search Bar Input Capsule
+              // 1. Scrollable Results List (placed first to scroll behind nav bars)
+              _buildResults(),
+
+              // 2. Search Bar Input Capsule (Liquid glass style)
               Positioned(
                 top: 16,
                 left: 16,
                 right: 16,
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true, // Automatically open the keyboard
-                  style: const TextStyle(color: Colors.white, fontFamily: 'Poppins'),
-                  decoration: InputDecoration(
-                    hintText: 'Search by name or location...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontFamily: 'Poppins'),
-                    filled: true,
-                    fillColor: const Color(0xFF121214),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: const BorderSide(color: pastelPurple, width: 1.5),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30.0),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(30.0),
+                        border: Border.all(
+                          color: pastelPurple.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        style: const TextStyle(color: Colors.white, fontFamily: 'Poppins'),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name or location...',
+                          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontFamily: 'Poppins'),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+                          border: InputBorder.none,
+                          prefixIcon: const Icon(Icons.search, color: pastelPurple),
+                        ),
+                        onSubmitted: (query) => _searchProperties(query),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: const BorderSide(color: pastelPurple, width: 2.0),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    prefixIcon: const Icon(Icons.search, color: pastelPurple),
                   ),
-                  onSubmitted: (query) => _searchProperties(query),
                 ),
-              ),
-
-              // 2. The Results List
-              Padding(
-                padding: const EdgeInsets.only(top: 96, bottom: 100),
-                child: _buildResults(),
               ),
 
               // 3. Floating Bottom Nav Bar
@@ -180,7 +184,7 @@ class _SearchPageState extends State<SearchPage> {
 
     // Display the results in a custom list of chunky cards
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 96, bottom: 110),
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final property = _results[index];

@@ -273,7 +273,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.black.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -470,7 +470,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.black.withValues(alpha: 0.7),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -540,7 +540,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: pastelPurple,
                               foregroundColor: const Color(0xFF000000),
-                              disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                              disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
                               disabledForegroundColor: Colors.white24,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
@@ -574,6 +574,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
 
   // --- Top Persistent Floating Search Capsule ---
   Widget _buildTopSearchCapsule(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return Positioned(
       top: 16.0,
       left: 16.0,
@@ -581,13 +582,16 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32.0),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF121214).withOpacity(0.85),
+              color: Colors.black.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(32.0),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(
+                color: pastelPurple.withValues(alpha: 0.3),
+                width: 0.5,
+              ),
             ),
             child: Row(
               children: [
@@ -619,7 +623,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                           Text(
                             'Search properties...',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.4),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 13,
                               fontFamily: 'Poppins',
                             ),

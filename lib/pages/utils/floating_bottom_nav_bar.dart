@@ -26,73 +26,82 @@ class FloatingBottomNavBar extends StatelessWidget {
           right: screenWidth * 0.08,
           bottom: 20,
         ),
-        child: Container(
-          height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF121214),
-            borderRadius: BorderRadius.circular(36),
-            border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Home Button
-              if (activeIndex == NavPageIndex.home)
-                const _ActiveFooterIcon(
-                  icon: 'assets/images/home_icon.png',
-                  label: 'EXPLORE',
-                  pastelPurple: pastelPurple,
-                )
-              else
-                _FooterIcon(
-                  imagePath: 'assets/images/white_home_icon.png',
-                  onTap: () => Navigator.of(context)
-                      .pushReplacement(fadeRoute(const HomeBuyerPage())),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(36),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+            child: Container(
+              height: 72,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4), // Glass tint
+                borderRadius: BorderRadius.circular(36),
+                border: Border.all(
+                  color: pastelPurple.withValues(alpha: 0.3), // Edge highlight
+                  width: 0.5,
                 ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Home Button
+                  if (activeIndex == NavPageIndex.home)
+                    const _ActiveFooterIcon(
+                      icon: 'assets/images/home_icon.png',
+                      label: 'EXPLORE',
+                      pastelPurple: pastelPurple,
+                    )
+                  else
+                    _FooterIcon(
+                      imagePath: 'assets/images/white_home_icon.png',
+                      onTap: () => Navigator.of(context)
+                          .pushReplacement(fadeRoute(const HomeBuyerPage())),
+                    ),
 
-              // Search Button
-              if (activeIndex == NavPageIndex.search)
-                const _ActiveFooterIcon(
-                  icon: 'assets/images/search_icon.png',
-                  label: 'SEARCH',
-                  pastelPurple: pastelPurple,
-                )
-              else
-                _FooterIcon(
-                  imagePath: 'assets/images/white_search_icon.png',
-                  onTap: () => Navigator.of(context)
-                      .pushReplacement(fadeRoute(const SearchPage())),
-                ),
+                  // Search Button
+                  if (activeIndex == NavPageIndex.search)
+                    const _ActiveFooterIcon(
+                      icon: 'assets/images/search_icon.png',
+                      label: 'SEARCH',
+                      pastelPurple: pastelPurple,
+                    )
+                  else
+                    _FooterIcon(
+                      imagePath: 'assets/images/white_search_icon.png',
+                      onTap: () => Navigator.of(context)
+                          .pushReplacement(fadeRoute(const SearchPage())),
+                    ),
 
-              // Favorites Button
-              if (activeIndex == NavPageIndex.favorites)
-                const _ActiveFooterIcon(
-                  icon: 'assets/images/fav_icon.png',
-                  label: 'FAVORITES',
-                  pastelPurple: pastelPurple,
-                )
-              else
-                _FooterIcon(
-                  imagePath: 'assets/images/white_fav_icon.png',
-                  onTap: () => Navigator.of(context)
-                      .pushReplacement(fadeRoute(const FavoritesPage())),
-                ),
+                  // Favorites Button
+                  if (activeIndex == NavPageIndex.favorites)
+                    const _ActiveFooterIcon(
+                      icon: 'assets/images/fav_icon.png',
+                      label: 'FAVORITES',
+                      pastelPurple: pastelPurple,
+                    )
+                  else
+                    _FooterIcon(
+                      imagePath: 'assets/images/white_fav_icon.png',
+                      onTap: () => Navigator.of(context)
+                          .pushReplacement(fadeRoute(const FavoritesPage())),
+                    ),
 
-              // Settings Button
-              if (activeIndex == NavPageIndex.settings)
-                const _ActiveFooterIcon(
-                  icon: 'assets/images/settings_icon.png',
-                  label: 'SETTINGS',
-                  pastelPurple: pastelPurple,
-                )
-              else
-                _FooterIcon(
-                  imagePath: 'assets/images/white_settings_icon.png',
-                  onTap: () => Navigator.of(context)
-                      .pushReplacement(fadeRoute(const SettingsPage())),
-                ),
-            ],
+                  // Settings Button
+                  if (activeIndex == NavPageIndex.settings)
+                    const _ActiveFooterIcon(
+                      icon: 'assets/images/settings_icon.png',
+                      label: 'SETTINGS',
+                      pastelPurple: pastelPurple,
+                    )
+                  else
+                    _FooterIcon(
+                      imagePath: 'assets/images/white_settings_icon.png',
+                      onTap: () => Navigator.of(context)
+                          .pushReplacement(fadeRoute(const SettingsPage())),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

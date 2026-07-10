@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
@@ -92,134 +93,157 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 1. Scrollable List grouped into card blocks
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 88, 16, 100),
-                child: ListView(
-                  children: [
-                    _buildSectionHeader('Account Preferences'),
+              // 1. Scrollable List grouped into card blocks (full screen stack child)
+              ListView(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 96, bottom: 120),
+                children: [
+                  _buildSectionHeader('Account Preferences'),
+                  _buildSettingsGroup([
+                    _buildSettingsItem('Preferred property types', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Preferred location', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Notification preferences', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
+                      );
+                    }, showDivider: false),
+                  ]),
+
+                  // Conditional "Security" block ---
+                  if (_hasPassword) ...[
+                    _buildSectionHeader('Security'),
                     _buildSettingsGroup([
-                      _buildSettingsItem('Preferred property types', () {
+                      _buildSettingsItem('Change password', () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Preferred location', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Notification preferences', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
+                          MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
                         );
                       }, showDivider: false),
                     ]),
+                  ],
 
-                    // Conditional "Security" block ---
-                    if (_hasPassword) ...[
-                      _buildSectionHeader('Security'),
-                      _buildSettingsGroup([
-                        _buildSettingsItem('Change password', () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
-                          );
-                        }, showDivider: false),
-                      ]),
-                    ],
+                  _buildSectionHeader('Support & Legal'),
+                  _buildSettingsGroup([
+                    _buildSettingsItem('FAQs', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const FAQPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Terms of Service', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const TOSPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Privacy Policy', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Contact Support', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ContactSupportPage()),
+                      );
+                    }),
+                    _buildSettingsItem('Deactivate Account', () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
+                      );
+                    }, showDivider: false),
+                  ]),
 
-                    _buildSectionHeader('Support & Legal'),
-                    _buildSettingsGroup([
-                      _buildSettingsItem('FAQs', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const FAQPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Terms of Service', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const TOSPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Privacy Policy', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Contact Support', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ContactSupportPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Deactivate Account', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
-                        );
-                      }, showDivider: false),
-                    ]),
-
-                    // Log Out Button: Solid block pastel purple shape with solid black text
-                    Center(
-                      child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 32, bottom: 16),
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: pastelPurple,
-                            foregroundColor: const Color(0xFF000000),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
+                  // Log Out Button: Solid block pastel purple shape with solid black text
+                  Center(
+                    child: Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 32, bottom: 16),
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: pastelPurple,
+                          foregroundColor: const Color(0xFF000000),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
                           ),
-                          onPressed: () => _logout(context),
-                          child: const Text(
-                            "LOG OUT",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
+                        ),
+                        onPressed: () => _logout(context),
+                        child: const Text(
+                          "LOG OUT",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
-              // 2. Title Header with Poppins Contrast Weights
-              Positioned(
-                top: 24,
-                left: 18,
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 32,
-                      color: Colors.white,
-                      height: 1.2,
-                    ),
-                    children: [
-                      TextSpan(text: 'APP ', style: TextStyle(fontWeight: FontWeight.w300)),
-                      TextSpan(text: 'SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
-                    ],
-                  ),
-                ),
-              ),
+              // 2. Liquid Glass Top Header Bar
+              _buildTopHeader(context),
 
               // 3. Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Glassmorphic Top Header Bar ---
+  Widget _buildTopHeader(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 80,
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+          child: Container(
+            padding: const EdgeInsets.only(left: 18, bottom: 12),
+            alignment: Alignment.bottomLeft,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.4),
+              border: Border(
+                bottom: BorderSide(
+                  color: pastelPurple.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 24,
+                  color: Colors.white,
+                ),
+                children: [
+                  TextSpan(text: 'APP ', style: TextStyle(fontWeight: FontWeight.w300)),
+                  TextSpan(text: 'SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
+                ],
+              ),
+            ),
           ),
         ),
       ),
