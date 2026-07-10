@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 
 class SendInquiryPage extends StatefulWidget {
   final Property property;
@@ -78,153 +79,175 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            // New Gradient Title Helper
-            _buildGradientTitle('Send\nInquiry'),
-            const SizedBox(height: 32),
-
-            // "From" Label & Box
-            const Text(
-              'From:',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Inter',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                border: Border.all(color: const Color(0xFFDF00FF), width: 1.5),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _userEmail.split('@')[0],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+      backgroundColor: const Color(0xFF000000), // Pitch Black background
+      body: AbstractBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom top section instead of standard AppBar (Back Navigation)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                  ),
-                  Text(
-                    '($_userEmail)',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // "Message" Label & Text Area
-            const Text(
-              'Message:',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 250,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
-              ),
-              child: TextField(
-                controller: _messageController,
-                maxLines: null,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                decoration: InputDecoration(
-                  hintText: 'Message here...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
+                    const Spacer(),
+                  ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 40),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'INQUIRY',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: pastelPurple,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Send inquiry',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: Colors.white,
+                          fontSize: 38,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.0,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
 
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitInquiry,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDF00FF),
-                  foregroundColor: const Color(0xFF0D0D0D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Color(0xFF0D0D0D))
-                    : const Text(
-                  'Submit',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                      // "From" Box (Chunky Solid Container)
+                      const Text(
+                        'From:',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121214), // Solid dark grey card block
+                          border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _userEmail.split('@')[0],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '($_userEmail)',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 12,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // "Message" Text Area
+                      const Text(
+                        'Message:',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        height: 220,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121214), // Solid card block
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          maxLines: null,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+                          decoration: InputDecoration(
+                            hintText: 'Message here...',
+                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontFamily: 'Poppins'),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: const EdgeInsets.all(20),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // Submit Button (Wise Style: Solid Accent filled shape, black text)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : _submitInquiry,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: pastelPurple,
+                            foregroundColor: const Color(0xFF000000),
+                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isSubmitting
+                              ? const CircularProgressIndicator(color: Color(0xFF000000))
+                              : const Text(
+                                  'SUBMIT INQUIRY',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Moved this function OUTSIDE of build() so it's a class method
-  Widget _buildGradientTitle(String title) {
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [
-          Colors.white,
-          Color(0xFFDF00FF),
-        ],
-      ).createShader(bounds),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 32,
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.bold,
-          height: 1.1,
-          color: Colors.white,
+            ],
+          ),
         ),
       ),
     );

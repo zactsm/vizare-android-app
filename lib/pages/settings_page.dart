@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
@@ -18,6 +17,7 @@ import 'package:untitled/pages/settings/tos_page.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/google_auth_service.dart';
 import 'package:untitled/welcome_page.dart';
+import 'utils/abstract_background.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -88,161 +88,157 @@ class _SettingsPageState extends State<SettingsPage> {
       canPop: false, // Prevents back swipe
       child: Scaffold(
         backgroundColor: const Color(0xFF000000), // Pitch Black background
-        body: SafeArea(
-          bottom: true,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // 1. Scrollable List grouped into card blocks (full screen stack child)
-              ListView(
-                padding: const EdgeInsets.only(left: 16, right: 16, top: 96, bottom: 120),
-                children: [
-                  _buildSectionHeader('Account Preferences'),
-                  _buildSettingsGroup([
-                    _buildSettingsItem('Preferred property types', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Preferred location', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Notification preferences', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
-                      );
-                    }, showDivider: false),
-                  ]),
-
-                  // Conditional "Security" block ---
-                  if (_hasPassword) ...[
-                    _buildSectionHeader('Security'),
+        body: AbstractBackground(
+          child: SafeArea(
+            bottom: true,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. Scrollable List grouped into card blocks (full screen stack child)
+                ListView(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
+                  children: [
+                    _buildSectionHeader('Account Preferences'),
                     _buildSettingsGroup([
-                      _buildSettingsItem('Change password', () {
+                      _buildSettingsItem('Preferred property types', () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                          MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Preferred location', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Notification preferences', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
                         );
                       }, showDivider: false),
                     ]),
-                  ],
 
-                  _buildSectionHeader('Support & Legal'),
-                  _buildSettingsGroup([
-                    _buildSettingsItem('FAQs', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const FAQPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Terms of Service', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const TOSPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Privacy Policy', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Contact Support', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ContactSupportPage()),
-                      );
-                    }),
-                    _buildSettingsItem('Deactivate Account', () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
-                      );
-                    }, showDivider: false),
-                  ]),
+                    // Conditional "Security" block ---
+                    if (_hasPassword) ...[
+                      _buildSectionHeader('Security'),
+                      _buildSettingsGroup([
+                        _buildSettingsItem('Change password', () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                          );
+                        }, showDivider: false),
+                      ]),
+                    ],
 
-                  // Log Out Button: Solid block pastel purple shape with solid black text
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(top: 32, bottom: 16),
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: pastelPurple,
-                          foregroundColor: const Color(0xFF000000),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
+                    _buildSectionHeader('Support & Legal'),
+                    _buildSettingsGroup([
+                      _buildSettingsItem('FAQs', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FAQPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Terms of Service', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const TOSPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Privacy Policy', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Contact Support', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ContactSupportPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Deactivate Account', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
+                        );
+                      }, showDivider: false),
+                    ]),
+
+                    // Log Out Button: Solid block pastel purple shape with solid black text
+                    Center(
+                      child: Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 32, bottom: 16),
+                        height: 56,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: pastelPurple,
+                            foregroundColor: const Color(0xFF000000),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20), // Chunky border radius
+                            ),
                           ),
-                        ),
-                        onPressed: () => _logout(context),
-                        child: const Text(
-                          "LOG OUT",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                          onPressed: () => _logout(context),
+                          child: const Text(
+                            "LOG OUT",
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
                           ),
                         ),
                       ),
                     ),
+                  ],
+                ),
+
+                // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
+                Positioned(
+                  top: 24,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121214), // Solid dark block
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: pastelPurple, width: 2.0), // High contrast border
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 34, // Massive expressive Wise-style font
+                            fontWeight: FontWeight.w900, // Ultra bold
+                            color: Colors.white,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Manage your preferences and profile details.',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-
-              // 2. Liquid Glass Top Header Bar
-              _buildTopHeader(context),
-
-              // 3. Floating Bottom Nav Bar
-              const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- Glassmorphic Top Header Bar ---
-  Widget _buildTopHeader(BuildContext context) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 80,
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-          child: Container(
-            padding: const EdgeInsets.only(left: 18, bottom: 12),
-            alignment: Alignment.bottomLeft,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              border: Border(
-                bottom: BorderSide(
-                  color: pastelPurple.withValues(alpha: 0.3),
-                  width: 0.5,
                 ),
-              ),
-            ),
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 24,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(text: 'APP ', style: TextStyle(fontWeight: FontWeight.w300)),
-                  TextSpan(text: 'SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
-                ],
-              ),
+
+                // 3. Floating Bottom Nav Bar
+                const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
+              ],
             ),
           ),
         ),
@@ -258,7 +254,7 @@ class _SettingsPageState extends State<SettingsPage> {
         title.toUpperCase(),
         style: const TextStyle(
           fontFamily: 'Poppins',
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w900,
           color: Color(0xFF8E8E93), // Muted gray
           letterSpacing: 1.2,

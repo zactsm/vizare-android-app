@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:convert'; // For jsonDecode
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +7,7 @@ import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/floating_bottom_nav_bar.dart';
+import 'utils/abstract_background.dart';
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
@@ -77,62 +77,58 @@ class _FavoritesPageState extends State<FavoritesPage> {
       canPop: false,
       child: Scaffold(
         backgroundColor: const Color(0xFF000000), // Pitch Black background
-        body: SafeArea(
-          child: Stack(
-            fit: StackFit.expand, // Make stack fill the screen
-            children: [
-              // 1. Scrollable Content (starts from top to scroll behind bars)
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: pastelPurple))
-                  : _buildFavoritesList(),
+        body: AbstractBackground(
+          child: SafeArea(
+            child: Stack(
+              fit: StackFit.expand, // Make stack fill the screen
+              children: [
+                // 1. Scrollable Content (padded internally to scroll behind header)
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: pastelPurple))
+                    : _buildFavoritesList(),
 
-              // 2. Liquid Glass Top Header Bar
-              _buildTopHeader(context),
-
-              // 3. Floating Bottom Nav Bar
-              const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- Glassmorphic Top Header Bar ---
-  Widget _buildTopHeader(BuildContext context) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 80,
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-          child: Container(
-            padding: const EdgeInsets.only(left: 18, bottom: 12),
-            alignment: Alignment.bottomLeft,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              border: Border(
-                bottom: BorderSide(
-                  color: pastelPurple.withValues(alpha: 0.3),
-                  width: 0.5,
+                // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
+                Positioned(
+                  top: 24,
+                  left: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF121214), // Solid dark block
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Favorites',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 34, // Massive expressive Wise-style font
+                            fontWeight: FontWeight.w900, // Ultra bold
+                            color: Colors.white,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Your bookmarked properties of interest.',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 24,
-                  color: Colors.white,
-                ),
-                children: [
-                  TextSpan(text: 'MY ', style: TextStyle(fontWeight: FontWeight.w300)),
-                  TextSpan(text: 'FAVORITES', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
-                ],
-              ),
+
+                // 3. Floating Bottom Nav Bar
+                const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
+              ],
             ),
           ),
         ),
@@ -147,13 +143,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
       return const Center(
         child: Text(
           'You haven\'t favorited any properties yet.',
-          style: TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
+          style: TextStyle(color: Colors.grey, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 96, bottom: 110),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
       itemCount: _favorites.length,
       itemBuilder: (context, index) {
         final property = _favorites[index];
@@ -165,7 +161,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 builder: (context) => PropertyDetailsPage(property: property),
               ),
             ).then((_) {
-              // Re-fetch favorites when user returns from the details page
               setState(() => _isLoading = true);
               _fetchFavorites();
             });
@@ -174,7 +169,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF121214), // Solid dark grey container
+              color: const Color(0xFF121214), // Solid dark grey card block
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
             ),
@@ -201,7 +196,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                           fontSize: 15,
                         ),
                         maxLines: 1,
@@ -210,10 +205,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       const SizedBox(height: 4),
                       Text(
                         property.location,
-                        style: const TextStyle(
-                          color: Colors.white54,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontFamily: 'Poppins',
                           fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -225,7 +221,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 Text(
                   property.price,
                   style: const TextStyle(
-                    color: pastelPurple, // Pastel purple price tag
+                    color: pastelPurple,
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
