@@ -114,8 +114,8 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E1E1E),
-                border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFDF00FF), width: 1.5),
+                borderRadius: BorderRadius.circular(30),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,10 +183,10 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitInquiry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFF200),
+                  backgroundColor: const Color(0xFFDF00FF),
                   foregroundColor: const Color(0xFF0D0D0D),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 child: _isSubmitting
@@ -214,7 +214,7 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFFFF200),
+          Color(0xFFDF00FF),
         ],
       ).createShader(bounds),
       child: Text(

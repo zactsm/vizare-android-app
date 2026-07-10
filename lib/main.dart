@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color neonYellow = const Color(0xFFFFF200);
+    final Color neonPurple = const Color(0xFFDF00FF);
     final Color darkBackground = const Color(0xFF0D0D0D);
     final Color surfaceColor = const Color(0xFF1C1C1E);
 
@@ -92,10 +92,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: darkBackground,
-        primaryColor: neonYellow,
+        primaryColor: neonPurple,
         colorScheme: ColorScheme.dark(
-          primary: neonYellow,
-          secondary: neonYellow,
+          primary: neonPurple,
+          secondary: neonPurple,
           surface: surfaceColor,
           error: Colors.redAccent,
         ),
@@ -113,15 +113,15 @@ class MyApp extends StatelessWidget {
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
-          iconTheme: IconThemeData(color: neonYellow),
+          iconTheme: IconThemeData(color: neonPurple),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: neonYellow,
+            backgroundColor: neonPurple,
             foregroundColor: const Color(0xFF0D0D0D),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(30),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -131,11 +131,11 @@ class MyApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: neonYellow,
-            side: BorderSide(color: neonYellow, width: 1.5),
+            foregroundColor: neonPurple,
+            side: BorderSide(color: neonPurple, width: 1.5),
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(30),
             ),
             textStyle: const TextStyle(
               fontSize: 16,
@@ -145,7 +145,7 @@ class MyApp extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: neonYellow,
+            foregroundColor: neonPurple,
             textStyle: const TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -155,19 +155,19 @@ class MyApp extends StatelessWidget {
           filled: true,
           fillColor: surfaceColor,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
-          labelStyle: TextStyle(color: neonYellow, fontSize: 14),
+          labelStyle: TextStyle(color: neonPurple, fontSize: 14),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(30),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: neonYellow, width: 1.5),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: BorderSide(color: neonPurple, width: 1.5),
           ),
         ),
       ),

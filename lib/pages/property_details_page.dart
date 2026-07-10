@@ -225,7 +225,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFFFF200),
+          Color(0xFFDF00FF),
         ],
       ).createShader(bounds),
       child: Text(
@@ -369,12 +369,12 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               }
                   : null, // Disable button if no model
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFF200),
-                disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                backgroundColor: const Color(0xFFDF00FF),
+                disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
                 foregroundColor: const Color(0xFF0D0D0D),
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
               child: Row(
@@ -407,13 +407,13 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
+              border: Border.all(color: const Color(0xFFDF00FF), width: 1.5),
             ),
             child: IconButton(
               icon: Image.asset(
                 'assets/images/white_chat_icon.png',
                 width: 20,
-                color: const Color(0xFFFFF200),
+                color: const Color(0xFFDF00FF),
               ),
               onPressed: () {
                 Navigator.push(
@@ -433,17 +433,17 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFF200), width: 1.5),
+              border: Border.all(color: const Color(0xFFDF00FF), width: 1.5),
             ),
             child: _isLoadingFavorite
                 ? const Padding(
               padding: EdgeInsets.all(14.0),
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFF200)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFDF00FF)),
             )
                 : IconButton(
               icon: Icon(
                 _isFavorited ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorited ? Colors.red : const Color(0xFFFFF200),
+                color: _isFavorited ? Colors.red : const Color(0xFFDF00FF),
                 size: 24,
               ),
               onPressed: _toggleFavorite,

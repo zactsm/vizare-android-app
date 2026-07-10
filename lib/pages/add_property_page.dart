@@ -349,9 +349,9 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFFFF200),
-                      side: const BorderSide(color: Color(0xFFFFF200), width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      foregroundColor: const Color(0xFFDF00FF),
+                      side: const BorderSide(color: Color(0xFFDF00FF), width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: const Text("Discard", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
@@ -364,9 +364,9 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                   child: ElevatedButton(
                     onPressed: _isUploading ? null : _submitProperty,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFF200),
+                      backgroundColor: const Color(0xFFDF00FF),
                       foregroundColor: const Color(0xFF0D0D0D),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _isUploading
@@ -390,7 +390,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFFFF200),
+          Color(0xFFDF00FF),
         ],
       ).createShader(bounds),
       child: Text(

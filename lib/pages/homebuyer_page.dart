@@ -281,11 +281,11 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                       }
                           : null, // Disables button if no model exists
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFF200),
-                        disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                        backgroundColor: const Color(0xFFDF00FF),
+                        disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
                         foregroundColor: const Color(0xFF0D0D0D),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       ),
@@ -407,7 +407,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
           shaderCallback: (bounds) => const LinearGradient(
             colors: [
               Colors.white,
-              Color(0xFFFFF200),
+              Color(0xFFDF00FF),
             ],
           ).createShader(bounds),
           child: Text(

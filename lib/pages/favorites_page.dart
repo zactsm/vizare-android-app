@@ -97,7 +97,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   shaderCallback: (bounds) => const LinearGradient(
                     colors: [
                       Colors.white,
-                      Color(0xFFFFF200),
+                      Color(0xFFDF00FF),
                     ],
                   ).createShader(bounds),
                   child: const Text(
@@ -166,7 +166,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ),
           trailing: Text(
             property.price,
-            style: const TextStyle(color: Color(0xFFFFF200), fontFamily: 'Poppins', fontSize: 12),
+            style: const TextStyle(color: Color(0xFFDF00FF), fontFamily: 'Poppins', fontSize: 12),
           ),
           onTap: () {
             Navigator.push(

@@ -417,11 +417,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFF200),
+                      backgroundColor: const Color(0xFFDF00FF),
                       foregroundColor: const Color(0xFF0D0D0D),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                     child: _isSaving
@@ -463,7 +463,7 @@ class _ProfilePageState extends State<ProfilePage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFFFF200),
+          Color(0xFFDF00FF),
         ],
       ).createShader(bounds),
       child: Text(

@@ -146,7 +146,7 @@ class _ActiveFooterIcon extends StatelessWidget {
         vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF200),
+        color: const Color(0xFFDF00FF),
         borderRadius: BorderRadius.circular(40),
       ),
       child: Row(

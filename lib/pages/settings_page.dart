@@ -254,7 +254,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   shaderCallback: (bounds) => const LinearGradient(
                     colors: [
                       Colors.white,
-                      Color(0xFFFFF200),
+                      Color(0xFFDF00FF),
                     ],
                   ).createShader(bounds),
                   child: const Text(

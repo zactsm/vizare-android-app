@@ -196,7 +196,7 @@ class _AdminPageState extends State<AdminPage> {
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Color(0xFFFFF200),
+                        color: Color(0xFFDF00FF),
                       ),
                     ),
                   ],
@@ -226,14 +226,14 @@ class _AdminPageState extends State<AdminPage> {
               ),
               const SizedBox(width: 12),
 
-              // Approve Button (Cyan Check)
+              // Approve Button (Neon Purple Check)
               GestureDetector(
                 onTap: () => _updateStatus(property.id, 'approved'),
                 child: Container(
                   width: 50,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF200),
+                    color: const Color(0xFFDF00FF),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.check, color: Color(0xFF0D0D0D)),
@@ -249,7 +249,7 @@ class _AdminPageState extends State<AdminPage> {
   Widget _buildGradientTitle(String text) {
     return ShaderMask(
       shaderCallback: (bounds) => const LinearGradient(
-        colors: [Colors.white, Color(0xFFFFF200)],
+        colors: [Colors.white, Color(0xFFDF00FF)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(bounds),

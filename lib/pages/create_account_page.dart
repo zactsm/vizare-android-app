@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -19,14 +20,19 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _logger = Logger();
 
-  // --- State Variables ---
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
-  bool _isHomeBuyer = true;
+  // --- Registration States ---
+  String _userRole = 'homebuyer'; // Default role
   bool _agreedToPolicy = false;
+  bool _isUploading = false;
+
+  // --- Password Validation States ---
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasDigit = false;
+  bool _hasSymbol = false;
 
   @override
   void initState() {
@@ -196,7 +202,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     return const LinearGradient(
       colors: [
         Colors.white,
-        Color(0xFFFFF200),
+        Color(0xFFDF00FF),
       ],
     ).createShader(bounds);
   }
@@ -205,12 +211,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color neonYellow = const Color(0xFFFFF200);
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
-      appBar: AppBar(
+    final Color neonPurple = const Color(0xFFDF00FF);
+    return PremiumBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           color: Colors.white70,
@@ -320,13 +327,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 child: ElevatedButton(
                   onPressed: _agreedToPolicy ? _createAccount : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: neonYellow,
+                    backgroundColor: neonPurple,
                     foregroundColor: const Color(0xFF0D0D0D),
                     disabledBackgroundColor: Colors.grey.shade800,
                     disabledForegroundColor: Colors.white30,
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                     elevation: 0,
                   ),
@@ -389,7 +396,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     child: Text(
                       'Log in',
                       style: TextStyle(
-                        color: neonYellow,
+                        color: neonPurple,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.bold,
                       ),
@@ -402,7 +409,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
         ),
       ),
-    );
+    ),);
   }
 
   // --- Helper Widgets ---
@@ -471,7 +478,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   /// Builds the "I agree to terms & policy" RichText
   Widget _buildPolicyLink() {
-    final Color neonYellow = const Color(0xFFFFF200);
+    final Color neonPurple = const Color(0xFFDF00FF);
     return RichText(
       text: TextSpan(
         style: TextStyle(
@@ -484,7 +491,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           TextSpan(
             text: 'terms & policy',
             style: TextStyle(
-              color: neonYellow,
+              color: neonPurple,
               decoration: TextDecoration.underline,
             ),
             recognizer: TapGestureRecognizer()
@@ -505,13 +512,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     required bool value,
     required ValueChanged<bool?> onChanged,
   }) {
-    final Color neonYellow = const Color(0xFFFFF200);
+    final Color neonPurple = const Color(0xFFDF00FF);
     return Theme(
       data: Theme.of(context).copyWith(
         checkboxTheme: CheckboxThemeData(
           fillColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return neonYellow;
+              return neonPurple;
             }
             return Colors.white.withOpacity(0.1);
           }),

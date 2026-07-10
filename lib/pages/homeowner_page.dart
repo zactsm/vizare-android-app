@@ -355,7 +355,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       shaderCallback: (bounds) => const LinearGradient(
         colors: [
           Colors.white,
-          Color(0xFFFFF200),
+          Color(0xFFDF00FF),
         ],
       ).createShader(bounds),
       child: Text(
@@ -372,21 +372,21 @@ class _HomeownerPageState extends State<HomeownerPage> {
   }
 
   Widget _buildButtonRow() {
-    final Color neonYellow = const Color(0xFFFFF200);
+    final Color neonPurple = const Color(0xFFDF00FF);
     return Row(
       children: [
-        // "+ Add new property" button (Neon yellow)
+        // "+ Add new property" button (Neon purple)
         Expanded(
           child: ElevatedButton(
             onPressed: () {
               _navigateToAddProperty();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: neonYellow,
+              backgroundColor: neonPurple,
               foregroundColor: const Color(0xFF0D0D0D),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
             child: const Text(
@@ -402,7 +402,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
         ),
         const SizedBox(width: 12),
 
-        // "To respond" button (Outlined neon yellow)
+        // "To respond" button (Outlined neon purple)
         Expanded(
           child: OutlinedButton(
             onPressed: () {
@@ -412,11 +412,11 @@ class _HomeownerPageState extends State<HomeownerPage> {
               );
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: neonYellow,
-              side: BorderSide(color: neonYellow, width: 1.5),
+              foregroundColor: neonPurple,
+              side: BorderSide(color: neonPurple, width: 1.5),
               minimumSize: const Size(100, 50),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
             child: const Text(

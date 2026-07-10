@@ -211,7 +211,7 @@ class _SearchPageState extends State<SearchPage> {
           trailing: Text(
             property.price,
             style: const TextStyle(
-              color: Color(0xFFFFF200),
+              color: Color(0xFFDF00FF),
               fontFamily: 'Poppins',
               fontSize: 13,
               fontWeight: FontWeight.bold,
