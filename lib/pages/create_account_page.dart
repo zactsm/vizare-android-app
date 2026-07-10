@@ -20,15 +20,18 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _logger = Logger();
 
   // --- Registration States ---
-  String _userRole = 'homebuyer'; // Default role
+  bool _isHomeBuyer = true; // Default role
   bool _agreedToPolicy = false;
   bool _isUploading = false;
 
   // --- Password Validation States ---
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasDigit = false;
