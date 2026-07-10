@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:untitled/pages/settings/change_password_page.dart';
@@ -17,10 +16,8 @@ import 'package:untitled/pages/settings/tos_page.dart';
 
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/google_auth_service.dart';
-
 import 'package:untitled/welcome_page.dart';
 
-//--- CONVERTED TO STATEFULWIDGET ---
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -37,7 +34,6 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _loadUserPreferences(); // Load the flag when the page opens
 
-    // Set status bar style
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -50,13 +46,12 @@ class _SettingsPageState extends State<SettingsPage> {
   // Function to read from SharedPreferences ---
   Future<void> _loadUserPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    // Get the flag, default to 'false' if it's not there
     setState(() {
       _hasPassword = prefs.getBool('has_password') ?? false;
     });
   }
 
-  // Moved logout logic inside the class ---
+  // Logout logic ---
   Future<void> _logout(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut(
@@ -87,187 +82,142 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return PopScope(
       canPop: false, // Prevents back swipe
       child: Scaffold(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: SafeArea(
-          bottom: true, // Ensures consistent nav bar position
+          bottom: true,
           child: Stack(
-            fit: StackFit.expand, // Ensures Stack fills screen
+            fit: StackFit.expand,
             children: [
+              // 1. Scrollable List grouped into card blocks
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 80, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 88, 16, 100),
                 child: ListView(
                   children: [
-                    const _SectionHeader(
-                      iconPath: 'assets/images/grey_home_icon.png',
-                      title: 'Account Preferences',
-                    ),
-                    _SettingsItem(
-                      title: 'Preferred property types',
-                      onTap: (){
+                    _buildSectionHeader('Account Preferences'),
+                    _buildSettingsGroup([
+                      _buildSettingsItem('Preferred property types', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
                         );
-                      },
-                    ),
-                    _SettingsItem(
-                        title: 'Preferred location',
-                        onTap: (){
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
-                          );
-                        }
-                    ),
-                    _SettingsItem(
-                      title: 'Notification preferences',
-                      onTap: (){
+                      }),
+                      _buildSettingsItem('Preferred location', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Notification preferences', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
                         );
-                      },
-                    ),
+                      }, showDivider: false),
+                    ]),
 
-                    // Conditional "Change Password" button ---
-                    // This will only show if _hasPassword is true
+                    // Conditional "Security" block ---
                     if (_hasPassword) ...[
-                      const SizedBox(height: 10),
-                      const _SectionDivider(),
-                      const _SectionHeader(
-                        iconPath: 'assets/images/grey_security_icon.png',
-                        title: 'Security',
-                      ),
-
-                      _SettingsItem(
-                        title: 'Change password',
-                        onTap: () {
+                      _buildSectionHeader('Security'),
+                      _buildSettingsGroup([
+                        _buildSettingsItem('Change password', () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => const ChangePasswordPage()),
+                            MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
                           );
-                        },
-                      ),
+                        }, showDivider: false),
+                      ]),
                     ],
 
-                    const SizedBox(height: 10),
-                    const _SectionDivider(),
-
-                    const _SectionHeader(
-                      iconPath: 'assets/images/grey_support_icon.png',
-                      title: 'Support & Legal',
-                    ),
-                    _SettingsItem(
-                        title: 'FAQs',
-                        onTap: (){
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const FAQPage()),
-                          );
-                        }
-                    ),
-                    _SettingsItem(
-                      title: 'Terms of Service',
-                      onTap: (){
+                    _buildSectionHeader('Support & Legal'),
+                    _buildSettingsGroup([
+                      _buildSettingsItem('FAQs', () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const FAQPage()),
+                        );
+                      }),
+                      _buildSettingsItem('Terms of Service', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const TOSPage()),
                         );
-                      },
-                    ),
-                    _SettingsItem(
-                      title: 'Privacy Policy',
-                      onTap: (){
+                      }),
+                      _buildSettingsItem('Privacy Policy', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
                         );
-                      },
-                    ),
-                    _SettingsItem(
-                      title: 'Contact Support',
-                      onTap: (){
+                      }),
+                      _buildSettingsItem('Contact Support', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const ContactSupportPage()),
                         );
-                      },
-                    ),
-                    _SettingsItem(
-                      title: 'Deactivate Account',
-                      onTap: (){
+                      }),
+                      _buildSettingsItem('Deactivate Account', () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
                         );
-                      },
-                    ),
+                      }, showDivider: false),
+                    ]),
 
-                    const SizedBox(height: 30),
-
-                    // Logout Button
+                    // Log Out Button: Solid block pastel purple shape with solid black text
                     Center(
                       child: Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.symmetric(horizontal: 40),
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF3D00), Color(0xFFFF6D00)],
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                        margin: const EdgeInsets.only(top: 32, bottom: 16),
+                        height: 56,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
+                            backgroundColor: pastelPurple,
+                            foregroundColor: const Color(0xFF000000),
                             elevation: 0,
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(28),
                             ),
                           ),
-                          onPressed: () => _logout(context), // Calls the new class method
+                          onPressed: () => _logout(context),
                           child: const Text(
-                            "Log out",
+                            "LOG OUT",
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
 
+              // 2. Title Header with Poppins Contrast Weights
               Positioned(
-                top: 16,
-                left: 16,
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Colors.white,
-                      Color(0xFFDF00FF),
-                    ],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Settings',
+                top: 24,
+                left: 18,
+                child: RichText(
+                  text: const TextSpan(
                     style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
+                      fontSize: 32,
                       color: Colors.white,
+                      height: 1.2,
                     ),
+                    children: [
+                      TextSpan(text: 'APP ', style: TextStyle(fontWeight: FontWeight.w300)),
+                      TextSpan(text: 'SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
+                    ],
                   ),
                 ),
               ),
+
+              // 3. Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
             ],
           ),
@@ -275,80 +225,69 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-}
 
-// --- Helper widgets for the settings list ---
-
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 32,
-      thickness: 1,
-      color: Colors.white.withValues(alpha: (0.1)),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String iconPath;
-  final String title;
-  const _SectionHeader({required this.iconPath, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4, top: 20),
-      child: Row(
-        children: [
-          Image.asset(iconPath, width: 20, height: 20, errorBuilder: (context, error, stackTrace) => const SizedBox()),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                color: Color(0xFF808080),
-                fontWeight: FontWeight.bold,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsItem extends StatelessWidget {
-  final String title;
-  final VoidCallback? onTap; // ✅ Allow tapping behavior
-
-  const _SettingsItem({
-    required this.title,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.only(left: 0, right: 8),
-      title: Text(
-        title,
+  // --- Header style: tiny, clean, all-caps muted gray text ---
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0, top: 24, bottom: 8),
+      child: Text(
+        title.toUpperCase(),
         style: const TextStyle(
           fontFamily: 'Poppins',
-          color: Colors.white,
-          fontSize: 14,
-          height: 1.4,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          color: Color(0xFF8E8E93), // Muted gray
+          letterSpacing: 1.2,
         ),
       ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        color: Colors.white,
-        size: 16,
+    );
+  }
+
+  // --- Group settings items inside a flat solid card container block ---
+  Widget _buildSettingsGroup(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF121214), // Solid dark gray block
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
       ),
-      onTap: onTap, // ✅ Use the callback you pass in
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  // --- Individual settings list item widget ---
+  Widget _buildSettingsItem(String title, VoidCallback onTap, {bool showDivider = true}) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Color(0xFFD4B2FF), // Pastel purple arrow icon
+            size: 14,
+          ),
+          onTap: onTap,
+        ),
+        if (showDivider)
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFF1E1E22),
+            indent: 20,
+            endIndent: 20,
+          ),
+      ],
     );
   }
 }

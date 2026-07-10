@@ -92,7 +92,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
 
         // Update the state
         setState(() {
-          // Filter properties into different lists (you can change this logic)
+          // Filter properties into different lists
           _featuredProperties = properties.where((p) => p.isFeatured).toList();
           _nearbyProperties = properties.where((p) => !p.isFeatured).toList();
           _popularProperties = List.from(properties)..shuffle(); // Just shuffle all for now
@@ -120,54 +120,76 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
   // --- Build Method ---
   @override
   Widget build(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D0D),
+        backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: SafeArea(
-          // bottom: false,
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // 1. YOUR MAIN PAGE CONTENT (SCROLLABLE)
               _isLoading
                   ? const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              )
+                      child: CircularProgressIndicator(color: pastelPurple),
+                    )
                   : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 100), // Spacer for top bar
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 100), // Spacer for top floating bar
 
-                    if (_featuredProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Featured'),
-                      const SizedBox(height: 16),
-                      _buildFeaturedCard(context, _featuredProperties[0]),
-                      const _Divider(),
-                    ],
-                    if (_nearbyProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Nearby'),
-                      const SizedBox(height: 16),
-                      _buildHorizontalList(_nearbyProperties),
-                      const _Divider(),
-                    ],
-                    if (_popularProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Popular'),
-                      const SizedBox(height: 16),
-                      _buildHorizontalList(_popularProperties),
-                    ],
-                    const SizedBox(height: 120), // Spacer for bottom nav
-                  ],
-                ),
-              ),
+                          // Advanced Poppins Typography Title
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+                            child: RichText(
+                              text: const TextSpan(
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 32,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
+                                children: [
+                                  TextSpan(text: 'EXPLORE\n', style: TextStyle(fontWeight: FontWeight.w300)),
+                                  TextSpan(text: 'PROPERTIES', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
 
-              // 2. THE FLOATING TOP BAR
-              _buildTopBar(context),
+                          // 1. Featured Carousel
+                          if (_featuredProperties.isNotEmpty) ...[
+                            _buildSectionHeader('FEATURED', 'UNITS'),
+                            const SizedBox(height: 14),
+                            _buildFeaturedCarousel(context, _featuredProperties),
+                            const SizedBox(height: 32),
+                          ],
 
-              // -------------------------------------------------
-              // REPLACED BOTTOM NAV BAR WITH NEW WIDGET
-              // -------------------------------------------------
+                          // 2. Nearby Carousel
+                          if (_nearbyProperties.isNotEmpty) ...[
+                            _buildSectionHeader('NEARBY', 'HOMES'),
+                            const SizedBox(height: 14),
+                            _buildNearbyCarousel(context, _nearbyProperties),
+                            const SizedBox(height: 32),
+                          ],
+
+                          // 3. Popular Property Feed (Massive chunky card blocks)
+                          if (_popularProperties.isNotEmpty) ...[
+                            _buildSectionHeader('POPULAR', 'FEED'),
+                            const SizedBox(height: 14),
+                            _buildPopularFeed(context, _popularProperties),
+                          ],
+                          const SizedBox(height: 120), // Spacer for bottom nav
+                        ],
+                      ),
+                    ),
+
+              // The Floating Top Search Capsule
+              _buildTopSearchCapsule(context),
+
+              // Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.home),
             ],
           ),
@@ -176,214 +198,126 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
     );
   }
 
-  // -------------------------------------------------
-  // WIDGET FOR THE "FEATURED" CARD
-  // -------------------------------------------------
-  Widget _buildFeaturedCard(BuildContext context, Property property) {
-    // Check if model exists to decide button state
-    final bool hasModel = property.modelPath.isNotEmpty;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PropertyDetailsPage(property: property),
+  // --- Typography Section Header Helper ---
+  Widget _buildSectionHeader(String thinText, String boldText) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            color: Colors.white,
+            letterSpacing: 0.5,
           ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                property.imagePath,
-                width: 160,
-                height: 177,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  return progress == null
-                      ? child
-                      : Container(
-                    width: 160,
-                    height: 177,
-                    color: Colors.white10,
-                    child: const Center(
-                        child: CircularProgressIndicator(color: Colors.white)),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 160,
-                    height: 177,
-                    color: Colors.white10,
-                    child: const Icon(Icons.broken_image, color: Colors.white24),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Details
-            Expanded(
-              child: SizedBox(
-                height: 180,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Top Text Details
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          property.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Poppins',
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          property.location,
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            height: 1.5,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                    // "View in AR" Button
-                    ElevatedButton(
-
-                      onPressed: hasModel
-                          ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ArViewPage(
-                              modelUrl: property.modelPath,
-                              propertyName: property.name,
-                            ),
-                          ),
-                        );
-                      }
-                          : null, // Disables button if no model exists
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDF00FF),
-                        disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
-                        foregroundColor: const Color(0xFF0D0D0D),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                      ),
-                      child: Text(
-                        hasModel ? 'View in AR' : 'No AR', // Changes text if unavailable
-                        style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: hasModel ? const Color(0xFF0D0D0D) : Colors.white30),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            TextSpan(text: '$thinText ', style: const TextStyle(fontWeight: FontWeight.w300)),
+            TextSpan(text: boldText, style: const TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
           ],
         ),
       ),
     );
   }
 
-  // -------------------------------------------------
-  // WIDGET FOR HORIZONTAL LISTS
-  // -------------------------------------------------
-  Widget _buildHorizontalList(List<Property> properties) {
+  // --- Featured Carousel (Flat solid cards with solid dark gray background) ---
+  Widget _buildFeaturedCarousel(BuildContext context, List<Property> properties) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return SizedBox(
-      height: 190,
+      height: 260,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: properties.length,
         itemBuilder: (context, index) {
           final property = properties[index];
-          final double leftPadding = index == 0 ? 16.0 : 8.0;
-          final double rightPadding = index == properties.length - 1 ? 16.0 : 0.0;
-
-          return Padding(
-            padding: EdgeInsets.only(left: leftPadding, right: rightPadding),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PropertyDetailsPage(property: property),
-                  ),
-                );
-              },
-              child: SizedBox(
-                width: 140,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PropertyDetailsPage(property: property),
+                ),
+              );
+            },
+            child: Container(
+              width: 280,
+              margin: EdgeInsets.only(
+                left: index == 0 ? 18.0 : 8.0,
+                right: index == properties.length - 1 ? 18.0 : 8.0,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121214), // Flat solid dark container
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(26),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network( // Changed to Image.network
-                        property.imagePath,
-                        width: 140,
-                        height: 140,
-                        fit: BoxFit.cover,
-                        // Add error and loading builders
-                        loadingBuilder: (context, child, progress) {
-                          return progress == null
-                              ? child
-                              : Container(
-                            width: 140,
-                            height: 140,
-                            color: Colors.white10,
-                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 140,
-                            height: 140,
-                            color: Colors.white10,
-                            child: const Icon(Icons.broken_image, color: Colors.white24),
-                          );
-                        },
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            property.imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, e, s) => Container(
+                              color: Colors.white10,
+                              child: const Icon(Icons.broken_image, color: Colors.white24),
+                            ),
+                          ),
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                property.price,
+                                style: const TextStyle(
+                                  color: pastelPurple,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      property.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      property.price, // Use real data
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontFamily: 'Inter',
-                        fontSize: 12,
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            property.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            property.location,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -396,155 +330,342 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
     );
   }
 
-  // -------------------------------------------------
-  // ALL OTHER HELPER WIDGETS
-  // -------------------------------------------------
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [
-              Colors.white,
-              Color(0xFFDF00FF),
-            ],
-          ).createShader(bounds),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poppins',
-              color: Colors.white,
+  // --- Nearby Carousel (Transparent background outlined secondary card blocks) ---
+  Widget _buildNearbyCarousel(BuildContext context, List<Property> properties) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+    return SizedBox(
+      height: 240,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: properties.length,
+        itemBuilder: (context, index) {
+          final property = properties[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PropertyDetailsPage(property: property),
+                ),
+              );
+            },
+            child: Container(
+              width: 190,
+              margin: EdgeInsets.only(
+                left: index == 0 ? 18.0 : 8.0,
+                right: index == properties.length - 1 ? 18.0 : 8.0,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.transparent, // Transparent background
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: pastelPurple, width: 1.5), // Crisp thin border
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Image.network(
+                        property.imagePath,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        errorBuilder: (context, e, s) => Container(
+                          color: Colors.white10,
+                          child: const Icon(Icons.broken_image, color: Colors.white24),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            property.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            property.price,
+                            style: const TextStyle(
+                              color: pastelPurple,
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          )),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  // --- Popular Property Feed (Massive chunky card blocks with pastel purple View in AR button) ---
+  Widget _buildPopularFeed(BuildContext context, List<Property> properties) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: properties.length,
+        itemBuilder: (context, index) {
+          final property = properties[index];
+          final bool hasModel = property.modelPath.isNotEmpty;
+
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PropertyDetailsPage(property: property),
+                ),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121214), // Flat solid dark container
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(26),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Massive full-width image
+                    SizedBox(
+                      height: 200,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            property.imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, e, s) => Container(
+                              color: Colors.white10,
+                              child: const Icon(Icons.broken_image, color: Colors.white24, size: 48),
+                            ),
+                          ),
+                          Positioned(
+                            top: 16,
+                            left: 16,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                property.price,
+                                style: const TextStyle(
+                                  color: pastelPurple,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  property.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Poppins',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  property.location,
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // View in AR Button: solid vibrant pastel purple block shapes
+                          ElevatedButton(
+                            onPressed: hasModel
+                                ? () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ArViewPage(
+                                          modelUrl: property.modelPath,
+                                          propertyName: property.name,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: pastelPurple,
+                              foregroundColor: const Color(0xFF000000),
+                              disabledBackgroundColor: Colors.white.withOpacity(0.05),
+                              disabledForegroundColor: Colors.white24,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            ),
+                            child: Text(
+                              hasModel ? 'VIEW AR' : 'NO AR',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                                color: hasModel ? const Color(0xFF000000) : Colors.white30,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // --- Top Persistent Floating Search Capsule ---
+  Widget _buildTopSearchCapsule(BuildContext context) {
     return Positioned(
       top: 16.0,
       left: 16.0,
       right: 16.0,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(40.0),
+        borderRadius: BorderRadius.circular(32.0),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1E).withOpacity(0.85),
-              borderRadius: BorderRadius.circular(40.0),
+              color: const Color(0xFF121214).withOpacity(0.85),
+              borderRadius: BorderRadius.circular(32.0),
               border: Border.all(color: Colors.white.withOpacity(0.08)),
             ),
             child: Row(
               children: [
-                // --- 1. Logo ---
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 60,
-                        height: 60,
-                      ),
-                    ],
-                  ),
+                // Logo
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 44,
+                  height: 44,
                 ),
-                // --- 2. Search Bar ---
+                const SizedBox(width: 8),
+                // Capsule Search Field
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(fadeRoute(const SearchPage()));
                     },
-                    child: AbsorbPointer(
-                      child: TextField(
-                        enabled: false,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Search properties...',
-                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
-                          prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
-                          filled: true,
-                          fillColor: const Color(0xFF0D0D0D),
-                          isDense: true,
-                          prefixIconConstraints: const BoxConstraints(
-                            minWidth: 40,
-                            minHeight: 40,
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF000000),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: const Color(0xFF1E1E22), width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: Colors.white54, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Search properties...',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 13,
+                              fontFamily: 'Poppins',
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                            borderSide: BorderSide.none,
-                          ),
-                          disabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-
-                // --- Profile Icon ---
-                GestureDetector( // Wrapped in GestureDetector
+                const SizedBox(width: 10),
+                // Profile Avatar
+                GestureDetector(
                   onTap: () {
-                    // Navigate to ProfilePage
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ProfilePage()),
                     );
                   },
                   child: Container(
-                    width: 50,
-                    height: 49,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white24,
                       shape: BoxShape.circle,
                       image: _profilePicUrl != null
-                        ? DecorationImage(
-                          image: NetworkImage(_profilePicUrl!),
-                          fit: BoxFit.cover,
-                          )
+                          ? DecorationImage(
+                              image: NetworkImage(_profilePicUrl!),
+                              fit: BoxFit.cover,
+                            )
                           : null,
                     ),
-
                     child: _profilePicUrl == null
-                      ? Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Image.asset(
-                            'assets/images/profile_icon.png',
-                            fit: BoxFit.contain,
-                          ),
-                      )
-                    : null,
+                        ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(
+                              'assets/images/profile_icon.png',
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// Reusable Divider
-class _Divider extends StatelessWidget {
-  const _Divider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-      child: Divider(
-        color: Colors.white10,
-        height: 1.0,
-        thickness: 1.0,
       ),
     );
   }

@@ -30,7 +30,7 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Changed to transparent
+        statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark, // For iOS
       ),
@@ -93,17 +93,16 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: SafeArea(
           child: Stack(
             fit: StackFit.expand, // Make stack fill the screen
             children: [
-              // -----------------------------------------------------------------
-              // REPLACED "Search" TITLE WITH A FUNCTIONAL SEARCH BAR
-              // -----------------------------------------------------------------
+              // 1. Search Bar Input Capsule
               Positioned(
                 top: 16,
                 left: 16,
@@ -111,35 +110,37 @@ class _SearchPageState extends State<SearchPage> {
                 child: TextField(
                   controller: _searchController,
                   autofocus: true, // Automatically open the keyboard
-                  style: const TextStyle(color: Colors.white, fontFamily: 'Inter'),
+                  style: const TextStyle(color: Colors.white, fontFamily: 'Poppins'),
                   decoration: InputDecoration(
                     hintText: 'Search by name or location...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Inter'),
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.4), fontFamily: 'Poppins'),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: (0.1)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+                    fillColor: const Color(0xFF121214),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: const BorderSide(color: pastelPurple, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: const BorderSide(color: pastelPurple, width: 2.0),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide.none,
                     ),
-                    prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                    prefixIcon: const Icon(Icons.search, color: pastelPurple),
                   ),
                   onSubmitted: (query) => _searchProperties(query),
                 ),
               ),
 
-              // -----------------------------------------------------------------
-              // THE RESULTS LIST
-              // -----------------------------------------------------------------
+              // 2. The Results List
               Padding(
-                // Add padding to avoid the search bar (top) and nav bar (bottom)
-                padding: const EdgeInsets.only(top: 80, bottom: 100),
+                padding: const EdgeInsets.only(top: 96, bottom: 100),
                 child: _buildResults(),
               ),
 
-              // -----------------------------------------------------------------
-              // BOTTOM NAV BAR
-              // -----------------------------------------------------------------
+              // 3. Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.search),
             ],
           ),
@@ -152,9 +153,10 @@ class _SearchPageState extends State<SearchPage> {
   // HELPER WIDGET TO BUILD THE RESULTS
   // -----------------------------------------------------------------
   Widget _buildResults() {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: pastelPurple),
       );
     }
 
@@ -162,7 +164,7 @@ class _SearchPageState extends State<SearchPage> {
       return const Center(
         child: Text(
           'Start typing to search for properties.',
-          style: TextStyle(color: Colors.grey, fontFamily: 'Inter'),
+          style: TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
         ),
       );
     }
@@ -171,52 +173,18 @@ class _SearchPageState extends State<SearchPage> {
       return const Center(
         child: Text(
           'No properties found.',
-          style: TextStyle(color: Colors.grey, fontFamily: 'Inter'),
+          style: TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
         ),
       );
     }
 
-    // Display the results in a list
+    // Display the results in a custom list of chunky cards
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final property = _results[index];
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.network(
-              property.imagePath, // image imported from Cloudinary
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, color: Colors.white24, size: 60),
-            ),
-          ),
-          title: Text(
-            property.name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          subtitle: Text(
-            property.location,
-            style: TextStyle(color: Colors.grey[400], fontFamily: 'Inter'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Text(
-            property.price,
-            style: const TextStyle(
-              color: Color(0xFFDF00FF),
-              fontFamily: 'Poppins',
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
@@ -225,6 +193,70 @@ class _SearchPageState extends State<SearchPage> {
               ),
             );
           },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121214), // Solid dark grey container
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Image.network(
+                    property.imagePath,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, color: Colors.white24, size: 70),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        property.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        property.location,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  property.price,
+                  style: const TextStyle(
+                    color: pastelPurple, // Pastel purple price tag
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

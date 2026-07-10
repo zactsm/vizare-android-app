@@ -8,7 +8,6 @@ import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 
-// --- CONVERTED TO STATEFULWIDGET ---
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({super.key});
 
@@ -26,7 +25,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // Set to transparent
+        statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
       ),
@@ -72,47 +71,44 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: SafeArea(
           child: Stack(
             fit: StackFit.expand, // Make stack fill the screen
             children: [
-              // scrollable content ---
-              Padding(
-                // Pad to avoid top and bottom bars
-                padding: const EdgeInsets.only(top: 80.0, bottom: 100.0),
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                    : _buildFavoritesList(), // Show list or empty message
-              ),
-
-              // --- "Favorites" Title ---
+              // 1. "Favorites" Title using w300/w900 Poppins Header
               Positioned(
-                top: 16,
-                left: 16,
-                child: ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [
-                      Colors.white,
-                      Color(0xFFDF00FF),
-                    ],
-                  ).createShader(bounds),
-                  child: const Text(
-                    'Favorites',
+                top: 24,
+                left: 18,
+                child: RichText(
+                  text: const TextSpan(
                     style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
+                      fontSize: 32,
                       color: Colors.white,
+                      height: 1.2,
                     ),
+                    children: [
+                      TextSpan(text: 'MY ', style: TextStyle(fontWeight: FontWeight.w300)),
+                      TextSpan(text: 'FAVORITES', style: TextStyle(fontWeight: FontWeight.w900, color: pastelPurple)),
+                    ],
                   ),
                 ),
               ),
 
-              // --- Bottom Nav Bar ---
+              // 2. Scrollable Content
+              Padding(
+                padding: const EdgeInsets.only(top: 88.0, bottom: 100.0),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: pastelPurple))
+                    : _buildFavoritesList(), // Show list or empty message
+              ),
+
+              // 3. Floating Bottom Nav Bar
               const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
             ],
           ),
@@ -121,53 +117,24 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  // --- Helper to build the list view ---
+  // --- Helper to build the list view of chunky cards ---
   Widget _buildFavoritesList() {
+    const Color pastelPurple = Color(0xFFD4B2FF);
     if (_favorites.isEmpty) {
       return const Center(
         child: Text(
           'You haven\'t favorited any properties yet.',
-          style: TextStyle(color: Colors.grey, fontFamily: 'Inter'),
+          style: TextStyle(color: Colors.grey, fontFamily: 'Poppins'),
         ),
       );
     }
 
-    // This is the same list style from search_page.dart
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _favorites.length,
       itemBuilder: (context, index) {
         final property = _favorites[index];
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.network(
-              property.imagePath, // Uses Cloudinary URL
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, color: Colors.white24, size: 60),
-            ),
-          ),
-          title: Text(
-            property.name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          subtitle: Text(
-            property.location,
-            style: TextStyle(color: Colors.grey[400], fontFamily: 'Inter'),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Text(
-            property.price,
-            style: const TextStyle(color: Color(0xFFDF00FF), fontFamily: 'Poppins', fontSize: 12),
-          ),
+        return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
@@ -175,12 +142,75 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 builder: (context) => PropertyDetailsPage(property: property),
               ),
             ).then((_) {
-              // This re-fetches favorites when user returns from the details page,
-              // in case user unfavorited the item.
+              // Re-fetch favorites when user returns from the details page
               setState(() => _isLoading = true);
               _fetchFavorites();
             });
           },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121214), // Solid dark grey container
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: Image.network(
+                    property.imagePath,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, color: Colors.white24, size: 70),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        property.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        property.location,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  property.price,
+                  style: const TextStyle(
+                    color: pastelPurple, // Pastel purple price tag
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

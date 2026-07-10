@@ -6,7 +6,6 @@ import 'package:untitled/pages/search_page.dart';
 import 'package:untitled/pages/settings_page.dart';
 import 'package:untitled/pages/utils/page_transitions.dart';
 
-// An enum to make it clear which page is active
 enum NavPageIndex { home, search, favorites, settings }
 
 class FloatingBottomNavBar extends StatelessWidget {
@@ -16,87 +15,84 @@ class FloatingBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen width for responsive padding
     final screenWidth = MediaQuery.of(context).size.width;
+    const Color pastelPurple = Color(0xFFD4B2FF);
 
     return Align(
       alignment: Alignment.bottomCenter,
-      // Use Padding for responsive horizontal margins
       child: Padding(
-        // ADJUST POSITIONING AND PADDING HERE ----------------------------------------------
         padding: EdgeInsets.only(
-          left: screenWidth * 0.1,
-          right: screenWidth * 0.1,
-          bottom: 10,
+          left: screenWidth * 0.08,
+          right: screenWidth * 0.08,
+          bottom: 20,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E1E).withOpacity(0.85),
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Home Button
-                  if (activeIndex == NavPageIndex.home)
-                    const _ActiveFooterIcon(
-                      icon: 'assets/images/home_icon.png',
-                      label: 'Main Menu',
-                    )
-                  else
-                    _FooterIcon(
-                      imagePath: 'assets/images/white_home_icon.png',
-                      onTap: () => Navigator.of(context)
-                          .pushReplacement(fadeRoute(const HomeBuyerPage())),
-                    ),
+        child: Container(
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF121214),
+            borderRadius: BorderRadius.circular(36),
+            border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Home Button
+              if (activeIndex == NavPageIndex.home)
+                const _ActiveFooterIcon(
+                  icon: 'assets/images/home_icon.png',
+                  label: 'EXPLORE',
+                  pastelPurple: pastelPurple,
+                )
+              else
+                _FooterIcon(
+                  imagePath: 'assets/images/white_home_icon.png',
+                  onTap: () => Navigator.of(context)
+                      .pushReplacement(fadeRoute(const HomeBuyerPage())),
+                ),
 
-                  // Search Button
-                  if (activeIndex == NavPageIndex.search)
-                    const _ActiveFooterIcon(
-                      icon: 'assets/images/search_icon.png',
-                      label: 'Search',
-                    )
-                  else
-                    _FooterIcon(
-                      imagePath: 'assets/images/white_search_icon.png',
-                      onTap: () => Navigator.of(context)
-                          .pushReplacement(fadeRoute(const SearchPage())),
-                    ),
+              // Search Button
+              if (activeIndex == NavPageIndex.search)
+                const _ActiveFooterIcon(
+                  icon: 'assets/images/search_icon.png',
+                  label: 'SEARCH',
+                  pastelPurple: pastelPurple,
+                )
+              else
+                _FooterIcon(
+                  imagePath: 'assets/images/white_search_icon.png',
+                  onTap: () => Navigator.of(context)
+                      .pushReplacement(fadeRoute(const SearchPage())),
+                ),
 
-                  // Favorites Button
-                  if (activeIndex == NavPageIndex.favorites)
-                    const _ActiveFooterIcon(
-                      icon: 'assets/images/fav_icon.png',
-                      label: 'Favorites',
-                    )
-                  else
-                    _FooterIcon(
-                      imagePath: 'assets/images/white_fav_icon.png',
-                      onTap: () => Navigator.of(context)
-                          .pushReplacement(fadeRoute(const FavoritesPage())),
-                    ),
+              // Favorites Button
+              if (activeIndex == NavPageIndex.favorites)
+                const _ActiveFooterIcon(
+                  icon: 'assets/images/fav_icon.png',
+                  label: 'FAVORITES',
+                  pastelPurple: pastelPurple,
+                )
+              else
+                _FooterIcon(
+                  imagePath: 'assets/images/white_fav_icon.png',
+                  onTap: () => Navigator.of(context)
+                      .pushReplacement(fadeRoute(const FavoritesPage())),
+                ),
 
-                  // Settings Button
-                  if (activeIndex == NavPageIndex.settings)
-                    const _ActiveFooterIcon(
-                      icon: 'assets/images/settings_icon.png',
-                      label: 'Settings',
-                    )
-                  else
-                    _FooterIcon(
-                      imagePath: 'assets/images/white_settings_icon.png',
-                      onTap: () => Navigator.of(context)
-                          .pushReplacement(fadeRoute(const SettingsPage())),
-                    ),
-                ],
-              ),
-            ),
+              // Settings Button
+              if (activeIndex == NavPageIndex.settings)
+                const _ActiveFooterIcon(
+                  icon: 'assets/images/settings_icon.png',
+                  label: 'SETTINGS',
+                  pastelPurple: pastelPurple,
+                )
+              else
+                _FooterIcon(
+                  imagePath: 'assets/images/white_settings_icon.png',
+                  onTap: () => Navigator.of(context)
+                      .pushReplacement(fadeRoute(const SettingsPage())),
+                ),
+            ],
           ),
         ),
       ),
@@ -115,16 +111,16 @@ class _FooterIcon extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.04),
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Image.asset(
           imagePath,
-          width: 22,
-          height: 22,
+          width: 24,
+          height: 24,
           fit: BoxFit.contain,
-          color: Colors.white.withOpacity(0.6),
+          color: const Color(0xFF8E8E93),
         ),
       ),
     );
@@ -134,38 +130,39 @@ class _FooterIcon extends StatelessWidget {
 class _ActiveFooterIcon extends StatelessWidget {
   final String icon;
   final String label;
-  const _ActiveFooterIcon({required this.icon, required this.label});
+  final Color pastelPurple;
+  const _ActiveFooterIcon({
+    required this.icon,
+    required this.label,
+    required this.pastelPurple,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final bool isMainMenu = label.contains('Main');
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMainMenu ? 16.5 : 12,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFDF00FF),
-        borderRadius: BorderRadius.circular(40),
+        color: pastelPurple,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
             icon,
-            width: isMainMenu ? 24 : 19.5,
-            height: 28,
-            color: const Color(0xFF0D0D0D),
+            width: 20,
+            height: 20,
+            color: const Color(0xFF000000),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
-            label.trim(),
+            label,
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
               fontFamily: 'Poppins',
-              color: Color(0xFF0D0D0D),
+              letterSpacing: 0.8,
+              color: Color(0xFF000000),
             ),
           )
         ],
