@@ -20,7 +20,8 @@ import 'package:untitled/welcome_page.dart';
 import 'utils/abstract_background.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final bool isEmbedded;
+  const SettingsPage({super.key, this.isEmbedded = false});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -84,6 +85,144 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     const Color pastelPurple = Color(0xFFD4B2FF);
+
+    final innerContent = Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Scrollable List grouped into card blocks (full screen stack child)
+        ListView(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 170),
+          children: [
+            _buildSectionHeader('Account Preferences'),
+            _buildSettingsGroup([
+              _buildSettingsItem('Preferred property types', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
+                );
+              }),
+              _buildSettingsItem('Preferred location', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
+                );
+              }),
+              if (_hasPassword)
+                _buildSettingsItem('Change password', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                  );
+                }),
+              _buildSettingsItem('Notification preferences', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
+                );
+              }),
+            ]),
+            _buildSectionHeader('Support & Legal'),
+            _buildSettingsGroup([
+              _buildSettingsItem('FAQs', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FAQPage()),
+                );
+              }),
+              _buildSettingsItem('Contact support', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ContactSupportPage()),
+                );
+              }),
+              _buildSettingsItem('Terms of service', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TOSPage()),
+                );
+              }),
+              _buildSettingsItem('Privacy policy', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
+                );
+              }),
+            ]),
+            _buildSectionHeader('Account Actions'),
+            _buildSettingsGroup([
+              _buildSettingsItem('Log out', () => _logout(context)),
+              _buildSettingsItem('Deactivate account', () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
+                );
+              }, showDivider: false),
+            ]),
+            const SizedBox(height: 40),
+            Center(
+              child: Text(
+                'VIZARE v1.0.0',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withValues(alpha: 0.15),
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
+        Positioned(
+          top: 24,
+          left: 20,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121214), // Solid dark grey card block
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 34, // Ultra bold
+                    fontWeight: FontWeight.w900, // Ultra bold
+                    color: Colors.white,
+                    letterSpacing: -1.0,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Manage your preferences and profile details.',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 3. Floating Bottom Nav Bar (only if not embedded)
+        if (!widget.isEmbedded)
+          const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
+      ],
+    );
+
+    if (widget.isEmbedded) {
+      return innerContent;
+    }
+
     return PopScope(
       canPop: false, // Prevents back swipe
       child: Scaffold(
@@ -91,155 +230,7 @@ class _SettingsPageState extends State<SettingsPage> {
         body: AbstractBackground(
           child: SafeArea(
             bottom: true,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // 1. Scrollable List grouped into card blocks (full screen stack child)
-                ListView(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
-                  children: [
-                    _buildSectionHeader('Account Preferences'),
-                    _buildSettingsGroup([
-                      _buildSettingsItem('Preferred property types', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PreferredPropertyTypesPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Preferred location', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PreferredLocationPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Notification preferences', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const NotificationPreferencesPage()),
-                        );
-                      }, showDivider: false),
-                    ]),
-
-                    // Conditional "Security" block ---
-                    if (_hasPassword) ...[
-                      _buildSectionHeader('Security'),
-                      _buildSettingsGroup([
-                        _buildSettingsItem('Change password', () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
-                          );
-                        }, showDivider: false),
-                      ]),
-                    ],
-
-                    _buildSectionHeader('Support & Legal'),
-                    _buildSettingsGroup([
-                      _buildSettingsItem('FAQs', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const FAQPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Terms of Service', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const TOSPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Privacy Policy', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Contact Support', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ContactSupportPage()),
-                        );
-                      }),
-                      _buildSettingsItem('Deactivate Account', () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DeactivateAccountPage()),
-                        );
-                      }, showDivider: false),
-                    ]),
-
-                    // Log Out Button: Solid block pastel purple shape with solid black text
-                    Center(
-                      child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 32, bottom: 16),
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: pastelPurple,
-                            foregroundColor: const Color(0xFF000000),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20), // Chunky border radius
-                            ),
-                          ),
-                          onPressed: () => _logout(context),
-                          child: const Text(
-                            "LOG OUT",
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
-                Positioned(
-                  top: 24,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF121214), // Solid dark block
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: pastelPurple, width: 2.0), // High contrast border
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Settings',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 34, // Massive expressive Wise-style font
-                            fontWeight: FontWeight.w900, // Ultra bold
-                            color: Colors.white,
-                            letterSpacing: -1.0,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Manage your preferences and profile details.',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // 3. Floating Bottom Nav Bar
-                const FloatingBottomNavBar(activeIndex: NavPageIndex.settings),
-              ],
-            ),
+            child: innerContent,
           ),
         ),
       ),

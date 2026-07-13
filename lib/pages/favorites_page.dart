@@ -10,7 +10,8 @@ import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
 
 class FavoritesPage extends StatefulWidget {
-  const FavoritesPage({super.key});
+  final bool isEmbedded;
+  const FavoritesPage({super.key, this.isEmbedded = false});
 
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
@@ -73,63 +74,71 @@ class _FavoritesPageState extends State<FavoritesPage> {
   @override
   Widget build(BuildContext context) {
     const Color pastelPurple = Color(0xFFD4B2FF);
+
+    final innerContent = Stack(
+      fit: StackFit.expand, // Make stack fill the screen
+      children: [
+        // 1. Scrollable Content (padded internally to scroll behind header)
+        _isLoading
+            ? const Center(child: CircularProgressIndicator(color: pastelPurple))
+            : _buildFavoritesList(),
+
+        // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
+        Positioned(
+          top: 24,
+          left: 20,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121214), // Solid dark block
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Favorites',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 34, // Massive expressive Wise-style font
+                    fontWeight: FontWeight.w900, // Ultra bold
+                    color: Colors.white,
+                    letterSpacing: -1.0,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Your bookmarked properties of interest.',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 3. Floating Bottom Nav Bar (only if not embedded)
+        if (!widget.isEmbedded)
+          const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
+      ],
+    );
+
+    if (widget.isEmbedded) {
+      return innerContent;
+    }
+
     return PopScope(
       canPop: false,
       child: Scaffold(
         backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: AbstractBackground(
           child: SafeArea(
-            child: Stack(
-              fit: StackFit.expand, // Make stack fill the screen
-              children: [
-                // 1. Scrollable Content (padded internally to scroll behind header)
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: pastelPurple))
-                    : _buildFavoritesList(),
-
-                // 2. Custom Wise-Style Header Overhaul (Solid high-contrast container)
-                Positioned(
-                  top: 24,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF121214), // Solid dark block
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Favorites',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 34, // Massive expressive Wise-style font
-                            fontWeight: FontWeight.w900, // Ultra bold
-                            color: Colors.white,
-                            letterSpacing: -1.0,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Your bookmarked properties of interest.',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // 3. Floating Bottom Nav Bar
-                const FloatingBottomNavBar(activeIndex: NavPageIndex.favorites),
-              ],
-            ),
+            child: innerContent,
           ),
         ),
       ),
@@ -149,7 +158,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 170),
       itemCount: _favorites.length,
       itemBuilder: (context, index) {
         final property = _favorites[index];

@@ -103,13 +103,14 @@ class _WelcomePageState extends State<WelcomePage> {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 600),
                     transitionBuilder: (Widget child, Animation<double> animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.05),
-                            end: Offset.zero,
-                          ).animate(animation),
+                      final isEntering = child.key == ValueKey(_currentIndex);
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: isEntering ? const Offset(0.2, 0.0) : const Offset(-0.2, 0.0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: FadeTransition(
+                          opacity: animation,
                           child: child,
                         ),
                       );

@@ -9,9 +9,10 @@ import 'package:untitled/pages/search_page.dart';
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
-import 'utils/page_transitions.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
+import 'favorites_page.dart';
+import 'settings_page.dart';
 
 class HomeBuyerPage extends StatefulWidget {
   const HomeBuyerPage({super.key});
@@ -21,17 +22,13 @@ class HomeBuyerPage extends StatefulWidget {
 }
 
 class _HomeBuyerPageState extends State<HomeBuyerPage> {
-  // State variables for loading and storing properties
-  bool _isLoading = true;
-  List<Property> _featuredProperties = [];
-  List<Property> _nearbyProperties = [];
-  List<Property> _popularProperties = [];
-  String? _profilePicUrl;
-  final _logger = Logger();
+  late PageController _pageController;
+  NavPageIndex _currentIndex = NavPageIndex.home;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex.index);
     // Set status bar style
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.edgeToEdge
@@ -45,6 +42,90 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF000000), // Pitch Black background
+        body: AbstractBackground(
+          child: SafeArea(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                PageView(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = NavPageIndex.values[index];
+                    });
+                  },
+                  children: [
+                    HomeBuyerHomeBody(
+                      onSearchTap: () {
+                        _pageController.animateToPage(
+                          NavPageIndex.search.index,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                    ),
+                    const SearchPage(isEmbedded: true),
+                    const FavoritesPage(isEmbedded: true),
+                    const SettingsPage(isEmbedded: true),
+                  ],
+                ),
+                FloatingBottomNavBar(
+                  activeIndex: _currentIndex,
+                  pageController: _pageController,
+                  onTap: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                    _pageController.animateToPage(
+                      index.index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomeBuyerHomeBody extends StatefulWidget {
+  final VoidCallback onSearchTap;
+  const HomeBuyerHomeBody({super.key, required this.onSearchTap});
+
+  @override
+  State<HomeBuyerHomeBody> createState() => _HomeBuyerHomeBodyState();
+}
+
+class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
+  // State variables for loading and storing properties
+  bool _isLoading = true;
+  List<Property> _featuredProperties = [];
+  List<Property> _nearbyProperties = [];
+  List<Property> _popularProperties = [];
+  String? _profilePicUrl;
+  final _logger = Logger();
+
+  @override
+  void initState() {
+    super.initState();
     // Fetch data when the page loads
     _fetchProperties();
     _fetchUserProfile();
@@ -114,94 +195,81 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
   @override
   Widget build(BuildContext context) {
     const Color pastelPurple = Color(0xFFD4B2FF);
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        backgroundColor: const Color(0xFF000000), // Pitch Black background
-        body: AbstractBackground(
-          child: SafeArea(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: pastelPurple),
-                      )
-                    : SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 100), // Spacer for top floating bar
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: pastelPurple),
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 100), // Spacer for top floating bar
 
-                            // Bold, Energetic Wise-style Header Overhaul
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Find your home',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 40, // Massive expressive title
-                                      fontWeight: FontWeight.w900, // Ultra bold
-                                      color: Colors.white,
-                                      letterSpacing: -1.5,
-                                      height: 1.1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Tour properties in immersive augmented reality.',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.normal,
-                                      color: Colors.white.withValues(alpha: 0.6),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    // Bold, Energetic Wise-style Header Overhaul
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Find your home',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 40, // Massive expressive title
+                              fontWeight: FontWeight.w900, // Ultra bold
+                              color: Colors.white,
+                              letterSpacing: -1.5,
+                              height: 1.1,
                             ),
-                            const SizedBox(height: 16),
-
-                            // 1. Featured Carousel
-                            if (_featuredProperties.isNotEmpty) ...[
-                              _buildSectionHeader('Featured', 'deals'),
-                              const SizedBox(height: 14),
-                              _buildFeaturedCarousel(context, _featuredProperties),
-                              const SizedBox(height: 36),
-                            ],
-
-                            // 2. Nearby Carousel
-                            if (_nearbyProperties.isNotEmpty) ...[
-                              _buildSectionHeader('Nearby', 'units'),
-                              const SizedBox(height: 14),
-                              _buildNearbyCarousel(context, _nearbyProperties),
-                              const SizedBox(height: 36),
-                            ],
-
-                            // 3. Popular Property Feed (Chunky Card Blocks)
-                            if (_popularProperties.isNotEmpty) ...[
-                              _buildSectionHeader('Popular', 'listings'),
-                              const SizedBox(height: 14),
-                              _buildPopularFeed(context, _popularProperties),
-                            ],
-                            const SizedBox(height: 120), // Spacer for bottom nav
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tour properties in immersive augmented reality.',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(height: 16),
 
-                // Custom Floating Search Capsule (Wise Style: Solid, Outlined, High-Contrast)
-                _buildTopSearchCapsule(context),
+                    // 1. Featured Carousel
+                    if (_featuredProperties.isNotEmpty) ...[
+                      _buildSectionHeader('Featured', 'deals'),
+                      const SizedBox(height: 14),
+                      _buildFeaturedCarousel(context, _featuredProperties),
+                      const SizedBox(height: 36),
+                    ],
 
-                // Floating Bottom Nav Bar
-                const FloatingBottomNavBar(activeIndex: NavPageIndex.home),
-              ],
-            ),
-          ),
-        ),
-      ),
+                    // 2. Nearby Carousel
+                    if (_nearbyProperties.isNotEmpty) ...[
+                      _buildSectionHeader('Nearby', 'units'),
+                      const SizedBox(height: 14),
+                      _buildNearbyCarousel(context, _nearbyProperties),
+                      const SizedBox(height: 36),
+                    ],
+
+                    // 3. Popular Property Feed (Chunky Card Blocks)
+                    if (_popularProperties.isNotEmpty) ...[
+                      _buildSectionHeader('Popular', 'listings'),
+                      const SizedBox(height: 14),
+                      _buildPopularFeed(context, _popularProperties),
+                    ],
+                    const SizedBox(height: 170), // Spacer for bottom nav (increased from 120 to 170 to avoid blocking text/price)
+                  ],
+                ),
+              ),
+
+        // Custom Floating Search Capsule (Wise Style: Solid, Outlined, High-Contrast)
+        _buildTopSearchCapsule(context),
+      ],
     );
   }
 
@@ -291,7 +359,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
                                   fontSize: 13,
                                   fontWeight: FontWeight.w900,
                                   fontFamily: 'Poppins',
-                                ),
+                                  ),
                               ),
                             ),
                           ),
@@ -608,7 +676,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(fadeRoute(const SearchPage()));
+                  widget.onSearchTap();
                 },
                 child: Container(
                   height: 44,

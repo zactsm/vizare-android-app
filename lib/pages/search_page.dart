@@ -9,7 +9,8 @@ import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final bool isEmbedded;
+  const SearchPage({super.key, this.isEmbedded = false});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -95,51 +96,59 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     const Color pastelPurple = Color(0xFFD4B2FF);
+
+    final innerContent = Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Scrollable Results List (scrolls under the top search bar)
+        _buildResults(),
+
+        // 2. Search Bar Input Capsule (Wise Style: Solid, Outlined, High-Contrast)
+        Positioned(
+          top: 16,
+          left: 16,
+          right: 16,
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF121214), // Solid card block
+              borderRadius: BorderRadius.circular(28.0),
+              border: Border.all(color: pastelPurple, width: 2.0), // High contrast border
+            ),
+            child: TextField(
+              controller: _searchController,
+              autofocus: !widget.isEmbedded,
+              style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
+                hintText: 'Search by name or location...',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+                filled: true,
+                fillColor: Colors.transparent,
+                contentPadding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+                border: InputBorder.none,
+                prefixIcon: const Icon(Icons.search, color: pastelPurple),
+              ),
+              onSubmitted: (query) => _searchProperties(query),
+            ),
+          ),
+        ),
+
+        // 3. Floating Bottom Nav Bar (only if not embedded)
+        if (!widget.isEmbedded)
+          const FloatingBottomNavBar(activeIndex: NavPageIndex.search),
+      ],
+    );
+
+    if (widget.isEmbedded) {
+      return innerContent;
+    }
+
     return PopScope(
       canPop: false,
       child: Scaffold(
         backgroundColor: const Color(0xFF000000), // Pitch Black background
         body: AbstractBackground(
           child: SafeArea(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // 1. Scrollable Results List (scrolls under the top search bar)
-                _buildResults(),
-
-                // 2. Search Bar Input Capsule (Wise Style: Solid, Outlined, High-Contrast)
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF121214), // Solid card block
-                      borderRadius: BorderRadius.circular(28.0),
-                      border: Border.all(color: pastelPurple, width: 2.0), // High contrast border
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                      decoration: InputDecoration(
-                        hintText: 'Search by name or location...',
-                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
-                        border: InputBorder.none,
-                        prefixIcon: const Icon(Icons.search, color: pastelPurple),
-                      ),
-                      onSubmitted: (query) => _searchProperties(query),
-                    ),
-                  ),
-                ),
-
-                // 3. Floating Bottom Nav Bar
-                const FloatingBottomNavBar(activeIndex: NavPageIndex.search),
-              ],
-            ),
+            child: innerContent,
           ),
         ),
       ),
@@ -175,9 +184,8 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    // Display the results in custom chunky cards
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 100, bottom: 120),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 100, bottom: 170),
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final property = _results[index];
