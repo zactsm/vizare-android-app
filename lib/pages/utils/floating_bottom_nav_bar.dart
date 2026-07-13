@@ -90,17 +90,17 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
-      0: 125.0, // Home (EXPLORE)
-      1: 115.0, // Search (SEARCH)
-      2: 135.0, // Favorites (FAVORITES)
-      3: 125.0, // Settings (SETTINGS)
+      0: 115.0, // Home (EXPLORE)
+      1: 105.0, // Search (SEARCH)
+      2: 125.0, // Favorites (FAVORITES)
+      3: 115.0, // Settings (SETTINGS)
     };
 
     final Map<int, double> textWidths = {
-      0: 75.0, // EXPLORE
-      1: 65.0, // SEARCH
-      2: 85.0, // FAVORITES
-      3: 75.0, // SETTINGS
+      0: 65.0, // EXPLORE
+      1: 55.0, // SEARCH
+      2: 75.0, // FAVORITES
+      3: 65.0, // SETTINGS
     };
 
     final List<String> activeIcons = [
@@ -130,8 +130,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
 
     // Compute size and position of sliding background oval
     final double maxWidthForActive = ovalWidths[activeIndexInt] ?? 110.0;
-    // Shrinks to a circular badge (width 56) when swiping in-between tabs
-    final double activeOvalWidth = 56.0 + (maxWidthForActive - 56.0) * closeness;
+    // Shrinks to a circular badge (width 48) when swiping in-between tabs
+    final double activeOvalWidth = 48.0 + (maxWidthForActive - 48.0) * closeness;
 
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
@@ -141,8 +141,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     final double nextCenter = segmentWidth * (nextIndex + 0.5);
     final double activeCenter = prevCenter + (nextCenter - prevCenter) * fraction;
 
-    // Clamp the position so the oval stays perfectly inside the navigation bar boundaries
-    final double ovalLeft = (activeCenter - (activeOvalWidth / 2)).clamp(0.0, innerWidth - activeOvalWidth);
+    // Clamp the position so the oval stays perfectly inside the navigation bar boundaries with a 4px safety padding
+    final double ovalLeft = (activeCenter - (activeOvalWidth / 2)).clamp(4.0, innerWidth - activeOvalWidth - 4.0);
 
     Widget buildNavItem(int index, String inactiveIcon) {
       final double closenessAtTab = (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
@@ -209,15 +209,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(39),
+          borderRadius: BorderRadius.circular(38),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
             child: Container(
               height: 76,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF121214).withValues(alpha: 0.65), // Glassy dark grey background
-                borderRadius: BorderRadius.circular(39),
+                borderRadius: BorderRadius.circular(38),
                 border: Border.all(color: pastelPurple.withValues(alpha: 0.7), width: 2.0), // High contrast border
               ),
               child: Stack(
@@ -225,13 +225,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                   // Sliding and expanding purple oval background
                   Positioned(
                     left: ovalLeft,
-                    top: 0,
-                    bottom: 0,
+                    top: 4,
+                    bottom: 4,
                     width: activeOvalWidth,
                     child: Container(
                       decoration: BoxDecoration(
                         color: pastelPurple,
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       child: Center(
                         child: SingleChildScrollView(
