@@ -97,10 +97,10 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     };
 
     final Map<int, double> textWidths = {
-      0: 80.0, // EXPLORE
-      1: 70.0, // SEARCH
-      2: 95.0, // FAVORITES
-      3: 80.0, // SETTINGS
+      0: 64.0, // EXPLORE
+      1: 56.0, // SEARCH
+      2: 78.0, // FAVORITES
+      3: 67.0, // SETTINGS
     };
 
     final List<String> activeIcons = [
