@@ -90,17 +90,17 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
-      0: 115.0, // Home (EXPLORE)
-      1: 105.0, // Search (SEARCH)
-      2: 125.0, // Favorites (FAVORITES)
-      3: 115.0, // Settings (SETTINGS)
+      0: 132.0, // Home (EXPLORE)
+      1: 122.0, // Search (SEARCH)
+      2: 147.0, // Favorites (FAVORITES)
+      3: 132.0, // Settings (SETTINGS)
     };
 
     final Map<int, double> textWidths = {
-      0: 65.0, // EXPLORE
-      1: 55.0, // SEARCH
-      2: 75.0, // FAVORITES
-      3: 65.0, // SETTINGS
+      0: 80.0, // EXPLORE
+      1: 70.0, // SEARCH
+      2: 95.0, // FAVORITES
+      3: 80.0, // SETTINGS
     };
 
     final List<String> activeIcons = [
@@ -247,13 +247,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                                 color: const Color(0xFF000000),
                               ),
                               ClipRect(
-                                child: SizedBox(
-                                  height: 20,
-                                  width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
-                                  child: Opacity(
-                                    opacity: closeness,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(left: 8.0),
+                                child: Opacity(
+                                  opacity: closeness,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(left: 8.0 * closeness),
+                                    child: SizedBox(
+                                      height: 20,
+                                      width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
                                       child: Text(
                                         labels[activeIndexInt],
                                         maxLines: 1,
