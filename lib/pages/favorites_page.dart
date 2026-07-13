@@ -158,7 +158,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 170),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
       itemCount: _favorites.length,
       itemBuilder: (context, index) {
         final property = _favorites[index];

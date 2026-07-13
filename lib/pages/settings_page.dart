@@ -91,7 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
       children: [
         // 1. Scrollable List grouped into card blocks (full screen stack child)
         ListView(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 170),
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 140, bottom: 120),
           children: [
             _buildSectionHeader('Account Preferences'),
             _buildSettingsGroup([

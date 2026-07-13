@@ -262,7 +262,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                       const SizedBox(height: 14),
                       _buildPopularFeed(context, _popularProperties),
                     ],
-                    const SizedBox(height: 170), // Spacer for bottom nav (increased from 120 to 170 to avoid blocking text/price)
+                    const SizedBox(height: 120), // Spacer for bottom nav (increased from 120 to 170 to avoid blocking text/price)
                   ],
                 ),
               ),

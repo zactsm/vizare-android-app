@@ -185,7 +185,7 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 100, bottom: 170),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 100, bottom: 120),
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final property = _results[index];
