@@ -231,47 +231,44 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                     child: Container(
                       decoration: BoxDecoration(
                         color: pastelPurple,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(29),
                       ),
                       child: Center(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const NeverScrollableScrollPhysics(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                activeIcons[activeIndexInt],
-                                width: 20,
-                                height: 20,
-                                color: const Color(0xFF000000),
-                              ),
-                              ClipRect(
-                                child: Opacity(
-                                  opacity: closeness,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(left: 8.0 * closeness),
-                                    child: SizedBox(
-                                      height: 20,
-                                      width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
-                                      child: Text(
-                                        labels[activeIndexInt],
-                                        maxLines: 1,
-                                        overflow: TextOverflow.clip,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w900,
-                                          fontFamily: 'Poppins',
-                                          letterSpacing: 0.5,
-                                          color: Color(0xFF000000),
-                                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              activeIcons[activeIndexInt],
+                              width: 20,
+                              height: 20,
+                              color: const Color(0xFF000000),
+                            ),
+                            ClipRect(
+                              child: Opacity(
+                                opacity: closeness,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 8.0 * closeness),
+                                  child: SizedBox(
+                                    height: 20,
+                                    width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
+                                    child: Text(
+                                      labels[activeIndexInt],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.clip,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w900,
+                                        fontFamily: 'Poppins',
+                                        letterSpacing: 0.5,
+                                        color: Color(0xFF000000),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
