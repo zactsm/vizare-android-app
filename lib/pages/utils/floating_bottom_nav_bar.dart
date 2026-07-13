@@ -209,7 +209,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(39),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
             child: Container(
@@ -217,7 +217,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF121214).withValues(alpha: 0.65), // Glassy dark grey background
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(39),
                 border: Border.all(color: pastelPurple.withValues(alpha: 0.7), width: 2.0), // High contrast border
               ),
               child: Stack(
