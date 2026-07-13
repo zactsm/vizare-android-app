@@ -90,7 +90,7 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 decoration: TextDecoration.none,
               ),
             ),

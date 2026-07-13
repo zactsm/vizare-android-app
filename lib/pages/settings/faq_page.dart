@@ -28,7 +28,7 @@ class FAQPage extends StatelessWidget {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -44,7 +44,7 @@ class FAQPage extends StatelessWidget {
               'Frequently Asked Questions (FAQs)',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -110,7 +110,7 @@ class _FAQItem extends StatelessWidget {
             question,
             style: const TextStyle(
               color: Colors.white,
-              fontFamily: 'Inter',
+              fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 14,
               height: 1.4,

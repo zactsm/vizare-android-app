@@ -444,7 +444,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 : 'You have not posted any properties yet.',
             textAlign: TextAlign.center,
             style: const TextStyle(
-                color: Colors.grey, fontFamily: 'Inter', fontSize: 16),
+                color: Colors.grey, fontFamily: 'Poppins', fontSize: 16),
           ),
         ),
       );
@@ -522,7 +522,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 Text(
                   property.description,
                   style:
-                  TextStyle(color: Colors.grey[400], fontFamily: 'Inter'),
+                  TextStyle(color: Colors.grey[400], fontFamily: 'Poppins'),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

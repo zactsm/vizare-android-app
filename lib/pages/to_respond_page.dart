@@ -57,7 +57,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text('Inquiries', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text('Inquiries', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFF121212),
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,

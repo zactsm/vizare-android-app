@@ -187,7 +187,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -264,7 +264,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         const Text(
           'Deactivate account',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
             fontSize: 16,
             color: Colors.white,
@@ -284,7 +284,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         const Text(
           'Reason for Deactivation:',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 16,
             color: Colors.white,
           ),
@@ -292,7 +292,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         ..._reasons.keys.map((reason) {
           return CheckboxListTile(
             title: Text(reason,
-                style: const TextStyle(color: Colors.white, fontFamily: 'Inter')),
+                style: const TextStyle(color: Colors.white, fontFamily: 'Poppins')),
             value: _reasons[reason],
             onChanged: (bool? value) => _handleReasonSelection(reason),
             activeColor: Colors.white,
@@ -311,7 +311,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
               decoration: InputDecoration(
                 hintText: 'Tell us why...',
                 hintStyle:
-                TextStyle(color: Colors.grey[600], fontFamily: 'Inter'),
+                TextStyle(color: Colors.grey[600], fontFamily: 'Poppins'),
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.all(12.0),
@@ -335,7 +335,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         const Text(
           'Deactivate account',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
             fontSize: 16,
             color: Colors.white,
@@ -355,7 +355,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         const Text(
           'Enter your password to confirm:',
           style: TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 16,
             color: Colors.white,
           ),

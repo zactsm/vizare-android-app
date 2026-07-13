@@ -166,7 +166,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -182,7 +182,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
               const Text(
                 'Contact Support',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Colors.white,
@@ -272,7 +272,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
       child: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           fontSize: 16,
           color: Colors.white,
         ),
@@ -293,7 +293,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         hintText: hintText,
         hintStyle: TextStyle(
           color: Colors.grey[600],
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
         ),
         filled: true,
         fillColor: Colors.white,

@@ -76,7 +76,7 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -92,7 +92,7 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
               'Notification preferences',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -102,7 +102,7 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
               'General',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -136,7 +136,7 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
               'Delivery Methods',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),

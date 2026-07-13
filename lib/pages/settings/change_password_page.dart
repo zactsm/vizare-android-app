@@ -187,7 +187,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -204,7 +204,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               const Text(
                 'Change password',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Colors.white,
@@ -307,7 +307,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       child: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           fontSize: 16,
           color: Colors.white,
         ),
@@ -372,7 +372,7 @@ class _ValidationChecklistItem extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Inter',
+              fontFamily: 'Poppins',
               color: isValid ? Colors.white : Colors.grey,
               fontSize: 14,
             ),

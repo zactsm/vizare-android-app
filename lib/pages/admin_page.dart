@@ -182,7 +182,7 @@ class _AdminPageState extends State<AdminPage> {
                     Text(
                       property.description,
                       style: TextStyle(
-                        fontFamily: 'Inter',
+                        fontFamily: 'Poppins',
                         fontSize: 12,
                         color: Colors.grey[400],
                       ),

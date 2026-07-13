@@ -72,7 +72,7 @@ class _PreferredPropertyTypesPageState extends State<PreferredPropertyTypesPage>
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -89,7 +89,7 @@ class _PreferredPropertyTypesPageState extends State<PreferredPropertyTypesPage>
               'Preferred property types',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

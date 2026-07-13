@@ -176,7 +176,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -191,7 +191,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
               const Text(
                 'Preferred location',
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                   color: Colors.white,
@@ -207,7 +207,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                   hintText: 'Search location...',
                   hintStyle: TextStyle(
                     color: Colors.grey[600],
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                   ),
                   prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
                   filled: true,
@@ -225,7 +225,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                 const Text(
                   'Is this correct?',
                   style: TextStyle(
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                     fontSize: 16,
                     color: Colors.white,
                   ),

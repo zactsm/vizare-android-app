@@ -253,7 +253,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                               : "Upload 3D Model (.glb)",
                           style: TextStyle(
                             color: _selectedModel != null ? Colors.green : Colors.white54,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: _selectedModel != null ? FontWeight.bold : FontWeight.normal,
                           )
                       ),
@@ -405,7 +405,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
         text,
-        style: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Inter', fontSize: 12),
+        style: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Poppins', fontSize: 12),
       ),
     );
   }
@@ -420,7 +420,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black, fontFamily: 'Inter', fontWeight: FontWeight.w600),
+        style: const TextStyle(color: Colors.black, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.normal),
@@ -451,7 +451,7 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
           ),
         ),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 14)),
+        Text(label, style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14)),
       ],
     );
   }

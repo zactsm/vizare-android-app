@@ -73,7 +73,20 @@ class _ProfilePageState extends State<ProfilePage> {
           }
 
           if (data['created_at'] != null) {
-            _dateJoined = data['created_at'].toString().split(' ')[0];
+            try {
+              final parsedDate = DateTime.parse(data['created_at'].toString());
+              final day = parsedDate.day.toString().padLeft(2, '0');
+              final month = parsedDate.month.toString().padLeft(2, '0');
+              final year = parsedDate.year.toString();
+              _dateJoined = "$day/$month/$year";
+            } catch (e) {
+              final parts = data['created_at'].toString().split(' ')[0].split('-');
+              if (parts.length == 3) {
+                _dateJoined = "${parts[2]}/${parts[1]}/${parts[0]}";
+              } else {
+                _dateJoined = data['created_at'].toString().split(' ')[0];
+              }
+            }
           }
 
           _isLoading = false;
@@ -374,10 +387,44 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Read-only Roles (Chunky checkboxes)
-                            _buildCheckboxRow("Homebuyer Dashboard Active", _isHomebuyer, pastelPurple),
-                            const SizedBox(height: 8),
-                            _buildCheckboxRow("Homeowner Dashboard Active", _isHomeowner, pastelPurple),
+                            // Account Type Box (Same style as other fields)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF09090A), // Read-only look
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFF1E1E22),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "ACCOUNT TYPE",
+                                    style: TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _isHomeowner ? "Homeowner" : (_isHomebuyer ? "Homebuyer" : "N/A"),
+                                    style: const TextStyle(
+                                      color: Colors.white38, // Read-only look
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             const SizedBox(height: 28),
 
                             // Date Joined Info Container (Chunky Block)
@@ -543,46 +590,12 @@ class _ProfilePageState extends State<ProfilePage> {
               isDense: true,
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.white24, fontWeight: FontWeight.normal),
-              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: InputBorder.none,
             ),
           ),
         ],
       ),
-    );
-  }
-
-  // Custom checkbox row
-  Widget _buildCheckboxRow(String label, bool value, Color pastelPurple) {
-    return Row(
-      children: [
-        Theme(
-          data: ThemeData(
-            unselectedWidgetColor: Colors.white24,
-          ),
-          child: Checkbox(
-            value: value,
-            onChanged: null, // Disabled / visual representation of active role
-            checkColor: Colors.black,
-            activeColor: pastelPurple,
-            fillColor: WidgetStateProperty.resolveWith((states) {
-              if (value) return pastelPurple;
-              return const Color(0xFF121214);
-            }),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }

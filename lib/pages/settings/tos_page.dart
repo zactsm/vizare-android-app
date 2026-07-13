@@ -28,7 +28,7 @@ class TOSPage extends StatelessWidget {
           'Settings',
           style: TextStyle(
             color: Colors.white,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -44,7 +44,7 @@ class TOSPage extends StatelessWidget {
               'Terms of Service',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -54,7 +54,7 @@ class TOSPage extends StatelessWidget {
               'Effective Date: 1 May 2025',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -130,7 +130,7 @@ class _FAQItem extends StatelessWidget {
             question,
             style: const TextStyle(
               color: Colors.white,
-              fontFamily: 'Inter',
+              fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 14,
               height: 1.4,

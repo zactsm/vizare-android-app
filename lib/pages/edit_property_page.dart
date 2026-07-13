@@ -349,7 +349,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
       child: Text(
         text,
-        style: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Inter', fontSize: 12),
+        style: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Poppins', fontSize: 12),
       ),
     );
   }
@@ -364,7 +364,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black, fontFamily: 'Inter', fontWeight: FontWeight.w600),
+        style: const TextStyle(color: Colors.black, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           hintStyle: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.normal),
           border: InputBorder.none,
@@ -394,7 +394,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           ),
         ),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 14)),
+        Text(label, style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14)),
       ],
     );
   }
