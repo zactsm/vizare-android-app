@@ -1,3 +1,4 @@
+import 'dart:ui'; // For ImageFilter
 import 'package:flutter/material.dart';
 import 'package:untitled/pages/favorites_page.dart';
 import 'package:untitled/pages/homebuyer_page.dart';
@@ -84,42 +85,68 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
         : _animController.value;
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
-    final double barWidth = maxBarWidth - (maxBarWidth * 0.12);
+    final double barWidth = maxBarWidth - 32; // Fixed margins (16px left/right) for consistency
     final double innerWidth = barWidth - 24; // padding horizontal 12 * 2
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
-      0: 110.0, // Home
-      1: 110.0, // Search
-      2: 125.0, // Favorites
-      3: 115.0, // Settings
+      0: 125.0, // Home (EXPLORE)
+      1: 115.0, // Search (SEARCH)
+      2: 135.0, // Favorites (FAVORITES)
+      3: 125.0, // Settings (SETTINGS)
     };
 
     final Map<int, double> textWidths = {
-      0: 65.0, // EXPLORE
-      1: 55.0, // SEARCH
-      2: 75.0, // FAVORITES
-      3: 65.0, // SETTINGS
+      0: 75.0, // EXPLORE
+      1: 65.0, // SEARCH
+      2: 85.0, // FAVORITES
+      3: 75.0, // SETTINGS
     };
 
-    // Calculate interpolated position and width for the purple oval
+    final List<String> activeIcons = [
+      'assets/images/home_icon.png',
+      'assets/images/search_icon.png',
+      'assets/images/fav_icon.png',
+      'assets/images/settings_icon.png',
+    ];
+
+    final List<String> inactiveIcons = [
+      'assets/images/white_home_icon.png',
+      'assets/images/white_search_icon.png',
+      'assets/images/white_fav_icon.png',
+      'assets/images/white_settings_icon.png',
+    ];
+
+    final List<String> labels = [
+      'EXPLORE',
+      'SEARCH',
+      'FAVORITES',
+      'SETTINGS',
+    ];
+
+    // Determine the closest index to anchor the active label and icon inside the sliding oval
+    final int activeIndexInt = pageProgress.round().clamp(0, 3);
+    final double closeness = (1.0 - (pageProgress - activeIndexInt).abs() * 2).clamp(0.0, 1.0);
+
+    // Compute size and position of sliding background oval
+    final double maxWidthForActive = ovalWidths[activeIndexInt] ?? 110.0;
+    // Shrinks to a circular badge (width 56) when swiping in-between tabs
+    final double activeOvalWidth = 56.0 + (maxWidthForActive - 56.0) * closeness;
+
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
     final double fraction = pageProgress - pageProgress.floor();
-
-    final double prevWidth = ovalWidths[prevIndex] ?? 110.0;
-    final double nextWidth = ovalWidths[nextIndex] ?? 110.0;
-    final double activeOvalWidth = prevWidth + (nextWidth - prevWidth) * fraction;
 
     final double prevCenter = segmentWidth * (prevIndex + 0.5);
     final double nextCenter = segmentWidth * (nextIndex + 0.5);
     final double activeCenter = prevCenter + (nextCenter - prevCenter) * fraction;
 
-    final double ovalLeft = activeCenter - (activeOvalWidth / 2);
+    // Clamp the position so the oval stays perfectly inside the navigation bar boundaries
+    final double ovalLeft = (activeCenter - (activeOvalWidth / 2)).clamp(0.0, innerWidth - activeOvalWidth);
 
-    Widget buildNavItem(int index, String activeIcon, String inactiveIcon, String label) {
-      final double closeness = (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
-      final double textWidth = textWidths[index] ?? 60.0;
+    Widget buildNavItem(int index, String inactiveIcon) {
+      final double closenessAtTab = (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
+      final double opacity = (1.0 - closenessAtTab).clamp(0.0, 1.0);
 
       return Expanded(
         child: GestureDetector(
@@ -158,59 +185,14 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
             color: Colors.transparent, // expand hit test area
             height: double.infinity,
             child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Outlined icon when inactive
-                      Opacity(
-                        opacity: (1.0 - closeness).clamp(0.0, 1.0),
-                        child: Image.asset(
-                          inactiveIcon,
-                          width: 20,
-                          height: 20,
-                          color: const Color(0xFF8E8E93),
-                        ),
-                      ),
-                      // Filled black icon when active
-                      Opacity(
-                        opacity: closeness,
-                        child: Image.asset(
-                          activeIcon,
-                          width: 20,
-                          height: 20,
-                          color: const Color(0xFF000000),
-                        ),
-                      ),
-                    ],
-                  ),
-                  ClipRect(
-                    child: SizedBox(
-                      height: 20,
-                      width: textWidth * closeness,
-                      child: Opacity(
-                        opacity: closeness,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.clip,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: 'Poppins',
-                              letterSpacing: 0.5,
-                              color: Color(0xFF000000),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: Opacity(
+                opacity: opacity,
+                child: Image.asset(
+                  inactiveIcon,
+                  width: 20,
+                  height: 20,
+                  color: const Color(0xFF8E8E93),
+                ),
               ),
             ),
           ),
@@ -221,45 +203,92 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: EdgeInsets.only(
-          left: screenWidth * 0.06,
-          right: screenWidth * 0.06,
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
           bottom: 24,
         ),
-        child: Container(
-          height: 76,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF121214), // High-contrast solid dark background
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: pastelPurple, width: 2.0), // High-contrast chunky border
-          ),
-          child: Stack(
-            children: [
-              // Sliding purple oval background
-              Positioned(
-                left: ovalLeft,
-                top: 0,
-                bottom: 0,
-                width: activeOvalWidth,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: pastelPurple,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+            child: Container(
+              height: 76,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121214).withValues(alpha: 0.65), // Glassy dark grey background
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: pastelPurple.withValues(alpha: 0.7), width: 2.0), // High contrast border
               ),
-              // Nav items
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Stack(
                 children: [
-                  buildNavItem(0, 'assets/images/home_icon.png', 'assets/images/white_home_icon.png', 'EXPLORE'),
-                  buildNavItem(1, 'assets/images/search_icon.png', 'assets/images/white_search_icon.png', 'SEARCH'),
-                  buildNavItem(2, 'assets/images/fav_icon.png', 'assets/images/white_fav_icon.png', 'FAVORITES'),
-                  buildNavItem(3, 'assets/images/settings_icon.png', 'assets/images/white_settings_icon.png', 'SETTINGS'),
+                  // Sliding and expanding purple oval background
+                  Positioned(
+                    left: ovalLeft,
+                    top: 0,
+                    bottom: 0,
+                    width: activeOvalWidth,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: pastelPurple,
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Center(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                activeIcons[activeIndexInt],
+                                width: 20,
+                                height: 20,
+                                color: const Color(0xFF000000),
+                              ),
+                              ClipRect(
+                                child: SizedBox(
+                                  height: 20,
+                                  width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
+                                  child: Opacity(
+                                    opacity: closeness,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: Text(
+                                        labels[activeIndexInt],
+                                        maxLines: 1,
+                                        overflow: TextOverflow.clip,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                          fontFamily: 'Poppins',
+                                          letterSpacing: 0.5,
+                                          color: Color(0xFF000000),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Inactive background icons in the foreground stack
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      buildNavItem(0, inactiveIcons[0]),
+                      buildNavItem(1, inactiveIcons[1]),
+                      buildNavItem(2, inactiveIcons[2]),
+                      buildNavItem(3, inactiveIcons[3]),
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
