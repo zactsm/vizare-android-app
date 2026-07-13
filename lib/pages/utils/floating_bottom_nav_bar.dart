@@ -86,7 +86,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
     final double barWidth = maxBarWidth - 32; // Fixed margins (16px left/right) for consistency
-    final double innerWidth = barWidth - 24; // padding horizontal 12 * 2
+    final double innerWidth = barWidth - 10; // padding horizontal 5 * 2
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
