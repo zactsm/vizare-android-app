@@ -90,10 +90,10 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
-      0: 132.0, // Home (EXPLORE)
-      1: 122.0, // Search (SEARCH)
-      2: 147.0, // Favorites (FAVORITES)
-      3: 132.0, // Settings (SETTINGS)
+      0: 110.0, // Home (EXPLORE)
+      1: 103.0, // Search (SEARCH)
+      2: 121.0, // Favorites (FAVORITES)
+      3: 113.0, // Settings (SETTINGS)
     };
 
     final Map<int, double> textWidths = {
@@ -214,7 +214,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
             filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
             child: Container(
               height: 76,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFF121214).withValues(alpha: 0.65), // Glassy dark grey background
                 borderRadius: BorderRadius.circular(38),
