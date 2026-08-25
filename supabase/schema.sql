@@ -330,24 +330,182 @@ alter table public.inquiries enable row level security;
 alter table public.support_tickets enable row level security;
 alter table public.notification_preferences enable row level security;
 
+-- Profiles Policies
 drop policy if exists "Profiles are readable" on public.profiles;
+create policy "Profiles are readable" on public.profiles
+for select to authenticated
+using (auth.uid() = auth_user_id or role = 'admin');
+
 drop policy if exists "Profiles are insertable" on public.profiles;
+create policy "Profiles are insertable" on public.profiles
+for insert to authenticated
+with check (auth.uid() = auth_user_id);
+
 drop policy if exists "Profiles are updatable" on public.profiles;
+create policy "Profiles are updatable" on public.profiles
+for update to authenticated
+using (auth.uid() = auth_user_id)
+with check (auth.uid() = auth_user_id);
+
+-- Properties Policies
 drop policy if exists "Properties are readable" on public.properties;
+create policy "Properties are readable" on public.properties
+for select
+using (
+  status = 'approved'
+  or homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
+
 drop policy if exists "Properties are insertable" on public.properties;
+create policy "Properties are insertable" on public.properties
+for insert to authenticated
+with check (
+  homeowner_id in (select id from public.profiles where auth_user_id = auth.uid() and role in ('homeowner', 'admin'))
+);
+
 drop policy if exists "Properties are updatable" on public.properties;
+create policy "Properties are updatable" on public.properties
+for update to authenticated
+using (
+  homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+)
+with check (
+  homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
+
 drop policy if exists "Properties are deletable" on public.properties;
+create policy "Properties are deletable" on public.properties
+for delete to authenticated
+using (
+  homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
+
+-- Property Images Policies
 drop policy if exists "Property images are readable" on public.property_images;
+create policy "Property images are readable" on public.property_images
+for select
+using (
+  exists (
+    select 1 from public.properties
+    where public.properties.id = property_id
+    and (
+      status = 'approved'
+      or homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+      or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+    )
+  )
+);
+
 drop policy if exists "Property images are insertable" on public.property_images;
+create policy "Property images are insertable" on public.property_images
+for insert to authenticated
+with check (
+  exists (
+    select 1 from public.properties
+    where public.properties.id = property_id
+    and (
+      homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+      or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+    )
+  )
+);
+
 drop policy if exists "Property images are updatable" on public.property_images;
+create policy "Property images are updatable" on public.property_images
+for update to authenticated
+using (
+  exists (
+    select 1 from public.properties
+    where public.properties.id = property_id
+    and (
+      homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+      or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+    )
+  )
+);
+
 drop policy if exists "Property images are deletable" on public.property_images;
+create policy "Property images are deletable" on public.property_images
+for delete to authenticated
+using (
+  exists (
+    select 1 from public.properties
+    where public.properties.id = property_id
+    and (
+      homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+      or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+    )
+  )
+);
+
+-- Favorites Policies
 drop policy if exists "Favorites are readable" on public.favorites;
+create policy "Favorites are readable" on public.favorites
+for select to authenticated
+using (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));
+
 drop policy if exists "Favorites are insertable" on public.favorites;
+create policy "Favorites are insertable" on public.favorites
+for insert to authenticated
+with check (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));
+
 drop policy if exists "Favorites are deletable" on public.favorites;
+create policy "Favorites are deletable" on public.favorites
+for delete to authenticated
+using (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));
+
+-- Inquiries Policies
 drop policy if exists "Inquiries are readable" on public.inquiries;
+create policy "Inquiries are readable" on public.inquiries
+for select to authenticated
+using (
+  homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or buyer_email in (select email from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
+
 drop policy if exists "Inquiries are insertable" on public.inquiries;
+create policy "Inquiries are insertable" on public.inquiries
+for insert to authenticated
+with check (
+  buyer_email in (select email from public.profiles where auth_user_id = auth.uid())
+);
+
+-- Support Tickets Policies
 drop policy if exists "Support tickets are readable" on public.support_tickets;
+create policy "Support tickets are readable" on public.support_tickets
+for select to authenticated
+using (
+  profile_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or user_email in (select email from public.profiles where auth_user_id = auth.uid())
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
+
 drop policy if exists "Support tickets are insertable" on public.support_tickets;
+create policy "Support tickets are insertable" on public.support_tickets
+for insert to authenticated
+with check (
+  profile_id in (select id from public.profiles where auth_user_id = auth.uid())
+  or user_email in (select email from public.profiles where auth_user_id = auth.uid())
+);
+
+-- Notification Preferences Policies
 drop policy if exists "Notification preferences are readable" on public.notification_preferences;
+create policy "Notification preferences are readable" on public.notification_preferences
+for select to authenticated
+using (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));
+
 drop policy if exists "Notification preferences are insertable" on public.notification_preferences;
+create policy "Notification preferences are insertable" on public.notification_preferences
+for insert to authenticated
+with check (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));
+
 drop policy if exists "Notification preferences are updatable" on public.notification_preferences;
+create policy "Notification preferences are updatable" on public.notification_preferences
+for update to authenticated
+using (profile_id in (select id from public.profiles where auth_user_id = auth.uid()))
+with check (profile_id in (select id from public.profiles where auth_user_id = auth.uid()));

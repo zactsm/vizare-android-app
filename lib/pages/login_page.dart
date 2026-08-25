@@ -69,10 +69,6 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
-
-    logger.d("📧 Sending email: [$email]");
-    logger.d("🔑 Sending password: [$password]");
-
     try {
       final response = await ApiService.post(
         'login.php',

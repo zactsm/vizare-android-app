@@ -1,8 +1,19 @@
 const { createClient } = require('@supabase/supabase-js');
 
 function corsHeaders(request) {
+  const origin = request.headers.origin;
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const allowOrigin =
+    allowedOrigins.length > 0
+      ? allowedOrigins.includes(origin)
+        ? origin
+        : allowedOrigins[0]
+      : origin || '*';
   return {
-    'Access-Control-Allow-Origin': request.headers.origin || '*',
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers':
       request.headers['access-control-request-headers'] ||
@@ -99,8 +110,14 @@ async function profileForUser(admin, user) {
     .maybeSingle();
   failOn(result.error);
 
-  // Link records imported from the old MySQL database on first login.
-  if (!result.data && user.email) {
+  // Only link records imported from the old database if the email has been confirmed
+  const isEmailVerified = Boolean(
+    user.email_confirmed_at ||
+    user.confirmed_at ||
+    user.app_metadata?.provider === 'google'
+  );
+
+  if (!result.data && user.email && isEmailVerified) {
     result = await admin
       .from('profiles')
       .update({ auth_user_id: user.id })
@@ -238,7 +255,7 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'search_properties.php') {
-    const term = String(input.term || '').trim().replace(/[%_,()]/g, '');
+    const term = String(input.term || '').trim().replace(/[^a-zA-Z0-9\s_-]/g, '');
     let builder = admin
       .from('properties')
       .select('*')
@@ -255,10 +272,34 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'get_property_images.php') {
+    const propId = Number(input.property_id);
+    if (!propId) {
+      return [400, { message: 'Invalid property ID.' }];
+    }
+    const propCheck = await admin
+      .from('properties')
+      .select('id,status,homeowner_id')
+      .eq('id', propId)
+      .maybeSingle();
+    failOn(propCheck.error);
+    if (!propCheck.data) {
+      return [404, { message: 'Property not found.' }];
+    }
+    if (propCheck.data.status !== 'approved') {
+      const authUser = await getAuthUser(request, publicClient);
+      if (!authUser) return [403, { message: 'Access denied.' }];
+      const callerProfile = await profileForUser(admin, authUser);
+      if (
+        !callerProfile ||
+        (callerProfile.role !== 'admin' && callerProfile.id !== propCheck.data.homeowner_id)
+      ) {
+        return [403, { message: 'Access denied.' }];
+      }
+    }
     const result = await admin
       .from('property_images')
       .select('image_url')
-      .eq('property_id', input.property_id)
+      .eq('property_id', propId)
       .order('sort_order');
     failOn(result.error);
     return [200, result.data.map((item) => item.image_url)];
@@ -267,23 +308,14 @@ async function dispatch(name, request, admin, publicClient) {
   const { user, profile } = await requireProfile(request, admin, publicClient);
 
   if (name === 'google_login.php') {
-    let current = await ensureProfile(admin, user, {
+    const requestedRole = ['homebuyer', 'homeowner'].includes(input.role)
+      ? input.role
+      : 'homebuyer';
+    const current = await ensureProfile(admin, user, {
       full_name: input.name,
+      role: requestedRole,
       has_password: false,
     });
-    if (
-      current.role !== 'admin' &&
-      ['homebuyer', 'homeowner'].includes(input.role)
-    ) {
-      const roleResult = await admin
-        .from('profiles')
-        .update({ role: input.role })
-        .eq('id', current.id)
-        .select('*')
-        .single();
-      failOn(roleResult.error);
-      current = roleResult.data;
-    }
     return [200, authPayload(null, current)];
   }
 

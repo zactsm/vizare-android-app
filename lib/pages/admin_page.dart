@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/google_auth_service.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -85,8 +88,24 @@ class _AdminPageState extends State<AdminPage> {
                   _buildGradientTitle("Admin\nMenu"),
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/login');
+                    onPressed: () async {
+                      try {
+                        await Supabase.instance.client.auth.signOut(
+                          scope: SignOutScope.local,
+                        );
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        try {
+                          await GoogleAuthService.signOut();
+                        } catch (_) {}
+                      } catch (_) {}
+                      if (context.mounted) {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/login',
+                          (route) => false,
+                        );
+                      }
                     },
                   )
                 ],
