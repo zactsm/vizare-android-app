@@ -3,8 +3,8 @@
   "outputDirectory": "build/web",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "/api/supabase-router"
     },
     {
       "source": "/(.*)",
