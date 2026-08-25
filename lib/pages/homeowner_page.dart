@@ -352,24 +352,14 @@ class _HomeownerPageState extends State<HomeownerPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 96),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Estate Manager',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: -0.6,
-                ),
-              ),
-              const SpatialBadge(
-                text: 'HOMEOWNER',
-                icon: Icons.verified_user_rounded,
-                primaryColor: VizareColors.champagneGold,
-              ),
-            ],
+          Text(
+            'Estate Manager',
+            style: GoogleFonts.poppins(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -0.6,
+            ),
           ),
           const SizedBox(height: 4),
           Text(

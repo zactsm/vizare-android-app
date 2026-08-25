@@ -189,23 +189,13 @@ class _WelcomePageState extends State<WelcomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 12),
-                            // Top Bar with Logo & Spatial Badge
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Image.asset(
-                                  'assets/images/logo.png',
-                                  width: 54,
-                                  height: 54,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const SizedBox(width: 54, height: 54),
-                                ),
-                                const SpatialBadge(
-                                  text: 'VISION AR 3.0',
-                                  icon: Icons.view_in_ar_rounded,
-                                  primaryColor: VizareColors.champagneGold,
-                                ),
-                              ],
+                            // Top Bar with Logo
+                            Image.asset(
+                              'assets/images/logo.png',
+                              width: 54,
+                              height: 54,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox(width: 54, height: 54),
                             ),
                             const SizedBox(height: 48),
                             // Dynamic Heading Switcher

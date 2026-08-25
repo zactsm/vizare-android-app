@@ -100,24 +100,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Saved Estates',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -0.6,
-                      ),
-                    ),
-                    const SpatialBadge(
-                      text: 'BOOKMARKED',
-                      icon: Icons.bookmark_added_rounded,
-                      primaryColor: VizareColors.champagneGold,
-                    ),
-                  ],
+                Text(
+                  'Saved Estates',
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(

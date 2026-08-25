@@ -108,12 +108,6 @@ class _AdminPageState extends State<AdminPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SpatialBadge(
-                          text: 'ADMIN TERMINAL',
-                          icon: Icons.admin_panel_settings_rounded,
-                          primaryColor: VizareColors.champagneGold,
-                        ),
-                        const SizedBox(height: 8),
                         Text(
                           'Moderation Queue',
                           style: GoogleFonts.poppins(

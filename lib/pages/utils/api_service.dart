@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -13,16 +13,25 @@ class ApiService {
   static const String supportAttachmentsBucket = 'support-attachments';
 
   static String get baseUrl {
+    final envBase = dotenv.env['API_BASE_URL']?.trim();
+    if (envBase != null && envBase.isNotEmpty) {
+      return envBase.endsWith('/')
+          ? envBase.substring(0, envBase.length - 1)
+          : envBase;
+    }
+
     if (kIsWeb) {
       return '/api';
     }
 
-    return dotenv.env['API_BASE_URL'] ?? '';
+    return '';
   }
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
   static String get supabasePublishableKey =>
-      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
+      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ??
+      dotenv.env['SUPABASE_ANON_KEY'] ??
+      '';
 
   static Future<String?> uploadAvatar(PlatformFile file) =>
       _uploadFile(file, avatarsBucket);
@@ -45,58 +54,68 @@ class ApiService {
     bool signedUrl = false,
   }) async {
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) {
-        throw StateError('A Supabase session is required to upload files.');
-      }
-      final bytes = file.bytes ??
-          (file.path == null ? null : await File(file.path!).readAsBytes());
+      final bytes = file.bytes;
       if (bytes == null) {
-        throw StateError('The selected file could not be read.');
+        _logger.e("Cannot upload file: bytes are null");
+        return null;
       }
-      final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+
+      String? userId;
+      try {
+        userId = Supabase.instance.client.auth.currentUser?.id;
+      } catch (_) {}
+
+      final extension = file.name.split('.').last;
       final fileName =
-          '$userId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
-      await Supabase.instance.client.storage
-          .from(bucket)
-          .uploadBinary(
-            fileName,
+          '${DateTime.now().millisecondsSinceEpoch}_${file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')}';
+      final objectPath =
+          userId == null ? fileName : '$userId/$fileName';
+
+      await Supabase.instance.client.storage.from(bucket).uploadBinary(
+            objectPath,
             bytes,
-            fileOptions: FileOptions(contentType: _contentType(file.name)),
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: _resolveContentType(extension),
+            ),
           );
 
       if (signedUrl) {
         return await Supabase.instance.client.storage
             .from(bucket)
-            .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+            .createSignedUrl(objectPath, 60 * 60 * 24 * 365);
       }
-      return Supabase.instance.client.storage.from(bucket).getPublicUrl(fileName);
+
+      return Supabase.instance.client.storage.from(bucket).getPublicUrl(objectPath);
     } catch (e) {
       _logger.e("Supabase Upload Error", error: e);
       return null;
     }
   }
 
-  static String _contentType(String fileName) {
-    final extension = fileName.toLowerCase().split('.').last;
-    return switch (extension) {
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'png' => 'image/png',
-      'webp' => 'image/webp',
-      'gif' => 'image/gif',
-      'glb' => 'model/gltf-binary',
-      'gltf' => 'model/gltf+json',
-      'pdf' => 'application/pdf',
-      _ => 'application/octet-stream',
-    };
+  static String _resolveContentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'glb':
+        return 'model/gltf-binary';
+      case 'gltf':
+        return 'model/gltf+json';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'webp':
+        return 'image/webp';
+      case 'pdf':
+        return 'application/pdf';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
   static Future<void> _deleteFileByUrl(String url, String bucket) async {
     final objectPath = _extractObjectPath(url, bucket);
-    if (objectPath == null) {
-      _logger.w('Skipping delete for non-matching or invalid storage URL: $url');
-      return;
-    }
+    if (objectPath == null) return;
 
     try {
       await Supabase.instance.client.storage.from(bucket).remove([objectPath]);
@@ -141,8 +160,13 @@ class ApiService {
 
   static Map<String, String> _authenticatedHeaders(
       [Map<String, String>? headers]) {
-    final accessToken =
-        Supabase.instance.client.auth.currentSession?.accessToken;
+    String? accessToken;
+    try {
+      accessToken =
+          Supabase.instance.client.auth.currentSession?.accessToken;
+    } catch (_) {
+      accessToken = null;
+    }
     return {
       ...?headers,
       if (accessToken != null) 'Authorization': 'Bearer $accessToken',
@@ -152,24 +176,41 @@ class ApiService {
   static Future<void> restoreSession(
       String? accessToken, String? refreshToken) async {
     if (accessToken == null || refreshToken == null) return;
-    await Supabase.instance.client.auth.setSession(refreshToken);
+    try {
+      await Supabase.instance.client.auth.setSession(refreshToken);
+    } catch (e) {
+      _logger.w("Session restore notice: $e");
+    }
   }
 
-  static Future<http.Response> post(String script, {Map<String, String>? body, Map<String, String>? headers}) async {
-    final url = Uri.parse('$baseUrl/$script');
+  static Future<http.Response> post(String script,
+      {Map<String, String>? body, Map<String, String>? headers}) async {
+    final base = baseUrl;
+    final cleanScript = script.startsWith('/') ? script.substring(1) : script;
+    final url = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
+
     if (kDebugMode) {
       final sanitized = Map<String, String>.from(body ?? {});
-      for (final key in ['password', 'current_password', 'new_password', 'token', 'access_token', 'refresh_token']) {
+      for (final key in [
+        'password',
+        'current_password',
+        'new_password',
+        'token',
+        'access_token',
+        'refresh_token'
+      ]) {
         if (sanitized.containsKey(key)) sanitized[key] = '******';
       }
       _logger.d('POST to $url with body: $sanitized');
     }
     try {
-      final response = await http.post(
-        url,
-        body: body,
-        headers: _authenticatedHeaders(headers),
-      );
+      final response = await http
+          .post(
+            url,
+            body: body,
+            headers: _authenticatedHeaders(headers),
+          )
+          .timeout(const Duration(seconds: 15));
       _logResponse(response);
       return response;
     } catch (e) {
@@ -178,16 +219,23 @@ class ApiService {
     }
   }
 
-  static Future<http.Response> get(String script, [Map<String, dynamic>? queryParameters]) async {
-    final baseUri = Uri.parse('$baseUrl/$script');
+  static Future<http.Response> get(String script,
+      [Map<String, dynamic>? queryParameters]) async {
+    final base = baseUrl;
+    final cleanScript = script.startsWith('/') ? script.substring(1) : script;
+    final baseUri = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
+
     final url = baseUri.replace(queryParameters: {
       ...baseUri.queryParameters,
-      ...?queryParameters?.map((key, value) => MapEntry(key, value.toString())),
+      ...?queryParameters
+          ?.map((key, value) => MapEntry(key, value.toString())),
     });
-    
+
     _logger.d('GET to $url');
     try {
-      final response = await http.get(url, headers: _authenticatedHeaders());
+      final response = await http
+          .get(url, headers: _authenticatedHeaders())
+          .timeout(const Duration(seconds: 15));
       _logResponse(response);
       return response;
     } catch (e) {
@@ -200,7 +248,8 @@ class ApiService {
     if (response.statusCode == 200) {
       _logger.i('Response 200 from ${response.request?.url}');
     } else {
-      _logger.w('Response ${response.statusCode} from ${response.request?.url}: ${response.body}');
+      _logger.w(
+          'Response ${response.statusCode} from ${response.request?.url}: ${response.body}');
     }
   }
 }

@@ -244,24 +244,14 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Settings',
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -0.6,
-                      ),
-                    ),
-                    const SpatialBadge(
-                      text: 'PREFERENCES',
-                      icon: Icons.tune_rounded,
-                      primaryColor: VizareColors.champagneGold,
-                    ),
-                  ],
+                Text(
+                  'Settings',
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(

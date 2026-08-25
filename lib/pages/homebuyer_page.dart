@@ -211,22 +211,6 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              const SpatialBadge(
-                                text: 'SPATIAL LIVING',
-                                icon: Icons.auto_awesome_rounded,
-                                primaryColor: VizareColors.champagneGold,
-                              ),
-                              const SizedBox(width: 8),
-                              SpatialBadge(
-                                text: '3D AR TOURS',
-                                icon: Icons.view_in_ar_rounded,
-                                primaryColor: VizareColors.spatialCyan,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
                           RichText(
                             text: TextSpan(
                               style: GoogleFonts.poppins(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -195,10 +196,16 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         }
         _showErrorDialog("Registration Failed", message);
       }
+    } on TimeoutException {
+      _logger.e("🚨 Create account request timed out");
+      _showErrorDialog("Connection Timeout", "The server took too long to respond. Please check your connection and try again.");
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
       _logger.e('Error occurred while creating account', error: e);
       _showErrorDialog("Connection Error", "An error occurred. Check your connection.");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -230,22 +237,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      width: 48,
-                      height: 48,
-                      errorBuilder: (c, e, s) =>
-                          const SizedBox(width: 48, height: 48),
-                    ),
-                    const SpatialBadge(
-                      text: 'PORTFOLIO PASS',
-                      icon: Icons.vpn_key_rounded,
-                      primaryColor: VizareColors.champagneGold,
-                    ),
-                  ],
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 48,
+                  height: 48,
+                  errorBuilder: (c, e, s) =>
+                      const SizedBox(width: 48, height: 48),
                 ),
                 const SizedBox(height: 24),
                 Text(

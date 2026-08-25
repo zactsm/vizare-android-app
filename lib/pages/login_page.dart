@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,11 +112,8 @@ class _LoginPageState extends State<LoginPage> {
       final response = await ApiService.post(
         'login.php',
         headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: {'email': email, 'password': password},
+        body: {'email': email.trim(), 'password': password},
       );
-
-      if (!mounted) return;
-      setState(() => _isLoading = false);
 
       if (response.statusCode == 200) {
         _logger.i("✅ Login successful");
@@ -128,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
         final userType = responseData['user_type'] as String?;
 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_email', email);
+        await prefs.setString('user_email', email.trim());
         if (userType != null) {
           await prefs.setString('user_type', userType);
         }
@@ -150,13 +148,19 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         final responseData = jsonDecode(response.body);
-        final errorMessage = responseData['message'] ?? 'Login failed.';
+        final errorMessage = responseData['message'] ?? 'Invalid email or password.';
         _showErrorDialog("Login Failed", errorMessage);
       }
+    } on TimeoutException {
+      _logger.e("🚨 Login request timed out");
+      _showErrorDialog("Connection Timeout", "The server took too long to respond. Please check your connection and try again.");
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
       _logger.e("🚨 Login error: $e");
-      _showErrorDialog("Connection Error", "Could not reach the server.");
+      _showErrorDialog("Connection Error", "Could not reach the server. Please verify your connection.");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -200,22 +204,12 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      width: 48,
-                      height: 48,
-                      errorBuilder: (c, e, s) =>
-                          const SizedBox(width: 48, height: 48),
-                    ),
-                    const SpatialBadge(
-                      text: 'SECURE AUTH',
-                      icon: Icons.shield_rounded,
-                      primaryColor: VizareColors.champagneGold,
-                    ),
-                  ],
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 48,
+                  height: 48,
+                  errorBuilder: (c, e, s) =>
+                      const SizedBox(width: 48, height: 48),
                 ),
                 const SizedBox(height: 24),
                 Text(
