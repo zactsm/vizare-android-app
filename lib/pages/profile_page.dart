@@ -56,7 +56,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final userType = prefs.getString('user_type');
 
     if (userEmail == null || userEmail.isEmpty) {
-      userEmail = Supabase.instance.client.auth.currentUser?.email;
+      try {
+        userEmail = Supabase.instance.client.auth.currentUser?.email;
+      } catch (_) {}
     }
 
     if (userEmail == null || userEmail.isEmpty) {

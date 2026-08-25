@@ -60,7 +60,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('VERIFIED LISTING'), findsOneWidget);
+      expect(find.text('ARCHITECTURAL SPECIFICATIONS'), findsOneWidget);
       expect(find.text('Modern Sunset Villa'), findsOneWidget);
       expect(find.text(mockPropertyWithModel.description), findsOneWidget);
 

@@ -116,4 +116,31 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(res.statusCode, 503);
     assert.match(res.body.message, /The API is not configured/);
   });
+
+  test('Database seed.sql contains 20 complete listings with unique 3D house models', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const seedPath = path.join(__dirname, '..', 'supabase', 'seed.sql');
+    assert.strictEqual(fs.existsSync(seedPath), true);
+    const sql = fs.readFileSync(seedPath, 'utf8');
+
+    // Verify 20 properties
+    const propertyRegex = /insert into public\.properties/gi;
+    const propertyMatches = sql.match(propertyRegex);
+    assert.strictEqual(propertyMatches?.length, 20, 'Expected exactly 20 property listings in seed.sql');
+
+    // Extract all model paths
+    const modelRegex = /'https:\/\/[^']+\.glb'/gi;
+    const modelMatches = sql.match(modelRegex) || [];
+    const uniqueModels = new Set(modelMatches);
+    assert.strictEqual(uniqueModels.size, 20, 'Expected 20 unique GLB model URLs');
+
+    // Verify relational integrity entities
+    assert.match(sql, /insert into public\.profiles/i);
+    assert.match(sql, /insert into public\.notification_preferences/i);
+    assert.match(sql, /insert into public\.property_images/i);
+    assert.match(sql, /insert into public\.favorites/i);
+    assert.match(sql, /insert into public\.inquiries/i);
+    assert.match(sql, /insert into public\.support_tickets/i);
+  });
 });

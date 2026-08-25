@@ -2,7 +2,8 @@
   "scripts": {
     "test": "node --test test/api_test.js",
     "test:flutter": "flutter test",
-    "test:all": "node --test test/api_test.js && flutter test"
+    "test:all": "node --test test/api_test.js && flutter test",
+    "validate:seed": "node scripts/validate_seed_assets.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
