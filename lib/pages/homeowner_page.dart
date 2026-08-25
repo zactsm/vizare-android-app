@@ -40,9 +40,30 @@ class _HomeownerPageState extends State<HomeownerPage> {
         statusBarBrightness: Brightness.dark,
       ),
     );
+    _verifyHomeownerRole();
     _searchController.addListener(_filterProperties);
     _fetchMyProperties();
     _fetchUserProfile();
+  }
+
+  Future<void> _verifyHomeownerRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_type')?.toLowerCase();
+    final email = prefs.getString('user_email');
+    if (email == null || (role != 'homeowner' && role != 'admin')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Access restricted to verified Homeowners & Administrators.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/homebuyer');
+      }
+    }
   }
 
   @override

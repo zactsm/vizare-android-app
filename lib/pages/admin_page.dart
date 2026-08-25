@@ -33,7 +33,28 @@ class _AdminPageState extends State<AdminPage> {
         statusBarBrightness: Brightness.dark,
       ),
     );
+    _verifyAdminRole();
     _fetchPendingProperties();
+  }
+
+  Future<void> _verifyAdminRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_type')?.toLowerCase();
+    final email = prefs.getString('user_email');
+    if (email == null || role != 'admin') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Access restricted to Platform Administrators.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/homebuyer');
+      }
+    }
   }
 
   Future<void> _fetchPendingProperties() async {

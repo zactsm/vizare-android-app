@@ -17,6 +17,7 @@ import 'pages/settings_page.dart';
 import 'pages/search_page.dart';
 import 'pages/homeowner_page.dart';
 import 'pages/admin_page.dart';
+import 'pages/utils/role_guard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -263,13 +264,41 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomePage(),
         '/create-account': (context) => const CreateAccountPage(),
         '/login': (context) => const LoginPage(),
-        '/home': (context) => const HomeBuyerPage(),
-        '/homebuyer': (context) => const HomeBuyerPage(),
-        '/favorites': (context) => const FavoritesPage(),
-        '/settings': (context) => const SettingsPage(),
-        '/search': (context) => const SearchPage(),
-        '/homeowner': (context) => const HomeownerPage(),
-        '/admin': (context) => const AdminPage(),
+        '/home': (context) => const RoleGuard(
+              allowedRoles: ['homebuyer', 'homeowner', 'admin'],
+              routeName: '/home',
+              child: HomeBuyerPage(),
+            ),
+        '/homebuyer': (context) => const RoleGuard(
+              allowedRoles: ['homebuyer', 'homeowner', 'admin'],
+              routeName: '/homebuyer',
+              child: HomeBuyerPage(),
+            ),
+        '/favorites': (context) => const RoleGuard(
+              allowedRoles: ['homebuyer', 'homeowner', 'admin'],
+              routeName: '/favorites',
+              child: FavoritesPage(),
+            ),
+        '/settings': (context) => const RoleGuard(
+              allowedRoles: ['homebuyer', 'homeowner', 'admin'],
+              routeName: '/settings',
+              child: SettingsPage(),
+            ),
+        '/search': (context) => const RoleGuard(
+              allowedRoles: ['homebuyer', 'homeowner', 'admin'],
+              routeName: '/search',
+              child: SearchPage(),
+            ),
+        '/homeowner': (context) => const RoleGuard(
+              allowedRoles: ['homeowner', 'admin'],
+              routeName: '/homeowner',
+              child: HomeownerPage(),
+            ),
+        '/admin': (context) => const RoleGuard(
+              allowedRoles: ['admin'],
+              routeName: '/admin',
+              child: AdminPage(),
+            ),
       },
     );
   }

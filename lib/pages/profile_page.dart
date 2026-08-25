@@ -181,12 +181,14 @@ class _ProfilePageState extends State<ProfilePage> {
           Navigator.pop(context, true);
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update profile.', style: GoogleFonts.inter()),
-            backgroundColor: VizareColors.crimsonRed,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update profile.', style: GoogleFonts.inter()),
+              backgroundColor: VizareColors.crimsonRed,
+            ),
+          );
+        }
       }
     } catch (e) {
       _logger.e("Error updating profile", error: e);
