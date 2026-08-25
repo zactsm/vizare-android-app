@@ -129,18 +129,51 @@ class _ArViewPageState extends State<ArViewPage> {
             ),
           ),
 
-          // 2. Full-bleed 3D Model Canvas
+          // 2. Background Loading Indicator & Ambience
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 38,
+                  height: 38,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      VizareColors.champagneGold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading 3D Spatial Model...',
+                  style: GoogleFonts.inter(
+                    color: VizareColors.textMuted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 3. Full-bleed 3D Model Canvas
           Positioned.fill(
             child: ModelViewer(
-              key: ValueKey('model-$_lightingIndex-$_autoRotate'),
+              key: ValueKey(widget.modelUrl.isNotEmpty
+                  ? widget.modelUrl
+                  : 'assets/models/default_model.glb'),
               backgroundColor: Colors.transparent,
-              src: widget.modelUrl,
+              src: widget.modelUrl.isNotEmpty
+                  ? widget.modelUrl
+                  : 'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/GlamVelvetSofa.glb',
               alt: "3D architectural model of ${widget.propertyName}",
               ar: true,
               arModes: const ['scene-viewer', 'webxr', 'quick-look'],
               autoRotate: _autoRotate,
               cameraControls: true,
               disableZoom: false,
+              loading: Loading.eager,
               exposure: double.tryParse(currentLight['exposure']) ?? 1.0,
               shadowIntensity:
                   double.tryParse(currentLight['shadowIntensity']) ?? 1.0,
