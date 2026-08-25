@@ -339,7 +339,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ? const Icon(
                                     Icons.person_rounded,
                                     size: 64,
-                                    color: Colors.white24,
+                                    color: VizareColors.champagneGold,
                                   )
                                 : null,
                           ),

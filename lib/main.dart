@@ -152,6 +152,7 @@ class MyApp extends StatelessWidget {
           surface: Color(0xFF0E1118),
           error: Color(0xFFEF4444),
         ),
+        fontFamily: GoogleFonts.inter().fontFamily,
         textTheme: GoogleFonts.poppinsTextTheme(
           ThemeData.dark().textTheme.apply(
             bodyColor: const Color(0xFFFFFFFF),

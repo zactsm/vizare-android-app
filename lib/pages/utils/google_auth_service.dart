@@ -24,49 +24,61 @@ class GoogleAuthService {
   static GoogleSignIn? _googleSignIn;
 
   static Future<GoogleAuthResult?> signIn({String? requestedRole}) async {
-    final googleSignIn = await _client();
-    final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return null;
+    try {
+      final googleSignIn = await _client();
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return null;
 
-    final googleAuth = await googleUser.authentication;
-    final idToken = googleAuth.idToken;
-    if (idToken == null) {
-      throw const AuthException('Google did not return an ID token.');
-    }
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        throw const AuthException('Google did not return an ID token.');
+      }
 
-    await Supabase.instance.client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: googleAuth.accessToken,
-    );
-
-    final response = await ApiService.post(
-      'google_login.php',
-      body: {
-        'email': googleUser.email,
-        'name': googleUser.displayName ?? 'Google User',
-        if (requestedRole != null) 'role': requestedRole,
-      },
-    );
-    final payload = jsonDecode(response.body) as Map<String, dynamic>;
-    if (response.statusCode != 200) {
-      throw AuthException(
-        payload['message']?.toString() ?? 'Google sign-in failed.',
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: googleAuth.accessToken,
       );
+
+      final response = await ApiService.post(
+        'google_login.php',
+        body: {
+          'email': googleUser.email,
+          'name': googleUser.displayName ?? 'Google User',
+          if (requestedRole != null) 'role': requestedRole,
+        },
+      );
+      final payload = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw AuthException(
+          payload['message']?.toString() ?? 'Google sign-in failed.',
+        );
+      }
+
+      final userType = payload['user_type']?.toString() ?? 'homebuyer';
+      final hasPassword = payload['has_password'] == true;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_email', googleUser.email);
+      await prefs.setString('user_type', userType);
+      await prefs.setBool('has_password', hasPassword);
+
+      return GoogleAuthResult(
+        email: googleUser.email,
+        userType: userType,
+        hasPassword: hasPassword,
+      );
+    } catch (e) {
+      if (kIsWeb) {
+        // Fallback to Supabase Web OAuth direct flow
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: kIsWeb ? Uri.base.origin : null,
+        );
+        return null;
+      }
+      rethrow;
     }
-
-    final userType = payload['user_type']?.toString() ?? 'homebuyer';
-    final hasPassword = payload['has_password'] == true;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_email', googleUser.email);
-    await prefs.setString('user_type', userType);
-    await prefs.setBool('has_password', hasPassword);
-
-    return GoogleAuthResult(
-      email: googleUser.email,
-      userType: userType,
-      hasPassword: hasPassword,
-    );
   }
 
   static Future<void> signOut() async {
@@ -90,15 +102,9 @@ class GoogleAuthService {
       }
     }
 
-    if (kIsWeb && (clientId == null || clientId.trim().isEmpty)) {
-      throw StateError(
-        'GOOGLE_OAUTH_CLIENT_ID is not configured in Vercel.',
-      );
-    }
-
     _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb ? clientId!.trim() : null,
-      scopes: const ['email', 'profile'],
+      clientId: kIsWeb ? (clientId?.trim().isNotEmpty == true ? clientId!.trim() : null) : null,
+      scopes: const ['email'],
     );
     return _googleSignIn!;
   }

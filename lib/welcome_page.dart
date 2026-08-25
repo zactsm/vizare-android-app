@@ -197,7 +197,7 @@ class _WelcomePageState extends State<WelcomePage> {
                               errorBuilder: (context, error, stackTrace) =>
                                   const SizedBox(width: 54, height: 54),
                             ),
-                            const SizedBox(height: 110),
+                            const SizedBox(height: 190),
                             // Dynamic Heading Switcher
                             Padding(
                               padding: const EdgeInsets.only(right: 12.0),
