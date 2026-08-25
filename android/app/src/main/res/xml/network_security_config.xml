@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  network_security_config.xml
+  Required by model_viewer_plus to allow the internal HTTP proxy server
+  (http://localhost:PORT) to serve the model-viewer HTML/JS to the WebView.
+
+  Only cleartext traffic to localhost is allowed — all other traffic must use HTTPS.
+-->
+<network-security-config>
+    <!-- Allow cleartext (HTTP) only to localhost — needed for model_viewer_plus internal proxy -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+
+    <!-- All other domains (Supabase, APIs, etc.) require HTTPS -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

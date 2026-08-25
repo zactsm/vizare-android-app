@@ -28,7 +28,8 @@ class _ArViewPageState extends State<ArViewPage> {
       'icon': Icons.wb_sunny_rounded,
       'color': VizareColors.champagneGold,
       'exposure': '1.1',
-      'shadowIntensity': '1.2',
+      // shadowIntensity capped at 1.0 — model_viewer_plus throws RangeError if > 1
+      'shadowIntensity': '1.0',
     },
     {
       'label': 'Studio Light',
@@ -42,7 +43,8 @@ class _ArViewPageState extends State<ArViewPage> {
       'icon': Icons.nightlight_round,
       'color': VizareColors.spatialCyan,
       'exposure': '0.8',
-      'shadowIntensity': '1.5',
+      // capped at 1.0 — values > 1.0 are clamped by model_viewer_plus
+      'shadowIntensity': '1.0',
     },
   ];
 
@@ -129,45 +131,18 @@ class _ArViewPageState extends State<ArViewPage> {
             ),
           ),
 
-          // 2. Background Loading Indicator & Ambience
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 38,
-                  height: 38,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      VizareColors.champagneGold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Loading 3D Spatial Model...',
-                  style: GoogleFonts.inter(
-                    color: VizareColors.textMuted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 3. Full-bleed 3D Model Canvas
+          // 2. Full-bleed 3D Model Canvas
           Positioned.fill(
             child: ModelViewer(
+              // Key on modelUrl so switching lighting doesn't rebuild the WebView
               key: ValueKey(widget.modelUrl.isNotEmpty
                   ? widget.modelUrl
-                  : 'assets/models/default_model.glb'),
+                  : 'default-model'),
               backgroundColor: Colors.transparent,
               src: widget.modelUrl.isNotEmpty
                   ? widget.modelUrl
                   : 'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/GlamVelvetSofa.glb',
-              alt: "3D architectural model of ${widget.propertyName}",
+              alt: '3D architectural model of ${widget.propertyName}',
               ar: true,
               arModes: const ['scene-viewer', 'webxr', 'quick-look'],
               autoRotate: _autoRotate,
@@ -175,8 +150,20 @@ class _ArViewPageState extends State<ArViewPage> {
               disableZoom: false,
               loading: Loading.eager,
               exposure: double.tryParse(currentLight['exposure']) ?? 1.0,
-              shadowIntensity:
-                  double.tryParse(currentLight['shadowIntensity']) ?? 1.0,
+              // NOTE: shadowIntensity is intentionally omitted here.
+              // The model_viewer_plus library (v1.9.3) has two bugs with this parameter:
+              //   1. It throws a RangeError for values > 1.0 (even though model-viewer
+              //      itself accepts values > 1)
+              //   2. It appends a stray '}' inside the HTML attribute value when the
+              //      parameter is set, producing shadow-intensity="1.0}" which is
+              //      malformed HTML.
+              // We instead set shadow intensity via relatedJs after the model loads.
+              relatedJs: '''
+                window.addEventListener('load', function() {
+                  const mv = document.querySelector('model-viewer');
+                  if (mv) mv.setAttribute('shadow-intensity', '${currentLight['shadowIntensity']}');
+                });
+              ''',
             ),
           ),
 
