@@ -619,6 +619,11 @@ module.exports = async function handler(request, response) {
   try {
     if (name === 'client_config.php') {
       return response.status(200).json({
+        supabase_url: process.env.SUPABASE_URL || '',
+        supabase_publishable_key:
+          process.env.SUPABASE_PUBLISHABLE_KEY ||
+          process.env.SUPABASE_ANON_KEY ||
+          '',
         google_maps_api_key: process.env.GOOGLE_MAPS_API_KEY || '',
         google_oauth_client_id:
           process.env.GOOGLE_OAUTH_CLIENT_ID ||

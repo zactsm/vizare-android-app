@@ -84,6 +84,8 @@ describe('Supabase Router API Tests', () => {
   });
 
   test('client_config.php route returns configured API keys from environment', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
     process.env.GOOGLE_MAPS_API_KEY = 'mock-google-maps-key-123';
     process.env.GOOGLE_OAUTH_CLIENT_ID = 'mock-google-client-id-abc';
 
@@ -94,6 +96,8 @@ describe('Supabase Router API Tests', () => {
 
     assert.strictEqual(res.statusCode, 200);
     assert.deepStrictEqual(res.body, {
+      supabase_url: 'https://mock.supabase.co',
+      supabase_publishable_key: 'mock-anon-key-xyz',
       google_maps_api_key: 'mock-google-maps-key-123',
       google_oauth_client_id: 'mock-google-client-id-abc',
     });

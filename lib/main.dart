@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,59 +21,113 @@ import 'pages/admin_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load the environment variables
+  // 1. Load local .env asset if bundled
   try {
     await dotenv.load(fileName: ".env");
   } catch (error) {
-    debugPrint('Unable to load .env asset: $error');
+    debugPrint('Note: .env asset not bundled locally: $error');
   }
 
-  try {
-    await loadGoogleMapsApi(
-      fallbackApiKey: dotenv.env['GOOGLE_MAPS_API_KEY'],
-    );
-  } catch (error) {
-    debugPrint('Google Maps initialization failed: $error');
-  }
+  // 2. Extract configuration or fetch dynamically on Web
+  String? supabaseUrl = dotenv.env['SUPABASE_URL'];
+  String? supabaseAnonKey =
+      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
+  String? googleMapsKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
+  String? googleOAuthId =
+      dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
 
-  // Safely extract the variables
-  final String? supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final String? supabaseAnonKey = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
+  if ((supabaseUrl == null || supabaseAnonKey == null) && kIsWeb) {
+    try {
+      final response = await http
+          .get(Uri.parse('/api/client_config.php'))
+          .timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        supabaseUrl ??= data['supabase_url']?.toString();
+        supabaseAnonKey ??= data['supabase_publishable_key']?.toString();
+        googleMapsKey ??= data['google_maps_api_key']?.toString();
+        googleOAuthId ??= data['google_oauth_client_id']?.toString();
 
-  // Initialize Supabase only when the credentials are available.
-  if (supabaseUrl == null || supabaseAnonKey == null) {
-    debugPrint('Supabase credentials are missing; continuing without backend initialization.');
-  } else {
-    await Supabase.initialize(
-      url: supabaseUrl,
-      // ignore: deprecated_member_use
-      anonKey: supabaseAnonKey,
-    );
-  }
-
-  // Check for existing session
-  final prefs = await SharedPreferences.getInstance();
-  final String? userEmail = prefs.getString('user_email');
-  final String? userType = prefs.getString('user_type');
-
-  // Decide where to start
-  String startRoute = '/'; // Default to Welcome Page
-
-  final hasSupabaseSession =
-      Supabase.instance.client.auth.currentSession != null;
-  if (userEmail != null && hasSupabaseSession) {
-    // User is logged in, check type
-    if (userType == 'admin'){
-      startRoute = '/admin';
-    } else if (userType == 'homeowner') {
-      startRoute = '/homeowner';
-    } else {
-      // Default to homebuyer if type is missing or homebuyer
-      startRoute = '/';
+        if (supabaseUrl != null && supabaseUrl.isNotEmpty) {
+          dotenv.env['SUPABASE_URL'] = supabaseUrl;
+        }
+        if (supabaseAnonKey != null && supabaseAnonKey.isNotEmpty) {
+          dotenv.env['SUPABASE_PUBLISHABLE_KEY'] = supabaseAnonKey;
+        }
+        if (googleMapsKey != null && googleMapsKey.isNotEmpty) {
+          dotenv.env['GOOGLE_MAPS_API_KEY'] = googleMapsKey;
+        }
+        if (googleOAuthId != null && googleOAuthId.isNotEmpty) {
+          dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] = googleOAuthId;
+        }
+      }
+    } catch (e) {
+      debugPrint('Dynamic client config fetch note: $e');
     }
   }
 
-  // Pass the route to the app
+  // 3. Initialize Google Maps non-blockingly
+  try {
+    loadGoogleMapsApi(
+      fallbackApiKey: googleMapsKey,
+    ).catchError((err) {
+      debugPrint('Google Maps loader note: $err');
+    });
+  } catch (error) {
+    debugPrint('Google Maps initialization note: $error');
+  }
+
+  // 4. Initialize Supabase safely
+  bool supabaseReady = false;
+  if (supabaseUrl != null &&
+      supabaseUrl.isNotEmpty &&
+      supabaseAnonKey != null &&
+      supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        // ignore: deprecated_member_use
+        anonKey: supabaseAnonKey,
+      );
+      supabaseReady = true;
+    } catch (e) {
+      debugPrint('Supabase initialization error: $e');
+    }
+  } else {
+    debugPrint('Supabase credentials not yet available; proceeding to UI.');
+  }
+
+  // 5. Check for existing session safely
+  String startRoute = '/';
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userEmail = prefs.getString('user_email');
+    final String? userType = prefs.getString('user_type');
+
+    bool hasSupabaseSession = false;
+    if (supabaseReady) {
+      try {
+        hasSupabaseSession =
+            Supabase.instance.client.auth.currentSession != null;
+      } catch (_) {
+        hasSupabaseSession = false;
+      }
+    }
+
+    if (userEmail != null && (hasSupabaseSession || !supabaseReady)) {
+      if (userType == 'admin') {
+        startRoute = '/admin';
+      } else if (userType == 'homeowner') {
+        startRoute = '/homeowner';
+      } else {
+        startRoute = '/';
+      }
+    }
+  } catch (e) {
+    debugPrint('Session check note: $e');
+  }
+
+  // 6. Launch App
   runApp(MyApp(initialRoute: startRoute));
 }
 
