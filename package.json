@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "test": "node --test test/api_test.js",
+    "test:flutter": "flutter test",
+    "test:all": "node --test test/api_test.js && flutter test"
+  },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1"

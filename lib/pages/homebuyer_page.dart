@@ -1,7 +1,9 @@
-import 'dart:convert'; // For jsonDecode
+import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:logger/logger.dart'; // For logging
+import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/property_details_page.dart';
@@ -9,6 +11,7 @@ import 'package:untitled/pages/search_page.dart';
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
 import 'favorites_page.dart';
@@ -29,10 +32,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex.index);
-    // Set status bar style
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge
-    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -55,7 +55,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF000000), // Pitch Black background
+        backgroundColor: VizareColors.obsidianBlack,
         body: AbstractBackground(
           child: SafeArea(
             child: Stack(
@@ -115,7 +115,6 @@ class HomeBuyerHomeBody extends StatefulWidget {
 }
 
 class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
-  // State variables for loading and storing properties
   bool _isLoading = true;
   List<Property> _featuredProperties = [];
   List<Property> _nearbyProperties = [];
@@ -126,7 +125,6 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
   @override
   void initState() {
     super.initState();
-    // Fetch data when the page loads
     _fetchProperties();
     _fetchUserProfile();
   }
@@ -137,12 +135,14 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
     if (email != null) {
       try {
-        final response = await ApiService.get('get_user_profile.php', {'email': email});
+        final response =
+            await ApiService.get('get_user_profile.php', {'email': email});
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (mounted) {
             setState(() {
-              if (data['profile_pic'] != null && data['profile_pic'].toString().isNotEmpty) {
+              if (data['profile_pic'] != null &&
+                  data['profile_pic'].toString().isNotEmpty) {
                 _profilePicUrl = data['profile_pic'];
               } else {
                 _profilePicUrl = null;
@@ -156,7 +156,6 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     }
   }
 
-  // --- Data Fetching Logic ---
   Future<void> _fetchProperties() async {
     try {
       final response = await ApiService.get('get_all_listings.php');
@@ -165,12 +164,15 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        final properties = data.map((json) => Property.fromJson(json)).toList();
+        final properties =
+            data.map((json) => Property.fromJson(json)).toList();
 
         setState(() {
-          _featuredProperties = properties.where((p) => p.isFeatured).toList();
-          _nearbyProperties = properties.where((p) => !p.isFeatured).toList();
-          _popularProperties = List.from(properties)..shuffle(); // Shuffle for home view
+          _featuredProperties =
+              properties.where((p) => p.isFeatured).toList();
+          _nearbyProperties =
+              properties.where((p) => !p.isFeatured).toList();
+          _popularProperties = List.from(properties)..shuffle();
           _isLoading = false;
         });
       } else {
@@ -181,152 +183,196 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
       _logger.e('Error fetching properties', error: e);
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load properties. Check connection.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
 
-  // --- Build Method ---
   @override
   Widget build(BuildContext context) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
     return Stack(
       fit: StackFit.expand,
       children: [
         _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: pastelPurple),
+                child: CircularProgressIndicator(
+                  color: VizareColors.champagneGold,
+                ),
               )
             : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 100), // Spacer for top floating bar
+                    const SizedBox(height: 96), // Spacer for top floating bar
 
-                    // Bold, Energetic Wise-style Header Overhaul
+                    // Luxury Expressive Header
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Find your home',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 40, // Massive expressive title
-                              fontWeight: FontWeight.w900, // Ultra bold
-                              color: Colors.white,
-                              letterSpacing: -1.5,
-                              height: 1.1,
+                          Row(
+                            children: [
+                              const SpatialBadge(
+                                text: 'SPATIAL LIVING',
+                                icon: Icons.auto_awesome_rounded,
+                                primaryColor: VizareColors.champagneGold,
+                              ),
+                              const SizedBox(width: 8),
+                              SpatialBadge(
+                                text: '3D AR TOURS',
+                                icon: Icons.view_in_ar_rounded,
+                                primaryColor: VizareColors.spatialCyan,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.poppins(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -1.0,
+                                height: 1.15,
+                              ),
+                              children: const [
+                                TextSpan(text: 'Discover your\n'),
+                                TextSpan(
+                                  text: 'Architectural ',
+                                  style: TextStyle(
+                                    color: VizareColors.champagneGold,
+                                  ),
+                                ),
+                                TextSpan(text: 'Sanctuary.'),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Tour properties in immersive augmented reality.',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.white.withValues(alpha: 0.6),
+                            'Step inside luxury properties with real-time 3D spatial models.',
+                            style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w400,
+                              color: VizareColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                    // 1. Featured Carousel
+                    // 1. Featured Architectural Showcase
                     if (_featuredProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Featured', 'deals'),
+                      _buildSectionHeader('Exclusive', 'Showcase'),
                       const SizedBox(height: 14),
                       _buildFeaturedCarousel(context, _featuredProperties),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 32),
                     ],
 
-                    // 2. Nearby Carousel
+                    // 2. Nearby Properties
                     if (_nearbyProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Nearby', 'units'),
+                      _buildSectionHeader('Nearby', 'Residences'),
                       const SizedBox(height: 14),
                       _buildNearbyCarousel(context, _nearbyProperties),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 32),
                     ],
 
-                    // 3. Popular Property Feed (Chunky Card Blocks)
+                    // 3. Popular Property Bento Feed
                     if (_popularProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Popular', 'listings'),
+                      _buildSectionHeader('Curated', 'Portfolio'),
                       const SizedBox(height: 14),
                       _buildPopularFeed(context, _popularProperties),
                     ],
-                    const SizedBox(height: 120), // Spacer for bottom nav (increased from 120 to 170 to avoid blocking text/price)
+                    const SizedBox(height: 130),
                   ],
                 ),
               ),
 
-        // Custom Floating Search Capsule (Wise Style: Solid, Outlined, High-Contrast)
+        // Floating VisionOS Top Search Capsule
         _buildTopSearchCapsule(context),
       ],
     );
   }
 
-  // --- Typographic Section Header Helper (Wise App Contrast Style) ---
-  Widget _buildSectionHeader(String boldText, String thinText) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
+  Widget _buildSectionHeader(String boldText, String accentText) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            color: Colors.white,
-            letterSpacing: -0.5,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.poppins(
+                fontSize: 21,
+                color: Colors.white,
+                letterSpacing: -0.4,
+              ),
+              children: [
+                TextSpan(
+                  text: '$boldText ',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                TextSpan(
+                  text: accentText,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w300,
+                    color: VizareColors.champagneGold,
+                  ),
+                ),
+              ],
+            ),
           ),
-          children: [
-            TextSpan(text: '$boldText ', style: const TextStyle(fontWeight: FontWeight.w900)),
-            TextSpan(text: thinText, style: const TextStyle(fontWeight: FontWeight.w300, color: pastelPurple)),
-          ],
-        ),
+          Text(
+            'VIEW ALL',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: VizareColors.champagneGold,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // --- Featured Carousel (Chunky solid containers with rounded corners) ---
-  Widget _buildFeaturedCarousel(BuildContext context, List<Property> properties) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
+  Widget _buildFeaturedCarousel(
+      BuildContext context, List<Property> properties) {
     return SizedBox(
-      height: 270,
+      height: 290,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: properties.length,
         itemBuilder: (context, index) {
           final property = properties[index];
+          final bool hasModel = property.modelPath.isNotEmpty;
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PropertyDetailsPage(property: property),
+                  builder: (context) =>
+                      PropertyDetailsPage(property: property),
                 ),
               );
             },
             child: Container(
-              width: 290,
+              width: 300,
               margin: EdgeInsets.only(
-                left: index == 0 ? 20.0 : 10.0,
-                right: index == properties.length - 1 ? 20.0 : 10.0,
+                left: index == 0 ? 20.0 : 12.0,
+                right: index == properties.length - 1 ? 20.0 : 12.0,
               ),
-              decoration: BoxDecoration(
-                color: const Color(0xFF121214), // Solid high-contrast block
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: pastelPurple, width: 2.0), // Chunky purple border
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(26),
+              child: VisionGlassContainer(
+                padding: EdgeInsets.zero,
+                borderRadius: 26,
+                backgroundColor:
+                    VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                border: Border.all(
+                  color: VizareColors.champagneGold.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -339,60 +385,111 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, e, s) => Container(
                               color: Colors.white10,
-                              child: const Icon(Icons.broken_image, color: Colors.white24),
+                              child: const Icon(Icons.broken_image,
+                                  color: Colors.white24),
                             ),
                           ),
+                          // Top Gradient Overlay
+                          Positioned.fill(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.45),
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.75),
+                                  ],
+                                  stops: const [0.0, 0.5, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Price Pill Top-Right
                           Positioned(
                             top: 12,
                             right: 12,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF000000),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: pastelPurple, width: 1.0),
-                              ),
-                              child: Text(
-                                property.price,
-                                style: const TextStyle(
-                                  color: pastelPurple,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  fontFamily: 'Poppins',
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                    sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.65),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: VizareColors.champagneGold
+                                          .withValues(alpha: 0.6),
+                                      width: 1.0,
+                                    ),
                                   ),
+                                  child: Text(
+                                    property.price,
+                                    style: GoogleFonts.poppins(
+                                      color: VizareColors.champagneGold,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                          // 3D Model indicator pill top-left
+                          if (hasModel)
+                            Positioned(
+                              top: 12,
+                              left: 12,
+                              child: SpatialBadge(
+                                text: '3D TOUR',
+                                icon: Icons.view_in_ar_rounded,
+                                primaryColor: VizareColors.spatialCyan,
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(18.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             property.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
-                              fontFamily: 'Poppins',
                               fontSize: 16,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            property.location,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                color: VizareColors.textMuted,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  property.location,
+                                  style: GoogleFonts.inter(
+                                    color: VizareColors.textSecondary,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -407,11 +504,10 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     );
   }
 
-  // --- Nearby Carousel (Chunky transparent background outlined cards) ---
-  Widget _buildNearbyCarousel(BuildContext context, List<Property> properties) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
+  Widget _buildNearbyCarousel(
+      BuildContext context, List<Property> properties) {
     return SizedBox(
-      height: 250,
+      height: 240,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: properties.length,
@@ -422,23 +518,26 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PropertyDetailsPage(property: property),
+                  builder: (context) =>
+                      PropertyDetailsPage(property: property),
                 ),
               );
             },
             child: Container(
-              width: 200,
+              width: 210,
               margin: EdgeInsets.only(
-                left: index == 0 ? 20.0 : 10.0,
-                right: index == properties.length - 1 ? 20.0 : 10.0,
+                left: index == 0 ? 20.0 : 12.0,
+                right: index == properties.length - 1 ? 20.0 : 12.0,
               ),
-              decoration: BoxDecoration(
-                color: Colors.transparent, // Outlined card concept
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
+              child: VisionGlassContainer(
+                padding: EdgeInsets.zero,
+                borderRadius: 22,
+                backgroundColor:
+                    VizareColors.obsidianElevated.withValues(alpha: 0.6),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -449,7 +548,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                         width: double.infinity,
                         errorBuilder: (context, e, s) => Container(
                           color: Colors.white10,
-                          child: const Icon(Icons.broken_image, color: Colors.white24),
+                          child: const Icon(Icons.broken_image,
+                              color: Colors.white24),
                         ),
                       ),
                     ),
@@ -460,23 +560,21 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                         children: [
                           Text(
                             property.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Text(
                             property.price,
-                            style: const TextStyle(
-                              color: pastelPurple,
-                              fontFamily: 'Poppins',
+                            style: GoogleFonts.poppins(
+                              color: VizareColors.champagneGold,
                               fontSize: 12,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
@@ -492,9 +590,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     );
   }
 
-  // --- Popular Property Feed (Massive chunky card blocks with Poppins typography) ---
-  Widget _buildPopularFeed(BuildContext context, List<Property> properties) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
+  Widget _buildPopularFeed(
+      BuildContext context, List<Property> properties) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: ListView.builder(
@@ -510,24 +607,27 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PropertyDetailsPage(property: property),
+                  builder: (context) =>
+                      PropertyDetailsPage(property: property),
                 ),
               );
             },
             child: Container(
-              margin: const EdgeInsets.only(bottom: 28),
-              decoration: BoxDecoration(
-                color: const Color(0xFF121214), // Solid dark grey card block
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(26),
+              margin: const EdgeInsets.only(bottom: 24),
+              child: VisionGlassContainer(
+                padding: EdgeInsets.zero,
+                borderRadius: 26,
+                backgroundColor:
+                    VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1.2,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 220,
+                      height: 210,
                       width: double.infinity,
                       child: Stack(
                         fit: StackFit.expand,
@@ -537,26 +637,38 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, e, s) => Container(
                               color: Colors.white10,
-                              child: const Icon(Icons.broken_image, color: Colors.white24, size: 48),
+                              child: const Icon(Icons.broken_image,
+                                  color: Colors.white24, size: 44),
                             ),
                           ),
                           Positioned(
-                            top: 16,
-                            left: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF000000),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: pastelPurple, width: 1.5),
-                              ),
-                              child: Text(
-                                property.price,
-                                style: const TextStyle(
-                                  color: pastelPurple,
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
+                            top: 14,
+                            left: 14,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                    sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.7),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: VizareColors.champagneGold
+                                          .withValues(alpha: 0.6),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    property.price,
+                                    style: GoogleFonts.poppins(
+                                      color: VizareColors.champagneGold,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13.5,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -565,7 +677,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(22.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -575,23 +687,21 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                               children: [
                                 Text(
                                   property.name,
-                                  style: const TextStyle(
+                                  style: GoogleFonts.poppins(
                                     color: Colors.white,
-                                    fontFamily: 'Poppins',
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900, // Extra ultra-bold title
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 5),
                                 Text(
                                   property.location,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.6),
-                                    fontFamily: 'Poppins',
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                  style: GoogleFonts.inter(
+                                    color: VizareColors.textSecondary,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -599,8 +709,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          // View in AR Button: Solid filled shape, black text
+                          const SizedBox(width: 14),
+                          // View in AR Button
                           ElevatedButton(
                             onPressed: hasModel
                                 ? () {
@@ -616,24 +726,37 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: pastelPurple,
-                              foregroundColor: const Color(0xFF000000),
-                              disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+                              backgroundColor: hasModel
+                                  ? VizareColors.champagneGold
+                                  : Colors.white10,
+                              foregroundColor: VizareColors.obsidianBlack,
                               disabledForegroundColor: Colors.white24,
-                              elevation: 0,
+                              elevation: hasModel ? 8 : 0,
+                              shadowColor: VizareColors.champagneGold
+                                  .withValues(alpha: 0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 14),
                             ),
-                            child: Text(
-                              hasModel ? 'VIEW AR' : 'NO AR',
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w900,
-                                fontSize: 12,
-                                letterSpacing: 0.5,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (hasModel) ...[
+                                  const Icon(Icons.view_in_ar_rounded,
+                                      size: 16, color: VizareColors.obsidianBlack),
+                                  const SizedBox(width: 6),
+                                ],
+                                Text(
+                                  hasModel ? 'VIEW AR' : 'NO AR',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -649,54 +772,60 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     );
   }
 
-  // --- Top Custom Search Capsule (Chunky, high-contrast, non-glass block) ---
   Widget _buildTopSearchCapsule(BuildContext context) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
     return Positioned(
-      top: 16.0,
+      top: 14.0,
       left: 16.0,
       right: 16.0,
-      child: Container(
+      child: VisionGlassContainer(
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          color: const Color(0xFF121214), // Solid dark grey card
-          borderRadius: BorderRadius.circular(28.0),
-          border: Border.all(color: pastelPurple, width: 2.0), // High-contrast chunky border
+        borderRadius: 30.0,
+        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.2,
         ),
         child: Row(
           children: [
-            // Logo
             Image.asset(
               'assets/images/logo.png',
-              width: 44,
-              height: 44,
+              width: 38,
+              height: 38,
+              errorBuilder: (context, e, s) =>
+                  const SizedBox(width: 38, height: 38),
             ),
-            const SizedBox(width: 8),
-            // Search Input Block
+            const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   widget.onSearchTap();
                 },
                 child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF000000),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1.0,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, color: pastelPurple, size: 18),
+                      const Icon(Icons.search_rounded,
+                          color: VizareColors.champagneGold, size: 18),
                       const SizedBox(width: 8),
-                      Text(
-                        'Search properties...',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 13,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          'Search luxury properties...',
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.45),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -705,7 +834,6 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               ),
             ),
             const SizedBox(width: 10),
-            // Profile Avatar
             GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -714,11 +842,14 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                 );
               },
               child: Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: VizareColors.champagneGold.withValues(alpha: 0.8),
+                    width: 1.5,
+                  ),
                   image: _profilePicUrl != null
                       ? DecorationImage(
                           image: NetworkImage(_profilePicUrl!),
@@ -728,7 +859,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                 ),
                 child: _profilePicUrl == null
                     ? Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(7.0),
                         child: Image.asset(
                           'assets/images/profile_icon.png',
                           fit: BoxFit.contain,

@@ -110,6 +110,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       if (email == null) {
         _logger.e('User email not found in SharedPreferences.');
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error: User session not found. Please log in again.'),

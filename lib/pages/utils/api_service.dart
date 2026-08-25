@@ -128,11 +128,14 @@ class ApiService {
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
     final base = baseUrl.replaceFirst(RegExp(r'https?://'), '');
     final isHttps = baseUrl.startsWith('https');
+    final query = (queryParameters != null && queryParameters.isNotEmpty)
+        ? queryParameters
+        : null;
 
     if (isHttps) {
-      return Uri.https(base, cleanPath, queryParameters);
+      return Uri.https(base, cleanPath, query);
     } else {
-      return Uri.http(base, cleanPath, queryParameters);
+      return Uri.http(base, cleanPath, query);
     }
   }
 
@@ -154,7 +157,13 @@ class ApiService {
 
   static Future<http.Response> post(String script, {Map<String, String>? body, Map<String, String>? headers}) async {
     final url = Uri.parse('$baseUrl/$script');
-    _logger.d('POST to $url with body: $body');
+    if (kDebugMode) {
+      final sanitized = Map<String, String>.from(body ?? {});
+      for (final key in ['password', 'current_password', 'new_password', 'token', 'access_token', 'refresh_token']) {
+        if (sanitized.containsKey(key)) sanitized[key] = '******';
+      }
+      _logger.d('POST to $url with body: $sanitized');
+    }
     try {
       final response = await http.post(
         url,

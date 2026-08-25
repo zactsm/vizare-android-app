@@ -1,12 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/admin_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
 import 'package:untitled/pages/utils/premium_background.dart';
-import 'admin_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,24 +17,75 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-final logger = Logger();
-
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  final _logger = Logger();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: VizareColors.obsidianElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.inter(color: VizareColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "OK",
+              style: GoogleFonts.poppins(
+                color: VizareColors.champagneGold,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   Future<void> signInWithGoogle() async {
+    setState(() => _isLoading = true);
     try {
-      final result = await GoogleAuthService.signIn();
-      if (result == null || !mounted) return;
+      final result = await GoogleAuthService.signIn(
+        requestedRole: 'homebuyer',
+      );
+      if (result == null || !mounted) {
+        setState(() => _isLoading = false);
+        return;
+      }
       final userType = result.userType;
 
       if (userType == 'admin') {
         Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminPage()),
-              (route) => false,
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPage()),
+          (route) => false,
         );
       } else if (userType == 'homeowner') {
         Navigator.pushNamedAndRemoveUntil(
@@ -41,34 +94,19 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushNamedAndRemoveUntil(
             context, '/homebuyer', (Route<dynamic> route) => false);
       }
-
     } catch (e) {
-      logger.e("Google Sign-In failed", error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Google Sign-In failed. Please try again. Error: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) setState(() => _isLoading = false);
+      _showErrorDialog("Error", "An unexpected error occurred during Google Sign-In.");
     }
   }
 
-  Future<void> login(String rawEmail, String rawPassword) async {
-    final email = rawEmail.trim();
-    final password = rawPassword.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (_) => const AlertDialog(
-          title: Text("Missing Fields"),
-          content: Text("Please enter both email and password."),
-        ),
-      );
+  Future<void> login(String email, String password) async {
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      _showErrorDialog("Required Fields", "Please enter your email and password.");
       return;
     }
+
+    setState(() => _isLoading = true);
     try {
       final response = await ApiService.post(
         'login.php',
@@ -77,9 +115,10 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
+      setState(() => _isLoading = false);
 
       if (response.statusCode == 200) {
-        logger.i("✅ Login success: ${response.body}");
+        _logger.i("✅ Login successful");
 
         final responseData = jsonDecode(response.body);
         await ApiService.restoreSession(
@@ -87,23 +126,20 @@ class _LoginPageState extends State<LoginPage> {
           responseData['refresh_token'] as String?,
         );
         final userType = responseData['user_type'] as String?;
-        final hasPassword = true;
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
-        if (userType != null){
+        if (userType != null) {
           await prefs.setString('user_type', userType);
         }
-
-        await prefs.setBool('has_password', hasPassword);
 
         if (!mounted) return;
 
         if (userType == 'admin') {
           Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminPage()),
-                (route) => false,
+            context,
+            MaterialPageRoute(builder: (context) => const AdminPage()),
+            (route) => false,
           );
         } else if (userType == 'homeowner') {
           Navigator.pushNamedAndRemoveUntil(
@@ -112,28 +148,15 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushNamedAndRemoveUntil(
               context, '/homebuyer', (Route<dynamic> route) => false);
         }
-
       } else {
-        logger.w("❌ Login failed: ${response.body}");
         final responseData = jsonDecode(response.body);
         final errorMessage = responseData['message'] ?? 'Login failed.';
-
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Login Failed"),
-            content: Text(errorMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK"),
-              )
-            ],
-          ),
-        );
+        _showErrorDialog("Login Failed", errorMessage);
       }
     } catch (e) {
-      logger.e("🚨 Login error: $e");
+      if (mounted) setState(() => _isLoading = false);
+      _logger.e("🚨 Login error: $e");
+      _showErrorDialog("Connection Error", "Could not reach the server.");
     }
   }
 
@@ -149,28 +172,25 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Shader _buildGradientShader(Rect bounds) {
-    return const LinearGradient(
-      colors: [
-        Colors.white,
-        Color(0xFFDF00FF),
-      ],
-    ).createShader(bounds);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final Color neonPurple = const Color(0xFFDF00FF);
     return PremiumBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            color: Colors.white70,
-            onPressed: () => Navigator.pop(context),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
           ),
         ),
         body: SafeArea(
@@ -179,152 +199,208 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ShaderMask(
-                  shaderCallback: _buildGradientShader,
-                  child: const Text(
-                    'Log In',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -1.0,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Welcome back! Enter your details to continue.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 36),
-                Text(
-                  'Email',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                  decoration: const InputDecoration(
-                    hintText: 'yourname@example.com',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Password',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                  decoration: InputDecoration(
-                    hintText: '••••••••',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: Colors.white70,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      login(_emailController.text, _passwordController.text);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: neonPurple,
-                      foregroundColor: const Color(0xFF0D0D0D),
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Log in',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 12),
-                // Google Sign-In Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: signInWithGoogle,
-                    icon: Image.asset(
-                      'assets/images/google_logo.png',
-                      height: 20,
-                      width: 20,
-                    ),
-                    label: const Text(
-                      'Continue with Google',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "Don't have an account?",
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontFamily: 'Poppins'),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 48,
+                      height: 48,
+                      errorBuilder: (c, e, s) =>
+                          const SizedBox(width: 48, height: 48),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/create-account'),
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(color: neonPurple, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
-                      ),
+                    const SpatialBadge(
+                      text: 'SECURE AUTH',
+                      icon: Icons.shield_rounded,
+                      primaryColor: VizareColors.champagneGold,
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
+                Text(
+                  'Welcome Back',
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.8,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Sign in to access your saved tours and luxury properties.',
+                  style: GoogleFonts.inter(
+                    color: VizareColors.textSecondary,
+                    fontSize: 13.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Form Container
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(22.0),
+                  borderRadius: 24,
+                  backgroundColor:
+                      VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 1.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EMAIL ADDRESS',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: const InputDecoration(
+                          hintText: 'yourname@luxury.com',
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'PASSWORD',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(
+                            Icons.lock_outline_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.white60,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Login CTA Button
+                LuxuryGradientButton(
+                  text: 'Log In',
+                  icon: Icons.login_rounded,
+                  isLoading: _isLoading,
+                  onPressed: () {
+                    login(_emailController.text, _passwordController.text);
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // Google Sign-In Glass Button
+                VisionGlassContainer(
+                  padding: EdgeInsets.zero,
+                  borderRadius: 30,
+                  onTap: _isLoading ? null : signInWithGoogle,
+                  child: Container(
+                    height: 54,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 18,
+                          width: 18,
+                          errorBuilder: (c, e, s) => const Icon(
+                            Icons.g_mobiledata_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Continue with Google',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Sign up prompt
+                Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: GoogleFonts.inter(
+                          color: VizareColors.textSecondary,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/create-account'),
+                        child: Text(
+                          'Sign up',
+                          style: GoogleFonts.poppins(
+                            color: VizareColors.champagneGold,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           ),

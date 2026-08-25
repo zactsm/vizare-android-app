@@ -1,23 +1,25 @@
 const { createClient } = require('@supabase/supabase-js');
 
+const MAX_BODY_SIZE = 1024 * 1024; // 1 MB payload limit
+
 function corsHeaders(request) {
   const origin = request.headers.origin;
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  const allowOrigin =
-    allowedOrigins.length > 0
-      ? allowedOrigins.includes(origin)
-        ? origin
-        : allowedOrigins[0]
-      : origin || '*';
+
+  let allowOrigin = '';
+  if (origin && (allowedOrigins.length === 0 || allowedOrigins.includes(origin))) {
+    allowOrigin = origin;
+  }
+
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}),
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers':
-      request.headers['access-control-request-headers'] ||
-      'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -71,7 +73,15 @@ async function readBody(request) {
 
   const raw = await new Promise((resolve, reject) => {
     let data = '';
-    request.on('data', (chunk) => (data += chunk));
+    let totalSize = 0;
+    request.on('data', (chunk) => {
+      totalSize += chunk.length;
+      if (totalSize > MAX_BODY_SIZE) {
+        request.destroy(Object.assign(new Error('Payload Too Large'), { code: 'PAYLOAD_TOO_LARGE' }));
+        return;
+      }
+      data += chunk;
+    });
     request.on('end', () => resolve(data));
     request.on('error', reject);
   });
@@ -255,7 +265,7 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'search_properties.php') {
-    const term = String(input.term || '').trim().replace(/[^a-zA-Z0-9\s_-]/g, '');
+    const term = String(input.term || '').trim().replace(/[^a-zA-Z0-9\s-]/g, '');
     let builder = admin
       .from('properties')
       .select('*')

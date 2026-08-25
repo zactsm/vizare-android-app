@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,7 +8,6 @@ import 'google_maps_loader_stub.dart'
 import 'welcome_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
-import 'pages/home_page.dart';
 import 'pages/homebuyer_page.dart';
 import 'pages/favorites_page.dart';
 import 'pages/settings_page.dart';
@@ -45,6 +43,7 @@ void main() async {
   } else {
     await Supabase.initialize(
       url: supabaseUrl,
+      // ignore: deprecated_member_use
       anonKey: supabaseAnonKey,
     );
   }
@@ -82,98 +81,117 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color neonPurple = const Color(0xFFDF00FF);
-    final Color darkBackground = const Color(0xFF0D0D0D);
-    final Color surfaceColor = const Color(0xFF1C1C1E);
-
     return MaterialApp(
-      title: 'AR Real Estate',
+      title: 'Vizare AR Real Estate',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: darkBackground,
-        primaryColor: neonPurple,
-        colorScheme: ColorScheme.dark(
-          primary: neonPurple,
-          secondary: neonPurple,
-          surface: surfaceColor,
-          error: Colors.redAccent,
+        scaffoldBackgroundColor: const Color(0xFF050608),
+        primaryColor: const Color(0xFFD4AF37), // Champagne Gold
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFD4AF37),
+          secondary: Color(0xFFDF00FF),
+          surface: Color(0xFF0E1118),
+          error: Color(0xFFEF4444),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(
           ThemeData.dark().textTheme.apply(
-            bodyColor: Colors.white.withValues(alpha: 0.9),
-            displayColor: Colors.white,
+            bodyColor: const Color(0xFFFFFFFF),
+            displayColor: const Color(0xFFFFFFFF),
           ),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: surfaceColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
+          centerTitle: true,
           titleTextStyle: GoogleFonts.poppins(
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
           ),
-          iconTheme: IconThemeData(color: neonPurple),
+          iconTheme: const IconThemeData(color: Color(0xFFD4AF37)),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: neonPurple,
-            foregroundColor: const Color(0xFF0D0D0D),
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            backgroundColor: const Color(0xFFD4AF37),
+            foregroundColor: const Color(0xFF050608),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            elevation: 8,
+            shadowColor: const Color(0xFFD4AF37).withValues(alpha: 0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            textStyle: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
             ),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: neonPurple,
-            side: BorderSide(color: neonPurple, width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            foregroundColor: const Color(0xFFD4AF37),
+            side: const BorderSide(color: Color(0xFFD4AF37), width: 1.5),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            textStyle: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
             ),
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: neonPurple,
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
+            foregroundColor: const Color(0xFFD4AF37),
+            textStyle: GoogleFonts.poppins(
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: surfaceColor,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 14),
-          labelStyle: TextStyle(color: neonPurple, fontSize: 14),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          fillColor: const Color(0xFF0E1118).withValues(alpha: 0.7),
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: 14,
+            fontFamily: 'Inter',
+          ),
+          labelStyle: const TextStyle(
+            color: Color(0xFFD4AF37),
+            fontSize: 14,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 1.0,
+            ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 1.0,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: neonPurple, width: 1.5),
+            borderRadius: BorderRadius.circular(20),
+            borderSide: const BorderSide(
+              color: Color(0xFFD4AF37),
+              width: 1.5,
+            ),
           ),
         ),
       ),
       builder: (context, child) {
         return Scaffold(
-          backgroundColor: const Color(0xFF0A0A0A), // Extra dark background for lateral excess space
+          backgroundColor: const Color(0xFF050608),
           body: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
@@ -188,7 +206,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomePage(),
         '/create-account': (context) => const CreateAccountPage(),
         '/login': (context) => const LoginPage(),
-        '/home': (context) => const HomePage(),
+        '/home': (context) => const HomeBuyerPage(),
         '/homebuyer': (context) => const HomeBuyerPage(),
         '/favorites': (context) => const FavoritesPage(),
         '/settings': (context) => const SettingsPage(),

@@ -1,9 +1,11 @@
-import 'dart:ui'; // For ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/favorites_page.dart';
 import 'package:untitled/pages/homebuyer_page.dart';
 import 'package:untitled/pages/search_page.dart';
 import 'package:untitled/pages/settings_page.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/page_transitions.dart';
 
 enum NavPageIndex { home, search, favorites, settings }
@@ -24,7 +26,8 @@ class FloatingBottomNavBar extends StatefulWidget {
   State<FloatingBottomNavBar> createState() => _FloatingBottomNavBarState();
 }
 
-class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with SingleTickerProviderStateMixin {
+class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
 
   @override
@@ -76,31 +79,31 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const Color pastelPurple = Color(0xFFD4B2FF);
 
     final double pageProgress = widget.pageController != null
         ? (widget.pageController!.hasClients
-            ? (widget.pageController!.page ?? widget.activeIndex.index.toDouble())
+            ? (widget.pageController!.page ??
+                widget.activeIndex.index.toDouble())
             : widget.activeIndex.index.toDouble())
         : _animController.value;
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
-    final double barWidth = maxBarWidth - 32; // Fixed margins (16px left/right) for consistency
-    final double innerWidth = barWidth - 16; 
+    final double barWidth = maxBarWidth - 32;
+    final double innerWidth = barWidth - 12;
     final double segmentWidth = innerWidth / 4;
 
     final Map<int, double> ovalWidths = {
-      0: 110.0, // Home (EXPLORE)
-      1: 103.0, // Search (SEARCH)
-      2: 121.0, // Favorites (FAVORITES)
-      3: 113.0, // Settings (SETTINGS)
+      0: 116.0, // EXPLORE
+      1: 108.0, // SEARCH
+      2: 126.0, // FAVORITES
+      3: 118.0, // SETTINGS
     };
 
     final Map<int, double> textWidths = {
-      0: 64.0, // EXPLORE
-      1: 56.0, // SEARCH
-      2: 78.0, // FAVORITES
-      3: 67.0, // SETTINGS
+      0: 68.0,
+      1: 60.0,
+      2: 82.0,
+      3: 72.0,
     };
 
     final List<String> activeIcons = [
@@ -124,14 +127,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
       'SETTINGS',
     ];
 
-    // Determine the closest index to anchor the active label and icon inside the sliding oval
     final int activeIndexInt = pageProgress.round().clamp(0, 3);
-    final double closeness = (1.0 - (pageProgress - activeIndexInt).abs() * 2).clamp(0.0, 1.0);
+    final double closeness =
+        (1.0 - (pageProgress - activeIndexInt).abs() * 2).clamp(0.0, 1.0);
 
-    // Compute size and position of sliding background oval
-    final double maxWidthForActive = ovalWidths[activeIndexInt] ?? 110.0;
-    // Shrinks to a circular badge (width 48) when swiping in-between tabs
-    final double activeOvalWidth = 48.0 + (maxWidthForActive - 48.0) * closeness;
+    final double maxWidthForActive = ovalWidths[activeIndexInt] ?? 116.0;
+    final double activeOvalWidth =
+        48.0 + (maxWidthForActive - 48.0) * closeness;
 
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
@@ -139,17 +141,20 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
 
     final double prevCenter = segmentWidth * (prevIndex + 0.5);
     final double nextCenter = segmentWidth * (nextIndex + 0.5);
-    final double activeCenter = prevCenter + (nextCenter - prevCenter) * fraction;
+    final double activeCenter =
+        prevCenter + (nextCenter - prevCenter) * fraction;
 
-    // Clamp the position so the oval stays perfectly inside the navigation bar boundaries with a 4px safety padding
-    final double ovalLeft = (activeCenter - (activeOvalWidth / 2)).clamp(4.0, innerWidth - activeOvalWidth - 4.0);
+    final double ovalLeft = (activeCenter - (activeOvalWidth / 2))
+        .clamp(4.0, innerWidth - activeOvalWidth - 4.0);
 
     Widget buildNavItem(int index, String inactiveIcon) {
-      final double closenessAtTab = (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
+      final double closenessAtTab =
+          (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
       final double opacity = (1.0 - closenessAtTab).clamp(0.0, 1.0);
 
       return Expanded(
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () {
             if (widget.onTap != null) {
               widget.onTap!(NavPageIndex.values[index]);
@@ -160,7 +165,6 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                 curve: Curves.easeInOut,
               );
             } else {
-              // Fallback to pushReplacement if no pageController or onTap is provided
               if (widget.activeIndex.index != index) {
                 Widget targetPage;
                 switch (NavPageIndex.values[index]) {
@@ -181,8 +185,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
               }
             }
           },
-          child: Container(
-            color: Colors.transparent, // expand hit test area
+          child: SizedBox(
             height: double.infinity,
             child: Center(
               child: Opacity(
@@ -191,7 +194,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                   inactiveIcon,
                   width: 20,
                   height: 20,
-                  color: const Color(0xFF8E8E93),
+                  color: VizareColors.textSecondary,
                 ),
               ),
             ),
@@ -209,20 +212,35 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(38),
+          borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+            filter: ImageFilter.blur(sigmaX: 24.0, sigmaY: 24.0),
             child: Container(
-              height: 76,
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              height: 74,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFF121214).withValues(alpha: 0.65), // Glassy dark grey background
-                borderRadius: BorderRadius.circular(38),
-                border: Border.all(color: pastelPurple.withValues(alpha: 0.7), width: 2.0), // High contrast border
+                color: VizareColors.obsidianSurface.withValues(alpha: 0.80),
+                borderRadius: BorderRadius.circular(40),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
+                  ),
+                  BoxShadow(
+                    color: VizareColors.champagneGold.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Stack(
                 children: [
-                  // Sliding and expanding purple oval background
+                  // Sliding and morphing VisionOS Champagne Gold & Neon pill
                   Positioned(
                     left: ovalLeft,
                     top: 4,
@@ -230,8 +248,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                     width: activeOvalWidth,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: pastelPurple,
-                        borderRadius: BorderRadius.circular(29),
+                        gradient: VizareColors.goldGradient,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: VizareColors.champagneGold.withValues(alpha: 0.35),
+                            blurRadius: 14,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: Row(
@@ -240,28 +265,29 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                           children: [
                             Image.asset(
                               activeIcons[activeIndexInt],
-                              width: 20,
-                              height: 20,
-                              color: const Color(0xFF000000),
+                              width: 19,
+                              height: 19,
+                              color: VizareColors.obsidianBlack,
                             ),
                             ClipRect(
                               child: Opacity(
                                 opacity: closeness,
                                 child: Padding(
-                                  padding: EdgeInsets.only(left: 8.0 * closeness),
+                                  padding:
+                                      EdgeInsets.only(left: 7.0 * closeness),
                                   child: SizedBox(
-                                    height: 20,
-                                    width: (textWidths[activeIndexInt] ?? 60.0) * closeness,
+                                    height: 18,
+                                    width: (textWidths[activeIndexInt] ?? 64.0) *
+                                        closeness,
                                     child: Text(
                                       labels[activeIndexInt],
                                       maxLines: 1,
                                       overflow: TextOverflow.clip,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w900,
-                                        fontFamily: 'Poppins',
-                                        letterSpacing: 0.5,
-                                        color: Color(0xFF000000),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.6,
+                                        color: VizareColors.obsidianBlack,
                                       ),
                                     ),
                                   ),
@@ -273,7 +299,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar> with Single
                       ),
                     ),
                   ),
-                  // Inactive background icons in the foreground stack
+                  // Inactive items row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

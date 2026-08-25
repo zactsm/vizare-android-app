@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 
-import '/welcome_page.dart';
+import 'package:untitled/welcome_page.dart';
 import '../utils/google_auth_service.dart';
 
 class DeactivateAccountPage extends StatefulWidget {
@@ -92,7 +92,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
 
-      if (!context.mounted) return;
+      if (!mounted) return;
       if (email == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

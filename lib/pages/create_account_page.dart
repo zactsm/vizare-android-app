@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
 import 'package:untitled/pages/utils/premium_background.dart';
 
@@ -16,26 +18,18 @@ class CreateAccountPage extends StatefulWidget {
 }
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
-  // --- Controllers & Logger ---
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _logger = Logger();
 
-  // --- Registration States ---
-  bool _isHomeBuyer = true; // Default role
+  bool _isHomeBuyer = true;
   bool _agreedToPolicy = false;
-  bool _isUploading = false;
+  bool _isLoading = false;
 
-  // --- Password Validation States ---
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  bool _hasMinLength = false;
-  bool _hasUppercase = false;
-  bool _hasDigit = false;
-  bool _hasSymbol = false;
 
   @override
   void initState() {
@@ -51,7 +45,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   @override
   void dispose() {
-    // Dispose all controllers
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -59,14 +52,53 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
-  // --- Authentication Logic ---
+  void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: VizareColors.obsidianElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.inter(color: VizareColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "OK",
+              style: GoogleFonts.poppins(
+                color: VizareColors.champagneGold,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   Future<void> signInWithGoogle() async {
+    setState(() => _isLoading = true);
     try {
       final result = await GoogleAuthService.signIn(
         requestedRole: _isHomeBuyer ? 'homebuyer' : 'homeowner',
       );
-      if (result == null || !mounted) return;
+      if (result == null || !mounted) {
+        setState(() => _isLoading = false);
+        return;
+      }
       final userType = result.userType;
 
       if (userType == 'homeowner') {
@@ -76,49 +108,32 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         Navigator.pushNamedAndRemoveUntil(
             context, '/homebuyer', (Route<dynamic> route) => false);
       }
-
     } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
       _logger.e("Google Sign-In failed", error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Google Sign-In failed. Please try again. Error: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showErrorDialog("Authentication Error", "Google Sign-In failed. Please try again.");
     }
   }
 
   Future<void> _createAccount() async {
-    final name = _nameController.text;
-    final email = _emailController.text;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     final bool isHomeBuyer = _isHomeBuyer;
 
-    // --- Start Validation ---
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _showErrorDialog("Required Fields", "Please fill in all fields.");
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showErrorDialog("Password Mismatch", "Passwords do not match.");
       return;
     }
-    // --- End Validation ---
+
+    setState(() => _isLoading = true);
 
     try {
       final response = await ApiService.post(
@@ -131,12 +146,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         },
       );
 
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
       if (response.statusCode == 200) {
         _logger.i('Account created: ${response.body}');
 
         final responseData = jsonDecode(response.body);
         if (responseData['requires_email_confirmation'] == true) {
-          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(responseData['message']),
@@ -152,7 +169,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         );
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_email', email);
-        await prefs.setString('user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
+        await prefs.setString(
+            'user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
         await prefs.setBool('has_password', true);
 
         if (!mounted) return;
@@ -165,384 +183,458 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               context, '/homeowner', (Route<dynamic> route) => false);
         }
       } else {
-        _logger.w(
-          'Failed to create account: ${response.statusCode} ${response.body}',
-        );
-        if (mounted) {
-          var message = 'Failed to create account. Please try again.';
-          try {
-            final responseData = jsonDecode(response.body);
-            message = responseData['message'] as String? ?? message;
-          } catch (_) {
-            if (response.statusCode == 503) {
-              message =
-                  'Registration service is temporarily unavailable. Please try again later.';
-            }
+        var message = 'Failed to create account. Please try again.';
+        try {
+          final responseData = jsonDecode(response.body);
+          message = responseData['message'] as String? ?? message;
+        } catch (_) {
+          if (response.statusCode == 503) {
+            message =
+                'Registration service is temporarily unavailable. Please try again later.';
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
+        _showErrorDialog("Registration Failed", message);
       }
     } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
       _logger.e('Error occurred while creating account', error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An error occurred. Check your connection.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showErrorDialog("Connection Error", "An error occurred. Check your connection.");
     }
   }
 
-  // --- Gradient for Title ---
-  Shader _buildGradientShader(Rect bounds) {
-    return const LinearGradient(
-      colors: [
-        Colors.white,
-        Color(0xFFDF00FF),
-      ],
-    ).createShader(bounds);
-  }
-
-  // --- Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    final Color neonPurple = const Color(0xFFDF00FF);
     return PremiumBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: Colors.white70,
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 50,
-                  height: 50,
-                ),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
               ),
-              const SizedBox(height: 24),
-              ShaderMask(
-                shaderCallback: (bounds) => _buildGradientShader(bounds),
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -1.0,
+            ),
+          ),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 48,
+                      height: 48,
+                      errorBuilder: (c, e, s) =>
+                          const SizedBox(width: 48, height: 48),
+                    ),
+                    const SpatialBadge(
+                      text: 'PORTFOLIO PASS',
+                      icon: Icons.vpn_key_rounded,
+                      primaryColor: VizareColors.champagneGold,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Join Vizare',
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.8,
                     color: Colors.white,
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Create an account to explore properties in AR.',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
-                  fontSize: 14,
+                const SizedBox(height: 6),
+                Text(
+                  'Explore and showcase luxury properties in interactive 3D.',
+                  style: GoogleFonts.inter(
+                    color: VizareColors.textSecondary,
+                    fontSize: 13.5,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
-              // --- Full Name ---
-              _buildTextField(
-                controller: _nameController,
-                hintText: 'Full Name',
-              ),
-              const SizedBox(height: 16),
+                // Form Container
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(22.0),
+                  borderRadius: 24,
+                  backgroundColor:
+                      VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 1.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'FULL NAME',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nameController,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: const InputDecoration(
+                          hintText: 'Sarah Jenkins',
+                          prefixIcon: Icon(
+                            Icons.person_outline_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'EMAIL ADDRESS',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: const InputDecoration(
+                          hintText: 'yourname@luxury.com',
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'PASSWORD',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: !_isPasswordVisible,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(
+                            Icons.lock_outline_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.white60,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'CONFIRM PASSWORD',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _confirmPasswordController,
+                        obscureText: !_isConfirmPasswordVisible,
+                        style: GoogleFonts.inter(
+                            color: Colors.white, fontSize: 14.5),
+                        decoration: InputDecoration(
+                          hintText: '••••••••',
+                          prefixIcon: const Icon(
+                            Icons.lock_outline_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isConfirmPasswordVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: Colors.white60,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isConfirmPasswordVisible =
+                                    !_isConfirmPasswordVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
-              // --- Email ---
-              _buildTextField(
-                controller: _emailController,
-                hintText: 'Email address',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
+                      // Account Role Selection
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isHomeBuyer = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _isHomeBuyer
+                                      ? VizareColors.champagneGold
+                                          .withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: _isHomeBuyer
+                                        ? VizareColors.champagneGold
+                                        : Colors.white.withValues(alpha: 0.1),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.explore_rounded,
+                                      size: 16,
+                                      color: _isHomeBuyer
+                                          ? VizareColors.champagneGold
+                                          : VizareColors.textMuted,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Homebuyer',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _isHomeBuyer
+                                            ? Colors.white
+                                            : VizareColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isHomeBuyer = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: !_isHomeBuyer
+                                      ? VizareColors.champagneGold
+                                      .withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: !_isHomeBuyer
+                                        ? VizareColors.champagneGold
+                                        : Colors.white.withValues(alpha: 0.1),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.home_work_rounded,
+                                      size: 16,
+                                      color: !_isHomeBuyer
+                                          ? VizareColors.champagneGold
+                                          : VizareColors.textMuted,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Homeowner',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: !_isHomeBuyer
+                                            ? Colors.white
+                                            : VizareColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
 
-              // --- Password ---
-              _buildPasswordField(
-                controller: _passwordController,
-                hintText: 'Password',
-                isVisible: _isPasswordVisible,
-                onToggleVisibility: () {
-                  setState(() => _isPasswordVisible = !_isPasswordVisible);
-                },
-              ),
-              const SizedBox(height: 16),
+                      // Policy Agreement Checkbox
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _agreedToPolicy,
+                            activeColor: VizareColors.champagneGold,
+                            checkColor: VizareColors.obsidianBlack,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            onChanged: (val) {
+                              setState(() => _agreedToPolicy = val ?? false);
+                            },
+                          ),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: GoogleFonts.inter(
+                                  color: VizareColors.textSecondary,
+                                  fontSize: 13.0,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'I agree to the '),
+                                  TextSpan(
+                                    text: 'terms & privacy policy',
+                                    style: const TextStyle(
+                                      color: VizareColors.champagneGold,
+                                      decoration: TextDecoration.underline,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.pushNamed(context, '/tos');
+                                      },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              // --- Confirm Password ---
-              _buildPasswordField(
-                controller: _confirmPasswordController,
-                hintText: 'Confirm password',
-                isVisible: _isConfirmPasswordVisible,
-                onToggleVisibility: () {
-                  setState(() =>
-                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // --- Homebuyer Checkbox ---
-              _buildCheckbox(
-                label: 'I am a homebuyer',
-                value: _isHomeBuyer,
-                onChanged: (val) {
-                  setState(() => _isHomeBuyer = val ?? false);
-                },
-              ),
-
-              // --- Policy Checkbox ---
-              _buildCheckbox(
-                richLabel: _buildPolicyLink(),
-                value: _agreedToPolicy,
-                onChanged: (val) {
-                  setState(() => _agreedToPolicy = val ?? false);
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              // --- Register Button ---
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
+                // Register Button
+                LuxuryGradientButton(
+                  text: 'Register Account',
+                  icon: Icons.person_add_rounded,
+                  isLoading: _isLoading,
                   onPressed: _agreedToPolicy ? _createAccount : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: neonPurple,
-                    foregroundColor: const Color(0xFF0D0D0D),
-                    disabledBackgroundColor: Colors.grey.shade800,
-                    disabledForegroundColor: Colors.white30,
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
+                ),
+                const SizedBox(height: 14),
+
+                // Google Sign-In Glass Button
+                VisionGlassContainer(
+                  padding: EdgeInsets.zero,
+                  borderRadius: 30,
+                  onTap: _isLoading ? null : signInWithGoogle,
+                  child: Container(
+                    height: 54,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-              _buildSeparator(),
-              const SizedBox(height: 16),
-
-              // --- Sign in with Google Button ---
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: signInWithGoogle,
-                  icon: Image.asset(
-                    'assets/images/google_logo.png',
-                    height: 20,
-                    width: 20,
-                  ),
-                  label: const Text(
-                    'Continue with Google',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withOpacity(0.15), width: 1.5),
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Already have an account? ",
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.6), fontFamily: 'Poppins'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    child: Text(
-                      'Log in',
-                      style: TextStyle(
-                        color: neonPurple,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        width: 1.0,
                       ),
                     ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    ),);
-  }
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 18,
+                          width: 18,
+                          errorBuilder: (c, e, s) => const Icon(
+                            Icons.g_mobiledata_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Continue with Google',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-  // --- Helper Widgets ---
-
-  /// Builds a standardized text field
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hintText,
-      ),
-    );
-  }
-
-  /// Built a standardized password field with visibility toggle
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required String hintText,
-    required bool isVisible,
-    required VoidCallback onToggleVisibility,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: !isVisible,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hintText,
-        suffixIcon: IconButton(
-          icon: Icon(
-            isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: Colors.white70,
-            size: 20,
-          ),
-          onPressed: onToggleVisibility,
-        ),
-      ),
-    );
-  }
-
-  /// Builds the "or" separator line
-  Widget _buildSeparator() {
-    return Row(
-      children: [
-        Expanded(
-          child: Divider(color: Colors.white.withOpacity(0.15)),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            'or',
-            style: TextStyle(color: Colors.white.withOpacity(0.5)),
-          ),
-        ),
-        Expanded(
-          child: Divider(color: Colors.white.withOpacity(0.15)),
-        ),
-      ],
-    );
-  }
-
-  /// Builds the "I agree to terms & policy" RichText
-  Widget _buildPolicyLink() {
-    final Color neonPurple = const Color(0xFFDF00FF);
-    return RichText(
-      text: TextSpan(
-        style: TextStyle(
-          color: Colors.white.withOpacity(0.7),
-          fontFamily: 'Poppins',
-          fontSize: 14.0,
-        ),
-        children: [
-          const TextSpan(text: 'I agree to the '),
-          TextSpan(
-            text: 'terms & policy',
-            style: TextStyle(
-              color: neonPurple,
-              decoration: TextDecoration.underline,
+                // Existing account login
+                Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account? ",
+                        style: GoogleFonts.inter(
+                          color: VizareColors.textSecondary,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/login'),
+                        child: Text(
+                          'Log in',
+                          style: GoogleFonts.poppins(
+                            color: VizareColors.champagneGold,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () {
-                _logger.i('Navigating to Terms & Policy...');
-                Navigator.pushNamed(context, '/tos');
-              },
           ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds a standardized checkbox
-  Widget _buildCheckbox({
-    String? label,
-    Widget? richLabel,
-    required bool value,
-    required ValueChanged<bool?> onChanged,
-  }) {
-    final Color neonPurple = const Color(0xFFDF00FF);
-    return Theme(
-      data: Theme.of(context).copyWith(
-        checkboxTheme: CheckboxThemeData(
-          fillColor: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return neonPurple;
-            }
-            return Colors.white.withOpacity(0.1);
-          }),
-          checkColor: WidgetStateProperty.all(const Color(0xFF0D0D0D)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
-      ),
-      child: CheckboxListTile(
-        value: value,
-        onChanged: onChanged,
-        title: richLabel ??
-            Text(
-              label ?? '',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontFamily: 'Poppins',
-                fontSize: 14.0,
-              ),
-            ),
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: EdgeInsets.zero,
       ),
     );
   }

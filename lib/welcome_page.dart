@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'pages/utils/premium_background.dart';
+import 'pages/utils/app_theme.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -27,9 +29,11 @@ class _WelcomePageState extends State<WelcomePage> {
     );
 
     _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % 5;
-      });
+      if (mounted) {
+        setState(() {
+          _currentIndex = (_currentIndex + 1) % 5;
+        });
+      }
     });
   }
 
@@ -39,154 +43,288 @@ class _WelcomePageState extends State<WelcomePage> {
     super.dispose();
   }
 
-  List<List<InlineSpan>> _getRichMessages(Color neonPurple) {
+  List<List<InlineSpan>> _getRichMessages() {
     return [
       [
-        const TextSpan(text: 'Your ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        TextSpan(text: 'dream space\n', style: TextStyle(fontWeight: FontWeight.w900, color: neonPurple)),
-        const TextSpan(text: 'now in ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        const TextSpan(text: 'augmented reality.', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.white)),
+        const TextSpan(
+          text: 'Experience ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'living spaces\n',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: VizareColors.champagneGold,
+          ),
+        ),
+        const TextSpan(
+          text: 'in spatial ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: '3D reality.',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: VizareColors.spatialCyan,
+          ),
+        ),
       ],
       [
-        const TextSpan(text: 'Bringing ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        TextSpan(text: 'properties\n', style: TextStyle(fontWeight: FontWeight.w900, color: neonPurple)),
-        const TextSpan(text: 'directly into ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        const TextSpan(text: 'your hands.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        const TextSpan(
+          text: 'Ultra-luxury ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'properties\n',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: VizareColors.champagneGold,
+          ),
+        ),
+        const TextSpan(
+          text: 'crafted for ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'next-gen living.',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: VizareColors.neonPurple,
+          ),
+        ),
       ],
       [
-        const TextSpan(text: 'Step ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        TextSpan(text: 'inside\n', style: TextStyle(fontWeight: FontWeight.w900, color: neonPurple)),
-        const TextSpan(text: 'your future home ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        const TextSpan(text: 'virtually.', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        const TextSpan(
+          text: 'Step inside ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'your future\n',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: VizareColors.champagneGold,
+          ),
+        ),
+        const TextSpan(
+          text: 'architectural ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'sanctuary.',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: VizareColors.goldLight,
+          ),
+        ),
       ],
       [
-        const TextSpan(text: 'Explore ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        const TextSpan(text: 'spaces\n', style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.w300, color: Colors.white)),
-        const TextSpan(text: 'like never before with ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        TextSpan(text: 'AR tours.', style: TextStyle(fontWeight: FontWeight.w900, color: neonPurple)),
+        const TextSpan(
+          text: 'Explore ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'spaces\n',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: VizareColors.champagneGold,
+          ),
+        ),
+        const TextSpan(
+          text: 'with real-time ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'AR tours.',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: VizareColors.spatialCyan,
+          ),
+        ),
       ],
       [
-        const TextSpan(text: 'Walk ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        TextSpan(text: 'through\n', style: TextStyle(fontWeight: FontWeight.w900, color: neonPurple)),
-        const TextSpan(text: 'before you ', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.white)),
-        const TextSpan(text: 'walk in.', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.white)),
+        const TextSpan(
+          text: 'Walk through ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'estates\n',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: VizareColors.champagneGold,
+          ),
+        ),
+        const TextSpan(
+          text: 'before you ',
+          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+        ),
+        const TextSpan(
+          text: 'walk in.',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: VizareColors.neonPurple,
+          ),
+        ),
       ],
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color neonPurple = const Color(0xFFDF00FF);
-
     return PremiumBackground(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 36.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                // Logo
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 60,
-                    height: 60,
-                  ),
-                ),
-                const SizedBox(height: 160),
-                Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 600),
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      final isEntering = child.key == ValueKey(_currentIndex);
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: isEntering ? const Offset(0.2, 0.0) : const Offset(-0.2, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0, vertical: 24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 12),
+                            // Top Bar with Logo & Spatial Badge
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Image.asset(
+                                  'assets/images/logo.png',
+                                  width: 54,
+                                  height: 54,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const SizedBox(width: 54, height: 54),
+                                ),
+                                const SpatialBadge(
+                                  text: 'VISION AR 3.0',
+                                  icon: Icons.view_in_ar_rounded,
+                                  primaryColor: VizareColors.champagneGold,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 48),
+                            // Dynamic Heading Switcher
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12.0),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 600),
+                                transitionBuilder: (Widget child,
+                                    Animation<double> animation) {
+                                  final isEntering =
+                                      child.key == ValueKey(_currentIndex);
+                                  return SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: isEntering
+                                          ? const Offset(0.15, 0.0)
+                                          : const Offset(-0.15, 0.0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: RichText(
+                                  key: ValueKey(_currentIndex),
+                                  text: TextSpan(
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 36,
+                                      height: 1.25,
+                                      letterSpacing: -0.5,
+                                    ),
+                                    children: _getRichMessages()[_currentIndex],
+                                  ),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            // Progress Indicator Dots
+                            Row(
+                              children: List.generate(5, (index) {
+                                final isActive = index == _currentIndex;
+                                return AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: const EdgeInsets.only(right: 8),
+                                  width: isActive ? 28 : 8,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: isActive
+                                        ? VizareColors.champagneGold
+                                        : Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: RichText(
-                      key: ValueKey(_currentIndex),
-                      text: TextSpan(
-                        style: const TextStyle(
-                          fontSize: 38,
-                          height: 1.2,
-                          fontFamily: 'Poppins',
+                        const SizedBox(height: 32),
+                        // CTAs
+                        Column(
+                          children: [
+                            LuxuryGradientButton(
+                              text: 'Create Account',
+                              icon: Icons.person_add_alt_1_rounded,
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/create-account');
+                              },
+                            ),
+                            const SizedBox(height: 14),
+                            VisionGlassContainer(
+                              padding: EdgeInsets.zero,
+                              borderRadius: 30,
+                              onTap: () {
+                                Navigator.pushNamed(context, '/login');
+                              },
+                              child: Container(
+                                height: 54,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.25),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.login_rounded,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Log In',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                         ),
-                        children: _getRichMessages(neonPurple)[_currentIndex],
-                      ),
-                      textAlign: TextAlign.left,
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-            Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/create-account');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: neonPurple,
-                      foregroundColor: const Color(0xFF0D0D0D),
-                      minimumSize: const Size(200, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Create account',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: neonPurple, width: 1.5),
-                      foregroundColor: neonPurple,
-                      minimumSize: const Size(200, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Log in',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ],
+              ),
+            );
+          },
         ),
       ),
     );

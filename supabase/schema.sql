@@ -145,6 +145,27 @@ create trigger set_properties_updated_at
 before update on public.properties
 for each row execute function public.set_updated_at();
 
+create or replace function public.enforce_property_integrity()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  if not exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
+    if new.status is distinct from old.status and new.status = 'approved' then
+      new.status := 'pending';
+    end if;
+    new.is_featured := old.is_featured;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists check_property_integrity on public.properties;
+create trigger check_property_integrity
+before update on public.properties
+for each row execute function public.enforce_property_integrity();
+
 drop trigger if exists set_support_tickets_updated_at on public.support_tickets;
 create trigger set_support_tickets_updated_at
 before update on public.support_tickets
@@ -170,7 +191,6 @@ begin
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name', 'User'),
     case new.raw_user_meta_data ->> 'role'
       when 'homeowner' then 'homeowner'::public.user_role
-      when 'admin' then 'admin'::public.user_role
       else 'homebuyer'::public.user_role
     end,
     coalesce((new.raw_user_meta_data ->> 'has_password')::boolean, false)
@@ -220,7 +240,10 @@ for select
 to authenticated
 using (
   bucket_id = 'support-attachments'
-  and (storage.foldername(name))[1] = (select auth.uid()::text)
+  and (
+    (storage.foldername(name))[1] = (select auth.uid()::text)
+    or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+  )
 );
 
 -- Users write only inside a folder named after their Supabase user id.
@@ -334,7 +357,10 @@ alter table public.notification_preferences enable row level security;
 drop policy if exists "Profiles are readable" on public.profiles;
 create policy "Profiles are readable" on public.profiles
 for select to authenticated
-using (auth.uid() = auth_user_id or role = 'admin');
+using (
+  auth.uid() = auth_user_id
+  or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+);
 
 drop policy if exists "Profiles are insertable" on public.profiles;
 create policy "Profiles are insertable" on public.profiles
