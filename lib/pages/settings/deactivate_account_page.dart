@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
-import 'package:untitled/pages/utils/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:convert';
-
+import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 import 'package:untitled/welcome_page.dart';
 import '../utils/google_auth_service.dart';
 
@@ -20,10 +21,10 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
   final _otherReasonController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // State Management
-  bool _isPasswordStep = false; // Toggles between the two views
+  bool _isPasswordStep = false;
   String? _selectedReason;
   bool _isPasswordVisible = false;
+  bool _isDeactivating = false;
 
   final Map<String, bool> _reasons = {
     'I found a property': false,
@@ -40,13 +41,9 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     super.dispose();
   }
 
-  // --- Logic ---
-
   void _handleReasonSelection(String reason) {
     setState(() {
-      // Unselect all reasons
       _reasons.updateAll((key, value) => false);
-      // Select the new reason
       _reasons[reason] = true;
       _selectedReason = reason;
     });
@@ -54,198 +51,221 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
 
   void _handlePrimaryDeactivation() {
     if (_selectedReason == null) {
-      // Optional: Show a snackbar if no reason is selected
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a reason for deactivation.'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: Text('Please select a reason for deactivation.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
         ),
       );
       return;
     }
-    _logger.i('Deactivation reason: $_selectedReason');
-    if (_selectedReason == 'Other') {
-      _logger.d('Other reason details: ${_otherReasonController.text}');
-    }
-
-    // Move to the password confirmation step
     setState(() {
       _isPasswordStep = true;
     });
   }
 
-
   Future<void> _handleFinalDeactivation() async {
     final password = _passwordController.text;
     if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your password to confirm.'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: Text('Please enter your password to confirm.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
         ),
       );
       return;
     }
 
+    setState(() => _isDeactivating = true);
+
     try {
-      // 1. Get user email from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
 
       if (!mounted) return;
       if (email == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error: User session not found. Please log in again.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text('Error: User session not found. Please log in again.',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
           ),
         );
         return;
       }
 
-      // 2. Call the PHP script
-      // (This script now performs a DELETE as we discussed)
       final response = await ApiService.post(
         'deactivate_account.php',
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: {'email': email, 'password': password},
       );
 
-      if (!context.mounted) return;
-
-      final responseData = jsonDecode(response.body);
-      final message = responseData['message'] ?? 'Unknown error';
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
-        // 3. Deletion Successful: Log the user out completely
-        _logger.i('Account deleted successfully.');
-
-        await Supabase.instance.client.auth.signOut(
-          scope: SignOutScope.local,
-        );
+        await prefs.clear();
         try {
           await GoogleAuthService.signOut();
-        } catch (error) {
-          _logger.d('Google session was not active: $error');
-        }
-        await prefs.clear();
+        } catch (_) {}
+        try {
+          await Supabase.instance.client.auth.signOut();
+        } catch (_) {}
 
         if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Account deactivated successfully.',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.emeraldGreen,
+          ),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
           MaterialPageRoute(builder: (context) => const WelcomePage()),
-              (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
         );
       } else {
-        // 4. Deletion Failed (e.g., wrong password)
-        _logger.w('Deletion failed: $message');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $message'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Deactivation failed. Check your password.',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
       }
     } catch (e) {
       _logger.e('Error during deactivation', error: e);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred. Check your connection.',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDeactivating = false);
     }
   }
 
-  // --- Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            // If on password step, go back to reasons. Otherwise, pop the page.
-            if (_isPasswordStep) {
-              setState(() {
-                _isPasswordStep = false;
-              });
-            } else {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: _isPasswordStep
-                ? _buildPasswordView()
-                : _buildReasonsView(),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        // Copied from contact_support_page for consistent positioning
-        padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 26.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            // The button's action changes based on the current step
-            onPressed: _isPasswordStep
-                ? _handleFinalDeactivation
-                : _handlePrimaryDeactivation,
-            style: ElevatedButton.styleFrom(
-              // Red gradient from the design
-              backgroundColor: Colors.transparent, // Required for gradient
-              foregroundColor: Colors.white,
-              shadowColor: Colors.transparent,
-              minimumSize: const Size(200, 60), // Matched size
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () {
+                if (_isPasswordStep) {
+                  setState(() => _isPasswordStep = false);
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
               ),
-              padding: EdgeInsets.zero, // Remove padding to allow gradient to fill
-            ).copyWith(
-              elevation: WidgetStateProperty.all(0),
             ),
-            child: Ink(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF3D00), Color(0xFFFF6D00)],
-                ),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Container(
-                height: 60, // Constrain the button height
-                alignment: Alignment.center,
-                child: const Text(
-                  'Deactivate',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+          ),
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Deactivate account',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
                   ),
                 ),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  'Deactivating will archive your profile, spatial favorites, and listing views.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (!_isPasswordStep)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Text(
+                      'Reason for Deactivation:',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                _isPasswordStep ? _buildPasswordView() : _buildReasonsView(),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isDeactivating
+                        ? null
+                        : (_isPasswordStep
+                            ? _handleFinalDeactivation
+                            : _handlePrimaryDeactivation),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: VizareColors.crimsonRed,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: _isDeactivating
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            _isPasswordStep
+                                ? 'Confirm Deactivation'
+                                : 'Deactivate',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
           ),
         ),
@@ -253,143 +273,155 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     );
   }
 
-  // --- UI Widgets for each step ---
-
   Widget _buildReasonsView() {
-    return Column(
-      key: const ValueKey('reasonsView'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        const Text(
-          'Deactivate account',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Deactivating your account will hide your profile and listings. You will no longer receive messages or notifications. You can reactivate your account by logging in again.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            color: Colors.grey,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Reason for Deactivation:',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        ..._reasons.keys.map((reason) {
-          return CheckboxListTile(
-            title: Text(reason,
-                style: const TextStyle(color: Colors.white, fontFamily: 'Poppins')),
-            value: _reasons[reason],
-            onChanged: (bool? value) => _handleReasonSelection(reason),
-            activeColor: Colors.white,
-            checkColor: Colors.black,
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-          );
-        }),
-        if (_reasons['Other'] == true)
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0),
-            child: TextField(
-              controller: _otherReasonController,
-              style: const TextStyle(color: Colors.black, fontFamily: 'Poppins'),
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Tell us why...',
-                hintStyle:
-                TextStyle(color: Colors.grey[600], fontFamily: 'Poppins'),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.all(12.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide.none,
+    return VisionGlassContainer(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ..._reasons.keys.map((reason) {
+            final isSelected = _reasons[reason] == true;
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _handleReasonSelection(reason),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? VizareColors.champagneGold.withValues(alpha: 0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: isSelected
+                              ? VizareColors.champagneGold
+                              : Colors.white38,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            reason,
+                            style: GoogleFonts.inter(
+                              color: isSelected
+                                  ? Colors.white
+                                  : VizareColors.textSecondary,
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          if (_reasons['Other'] == true) ...[
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: VizareColors.obsidianSurface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              ),
+              child: TextField(
+                controller: _otherReasonController,
+                style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Tell us why...',
+                  hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(14),
                 ),
               ),
             ),
-          ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildPasswordView() {
-    return Column(
-      key: const ValueKey('passwordView'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        const Text(
-          'Deactivate account',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Deactivating your account will hide your profile and listings. You will no longer receive messages or notifications. You can reactivate your account by logging in again.',
-          style: TextStyle(
-            fontFamily:'Poppins',
-            fontSize: 14,
-            color: Colors.grey,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Enter your password to confirm:',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _passwordController,
-          obscureText: !_isPasswordVisible,
-          style: const TextStyle(color: Colors.black, fontFamily: 'Poppins'),
-          decoration: InputDecoration(
-            hintText: '************',
-            hintStyle: TextStyle(color: Colors.grey[600]),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding:
-            const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
+    return VisionGlassContainer(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Confirm with Password',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey[600],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Please enter your account password to confirm deactivation.',
+            style: GoogleFonts.inter(
+              color: VizareColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            decoration: BoxDecoration(
+              color: VizareColors.obsidianSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            child: TextField(
+              controller: _passwordController,
+              obscureText: !_isPasswordVisible,
+              style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: VizareColors.champagneGold,
+                  size: 20,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    setState(
+                        () => _isPasswordVisible = !_isPasswordVisible);
+                  },
+                ),
+                hintText: '••••••••••••',
+                hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
+                border: InputBorder.none,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

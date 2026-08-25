@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/utils/api_service.dart';
-import 'package:untitled/pages/utils/abstract_background.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class SendInquiryPage extends StatefulWidget {
   final Property property;
@@ -26,6 +28,12 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
     _loadUserEmail();
   }
 
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -36,7 +44,11 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
   Future<void> _submitInquiry() async {
     if (_messageController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a message.')),
+        SnackBar(
+          content: Text('Please enter an inquiry message.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
       );
       return;
     }
@@ -58,9 +70,12 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
       _logger.i("Inquiry saved to Supabase");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Inquiry sent! The homeowner will see it in their app.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Inquiry sent! The estate advisor will respond directly.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: VizareColors.emeraldGreen,
           ),
         );
         Navigator.pop(context);
@@ -69,7 +84,11 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
       _logger.e("Error sending inquiry", error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send inquiry. Try again.')),
+          SnackBar(
+            content: Text('Failed to transmit inquiry: $e',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
         );
       }
     } finally {
@@ -79,175 +98,216 @@ class _SendInquiryPageState extends State<SendInquiryPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color pastelPurple = Color(0xFFD4B2FF);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF000000), // Pitch Black background
-      body: AbstractBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Custom top section instead of standard AppBar (Back Navigation)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 24),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
               ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          title: Text(
+            'Private Inquiry',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Estate Concierge Contact',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Direct communication channel with the listing owner and representative.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Property Target Glass Card
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      const Text(
-                        'INQUIRY',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: pastelPurple,
-                          letterSpacing: 1.5,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          widget.property.imagePath,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 64,
+                            height: 64,
+                            color: VizareColors.obsidianSurface,
+                            child: const Icon(
+                              Icons.home_work_rounded,
+                              color: Colors.white24,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Send inquiry',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: Colors.white,
-                          fontSize: 38,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1.0,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // "From" Box (Chunky Solid Container)
-                      const Text(
-                        'From:',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121214), // Solid dark grey card block
-                          border: Border.all(color: pastelPurple, width: 2.0), // High-contrast border
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                      const SizedBox(width: 14),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _userEmail.split('@')[0],
-                              style: const TextStyle(
+                              widget.property.name,
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                                fontFamily: 'Poppins',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '($_userEmail)',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
+                              widget.property.location,
+                              style: GoogleFonts.inter(
+                                color: VizareColors.textSecondary,
                                 fontSize: 12,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.property.price,
+                              style: GoogleFonts.poppins(
+                                color: VizareColors.champagneGold,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 28),
-
-                      // "Message" Text Area
-                      const Text(
-                        'Message:',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        height: 220,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121214), // Solid card block
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0xFF1E1E22), width: 1.5),
-                        ),
-                        child: TextField(
-                          controller: _messageController,
-                          maxLines: null,
-                          style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-                          decoration: InputDecoration(
-                            hintText: 'Message here...',
-                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontFamily: 'Poppins'),
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: const EdgeInsets.all(20),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 40),
-
-                      // Submit Button (Wise Style: Solid Accent filled shape, black text)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : _submitInquiry,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: pastelPurple,
-                            foregroundColor: const Color(0xFF000000),
-                            disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: _isSubmitting
-                              ? const CircularProgressIndicator(color: Color(0xFF000000))
-                              : const Text(
-                                  'SUBMIT INQUIRY',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 14,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel('Sender Identity'),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: VizareColors.obsidianSurface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.alternate_email_rounded,
+                              color: VizareColors.champagneGold,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _userEmail,
+                              style: GoogleFonts.inter(
+                                color: Colors.white70,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Message to Homeowner'),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: VizareColors.obsidianSurface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          maxLines: 6,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Inquire regarding inspection schedules, spatial dimensions, acquisition details...',
+                            hintStyle: GoogleFonts.inter(
+                              color: VizareColors.textMuted,
+                              fontSize: 13,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.all(16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                LuxuryGradientButton(
+                  text: 'Send Direct Inquiry',
+                  icon: Icons.send_rounded,
+                  isLoading: _isSubmitting,
+                  onPressed: _submitInquiry,
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 2.0),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: VizareColors.champagneGold,
+          letterSpacing: 0.2,
         ),
       ),
     );

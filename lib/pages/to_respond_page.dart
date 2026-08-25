@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:untitled/pages/utils/api_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ToRespondPage extends StatefulWidget {
@@ -54,39 +57,82 @@ class _ToRespondPageState extends State<ToRespondPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text('Inquiries', style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFF121212),
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+          title: Text(
+            'Inquiry Terminal',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: VizareColors.champagneGold,
                   ),
                 )
-              : _buildInquiryList(),
+              : _error != null
+                  ? Center(
+                      child: Text(
+                        _error!,
+                        style: GoogleFonts.inter(color: VizareColors.crimsonRed),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : _buildInquiryList(),
+        ),
+      ),
     );
   }
 
   Widget _buildInquiryList() {
     if (_inquiries.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 60, color: Colors.grey),
-            SizedBox(height: 16),
+            const Icon(
+              Icons.mark_email_read_outlined,
+              size: 56,
+              color: Colors.white24,
+            ),
+            const SizedBox(height: 16),
             Text(
-              'No inquiries yet.',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              'No Inquiries Pending Response',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'New prospective homebuyer inquiries will arrive here.',
+              style: GoogleFonts.inter(
+                color: VizareColors.textMuted,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -95,61 +141,121 @@ class _ToRespondPageState extends State<ToRespondPage> {
 
     return RefreshIndicator(
       onRefresh: _fetchInquiries,
+      color: VizareColors.champagneGold,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         itemCount: _inquiries.length,
         itemBuilder: (context, index) {
           final data = _inquiries[index];
-          var timeString = 'Just now';
-          final createdAt = DateTime.tryParse(
-            data['created_at']?.toString() ?? '',
-          );
-          if (createdAt != null) {
-            timeString = DateFormat('MMM d, h:mm a').format(createdAt.toLocal());
+          String timeString = '';
+          if (data['created_at'] != null) {
+            try {
+              final DateTime dt = DateTime.parse(data['created_at']);
+              timeString = DateFormat('MMM d, h:mm a').format(dt.toLocal());
+            } catch (_) {}
           }
 
-          return Card(
-            color: Colors.white.withValues(alpha: 0.05),
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              title: Text(
-                data['property_name'] ?? 'Unknown Property',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              subtitle: Column(
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            child: VisionGlassContainer(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    "From: ${data['buyer_email']}",
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          data['property_name'] ?? 'Architectural Listing',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (timeString.isNotEmpty)
+                        Text(
+                          timeString,
+                          style: GoogleFonts.inter(
+                            color: VizareColors.textMuted,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.alternate_email_rounded,
+                        color: VizareColors.champagneGold,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          data['buyer_email'] ?? '',
+                          style: GoogleFonts.inter(
+                            color: VizareColors.champagneGold,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Text(
                     data['message'] ?? '',
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
-                    maxLines: 2,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    timeString,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                  const SizedBox(height: 14),
+                  GestureDetector(
+                    onTap: () => _showInquiryDetails(context, data),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: VizareColors.champagneGold.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.reply_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Respond to Buyer',
+                            style: GoogleFonts.inter(
+                              color: VizareColors.champagneGold,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              onTap: () => _showInquiryDetails(
-                context,
-                data,
-                data['id'].toString(),
               ),
             ),
           );
@@ -158,70 +264,112 @@ class _ToRespondPageState extends State<ToRespondPage> {
     );
   }
 
-  void _showInquiryDetails(BuildContext context, Map<String, dynamic> data, String docId) {
+  void _showInquiryDetails(BuildContext context, Map<String, dynamic> data) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: VizareColors.obsidianSurface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(data['property_name'], style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const Text("Buyer Email:", style: TextStyle(color: Colors.grey)),
-              Text(data['buyer_email'], style: const TextStyle(color: Colors.white, fontSize: 16)),
-              const SizedBox(height: 16),
-              const Text("Message:", style: TextStyle(color: Colors.grey)),
-              Text(data['message'], style: const TextStyle(color: Colors.white, fontSize: 16)),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDF00FF),
-                    foregroundColor: const Color(0xFF0D0D0D),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  onPressed: () async {
-                    final String recipient = data['buyer_email'];
-                    final String subject = 'Re: Inquiry about ${data['property_name']}';
-                    final String body = '\n\n\n--- Original Message ---\nFrom: $recipient\n${data['message']}';
-
-                    final Uri emailLaunchUri = Uri(
-                      scheme: 'mailto',
-                      path: recipient,
-                      query: _encodeQueryParameters(<String, String>{
-                        'subject': subject,
-                        'body': body,
-                      }),
-                    );
-                    
-                    try {
-                      if (await canLaunchUrl(emailLaunchUri)) {
-                        await launchUrl(emailLaunchUri);
-                      } else {
-                        await launchUrl(emailLaunchUri);
-                      }
-                    } catch (e) {
-                      debugPrint("Could not launch email app: $e");
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Could not open email app.")),
-                        );
-                      }
-                    }
-
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: const Text("Reply via Email", style: TextStyle(color: Colors.white)),
+              Text(
+                data['property_name'] ?? 'Listing Inquiry',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
-              )
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'From Buyer:',
+                style: GoogleFonts.inter(
+                  color: VizareColors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                data['buyer_email'] ?? '',
+                style: GoogleFonts.inter(
+                  color: VizareColors.champagneGold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Message:',
+                style: GoogleFonts.inter(
+                  color: VizareColors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  data['message'] ?? '',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              LuxuryGradientButton(
+                text: 'Launch Email Response',
+                icon: Icons.send_rounded,
+                onPressed: () async {
+                  final String recipient = data['buyer_email'] ?? '';
+                  final String subject =
+                      'Re: Inquiry about ${data['property_name']}';
+                  final String body =
+                      '\n\n\n--- Original Inquiry ---\nFrom: $recipient\n${data['message']}';
+
+                  final Uri emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: recipient,
+                    query: _encodeQueryParameters(<String, String>{
+                      'subject': subject,
+                      'body': body,
+                    }),
+                  );
+
+                  try {
+                    await launchUrl(emailLaunchUri);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Could not open default email app.",
+                              style: GoogleFonts.inter()),
+                          backgroundColor: VizareColors.crimsonRed,
+                        ),
+                      );
+                    }
+                  }
+
+                  if (context.mounted) Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         );
@@ -229,11 +377,10 @@ class _ToRespondPageState extends State<ToRespondPage> {
     );
   }
 
-  // Helper to properly encode spaces and special characters for URLs
   String? _encodeQueryParameters(Map<String, String> params) {
     return params.entries
         .map((MapEntry<String, String> e) =>
-    '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
         .join('&');
   }
 }

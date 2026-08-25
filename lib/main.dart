@@ -147,7 +147,7 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFFD4AF37), // Champagne Gold
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFD4AF37),
-          secondary: Color(0xFFDF00FF),
+          secondary: Color(0xFFF3E5AB),
           surface: Color(0xFF0E1118),
           error: Color(0xFFEF4444),
         ),

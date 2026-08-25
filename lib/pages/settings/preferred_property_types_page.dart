@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class PreferredPropertyTypesPage extends StatefulWidget {
   const PreferredPropertyTypesPage({super.key});
 
   @override
-  State<PreferredPropertyTypesPage> createState() => _PreferredPropertyTypesPageState();
+  State<PreferredPropertyTypesPage> createState() =>
+      _PreferredPropertyTypesPageState();
 }
 
-class _PreferredPropertyTypesPageState extends State<PreferredPropertyTypesPage> {
+class _PreferredPropertyTypesPageState
+    extends State<PreferredPropertyTypesPage> {
   final Map<String, bool> propertyTypes = {
-    'Apartment/Flat': true,
+    'Apartment / Flat': true,
     'Condominium': true,
     'Terraced House / Townhouse': true,
     'Semi-Detached House': true,
@@ -28,7 +32,7 @@ class _PreferredPropertyTypesPageState extends State<PreferredPropertyTypesPage>
   @override
   void initState() {
     super.initState();
-    _loadPreferences(); // Load saved states when page opens
+    _loadPreferences();
   }
 
   Future<void> _loadPreferences() async {
@@ -40,102 +44,146 @@ class _PreferredPropertyTypesPageState extends State<PreferredPropertyTypesPage>
       }
     }
 
-    setState(() {}); // Refresh UI after loading
+    if (mounted) setState(() {});
   }
 
   Future<void> _savePreference(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('propertyType_$key', value); // Save individual toggle
+    await prefs.setBool('propertyType_$key', value);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Set status bar for dark theme
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
-    );
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: false,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            const Text(
-              'Preferred property types',
-              style: TextStyle(
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
                 color: Colors.white,
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                size: 16,
               ),
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
-                children: propertyTypes.keys.map((type) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: propertyTypes[type],
-                          onChanged: (value) async {
-                            setState(() {
-                              propertyTypes[type] = value!;
-                            });
-                            await _savePreference(type, value!); // Save persistently
-                          },
-                          side: const BorderSide(color: Colors.white, width: 1.5),
-                          activeColor: Colors.white,
-                          checkColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            type,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontFamily: 'Poppins',
+          ),
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Preferred property types',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Toggle the architectural categories you want featured in your discovery feeds.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: VisionGlassContainer(
+                    padding: const EdgeInsets.all(12),
+                    child: ListView(
+                      children: propertyTypes.keys.map((type) {
+                        final isSelected = propertyTypes[type] ?? false;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                final newVal = !isSelected;
+                                setState(() {
+                                  propertyTypes[type] = newVal;
+                                });
+                                await _savePreference(type, newVal);
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? VizareColors.champagneGold
+                                          .withValues(alpha: 0.1)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? VizareColors.champagneGold
+                                            .withValues(alpha: 0.3)
+                                        : Colors.transparent,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: isSelected,
+                                      activeColor: VizareColors.champagneGold,
+                                      checkColor: Colors.black,
+                                      onChanged: (val) async {
+                                        if (val == null) return;
+                                        setState(() {
+                                          propertyTypes[type] = val;
+                                        });
+                                        await _savePreference(type, val);
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        type,
+                                        style: GoogleFonts.inter(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : VizareColors.textSecondary,
+                                          fontSize: 14,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

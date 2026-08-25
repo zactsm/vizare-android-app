@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 
 class GalleryViewPage extends StatefulWidget {
   final List<String> imagePaths;
@@ -26,14 +27,6 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
-
-    // Set status bar to light for this full-screen view
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
   }
 
   void onPageChanged(int index) {
@@ -49,7 +42,6 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
       body: Stack(
         alignment: Alignment.bottomRight,
         children: [
-          // --- The Swipable, Zoomable Gallery ---
           PhotoViewGallery.builder(
             pageController: _pageController,
             onPageChanged: onPageChanged,
@@ -58,40 +50,52 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
               final imagePath = widget.imagePaths[index];
               return PhotoViewGalleryPageOptions(
                 imageProvider: NetworkImage(imagePath),
-                // This Hero tag MUST match the one on the details page
-                heroAttributes: PhotoViewHeroAttributes(tag: '$imagePath-$index'),
+                heroAttributes:
+                    PhotoViewHeroAttributes(tag: '$imagePath-$index'),
                 minScale: PhotoViewComputedScale.contained,
-                maxScale: PhotoViewComputedScale.covered * 2,
+                maxScale: PhotoViewComputedScale.covered * 2.5,
               );
             },
             loadingBuilder: (context, event) => const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+              child: CircularProgressIndicator(
+                color: VizareColors.champagneGold,
+              ),
             ),
           ),
-
-          // --- Back Button ---
           Positioned(
             top: 50,
             left: 16,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(10),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ),
-
-          // --- Page Counter (e.g., "3 / 5") ---
           Positioned(
-            bottom: 24,
+            bottom: 28,
             right: 24,
-            child: Text(
-              '${_currentIndex + 1} / ${widget.imagePaths.length}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'Poppins',
-                decoration: TextDecoration.none,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Text(
+                '${_currentIndex + 1} / ${widget.imagePaths.length}',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
               ),
             ),
           ),

@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http; // For EmailJS
-import 'dart:convert'; // For jsonEncode
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class ContactSupportPage extends StatefulWidget {
   const ContactSupportPage({super.key});
@@ -15,9 +18,9 @@ class ContactSupportPage extends StatefulWidget {
 }
 
 class _ContactSupportPageState extends State<ContactSupportPage> {
+  final _logger = Logger();
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _logger = Logger();
 
   final List<PlatformFile> _attachedFiles = [];
   bool _isSubmitting = false;
@@ -31,34 +34,34 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
 
   Future<void> _pickFiles() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
-        type: FileType.any,
         withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'docx', 'txt'],
       );
 
-      if (result != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
           _attachedFiles.addAll(result.files);
         });
       }
     } catch (e) {
-      _logger.e('Error picking files', error: e);
+      _logger.e("Error picking files", error: e);
     }
   }
 
   Future<void> _submitSupportTicket() async {
-    // --- 1. CONFIGURATION ---
-    final serviceId = dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
-    final templateId = dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
-    final publicKey = dotenv.env['EMAILJS_PUBLIC_KEY'] ?? '';
-
-    // --- 2. VALIDATION ---
     if (_subjectController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please enter a subject and description.')),
+        SnackBar(
+          content: Text(
+            'Please fill in both subject and description.',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
       );
       return;
     }
@@ -66,23 +69,21 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // --- 3. GET USER EMAIL ---
+      final serviceId = dotenv.env['EMAILJS_SERVICE_ID'] ?? '';
+      final templateId = dotenv.env['EMAILJS_TEMPLATE_ID'] ?? '';
+      final publicKey = dotenv.env['EMAILJS_PUBLIC_KEY'] ?? '';
+
       final prefs = await SharedPreferences.getInstance();
       final userEmail = prefs.getString('user_email') ?? 'Anonymous';
 
-      // --- 4. UPLOAD FILES TO SUPABASE STORAGE ---
-      List<String> fileUrls = [];
-      if (_attachedFiles.isNotEmpty) {
-        for (var file in _attachedFiles) {
-          final downloadUrl = await ApiService.uploadSupportAttachment(file);
-          if (downloadUrl == null) {
-            throw Exception('An attachment could not be uploaded.');
-          }
+      final List<String> fileUrls = [];
+      for (var file in _attachedFiles) {
+        final downloadUrl = await ApiService.uploadSupportAttachment(file);
+        if (downloadUrl != null) {
           fileUrls.add(downloadUrl);
         }
       }
 
-      // --- 5. SAVE TO SUPABASE THROUGH THE AUTHENTICATED API ---
       final ticketResponse = await ApiService.post(
         'create_support_ticket.php',
         body: {
@@ -95,46 +96,38 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         throw Exception('Could not save ticket: ${ticketResponse.body}');
       }
 
-      // --- 6. SEND EMAIL VIA EMAILJS ---
       final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+      final String linksString =
+          fileUrls.isEmpty ? "No attachments" : fileUrls.join("\n");
 
-      // Format the links for the email body
-      String linksString = fileUrls.isEmpty
-          ? "No attachments"
-          : fileUrls.join("\n");
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'service_id': serviceId,
-          'template_id': templateId,
-          'user_id': publicKey,
-          'template_params': {
-            'user_email': userEmail,
-            'subject': _subjectController.text.trim(),
-            'description': _descriptionController.text.trim(),
-            'attachment_links': linksString,
-          }
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        _logger.i("Email sent successfully via EmailJS");
-      } else {
-        _logger.w("EmailJS Failed: ${response.body}");
-        // The ticket remains safely stored in Supabase.
+      if (serviceId.isNotEmpty && publicKey.isNotEmpty) {
+        try {
+          await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'service_id': serviceId,
+              'template_id': templateId,
+              'user_id': publicKey,
+              'template_params': {
+                'user_email': userEmail,
+                'subject': _subjectController.text.trim(),
+                'description': _descriptionController.text.trim(),
+                'attachment_links': linksString,
+              }
+            }),
+          ).timeout(const Duration(seconds: 8));
+        } catch (_) {}
       }
 
-      // --- 7. SUCCESS UI ---
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-            Text('Support ticket received! We will contact you shortly.'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Support ticket submitted! Our team will contact you shortly.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: VizareColors.emeraldGreen,
           ),
         );
         Navigator.pop(context);
@@ -143,7 +136,10 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
       _logger.e("Error submitting ticket", error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Submission error: $e', style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
         );
       }
     } finally {
@@ -153,112 +149,194 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Text(
-                'Contact Support',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              _buildTextFieldLabel('Subject*'),
-              _buildTextField(
-                controller: _subjectController,
-                hintText: 'Subject here...',
-              ),
-              const SizedBox(height: 24),
-
-              _buildTextFieldLabel('Description*'),
-              _buildTextField(
-                controller: _descriptionController,
-                hintText: 'Description here...',
-                maxLines: 6,
-              ),
-              const SizedBox(height: 24),
-
-              _buildTextFieldLabel('Attachments'),
-              OutlinedButton.icon(
-                onPressed: _isSubmitting ? null : _pickFiles,
-                icon: const Icon(Icons.attach_file, color: Colors.white),
-                label: const Text(
-                  'Attach files',
-                  style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.white, width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding:
-                  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                ),
-              ),
-
-              if (_attachedFiles.isNotEmpty) _buildAttachedFilesList(),
-
-              const SizedBox(height: 80),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 26.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _submitSupportTicket,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDF00FF),
-              foregroundColor: const Color(0xFF0D0D0D),
-              disabledBackgroundColor: Colors.grey[900],
-              disabledForegroundColor: Colors.white30,
-              minimumSize: const Size(200, 60),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
               ),
             ),
-            child: _isSubmitting
-                ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
-                : const Text(
-              'Submit',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+          ),
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Contact Support',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Submit architectural inquiries, technical assistance, or property portfolio requests.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTextFieldLabel('Subject'),
+                      _buildInput(
+                        controller: _subjectController,
+                        hintText: 'e.g. 3D AR Model Viewport Inquiry',
+                        icon: Icons.title_rounded,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildTextFieldLabel('Description'),
+                      _buildInput(
+                        controller: _descriptionController,
+                        hintText: 'Provide details regarding your issue or inquiry...',
+                        icon: Icons.description_rounded,
+                        maxLines: 5,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildTextFieldLabel('Attachments (Optional)'),
+                      GestureDetector(
+                        onTap: _isSubmitting ? null : _pickFiles,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: VizareColors.champagneGold
+                                  .withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.attach_file_rounded,
+                                color: VizareColors.champagneGold,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Select Files / Screenshots',
+                                style: GoogleFonts.inter(
+                                  color: VizareColors.champagneGold,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_attachedFiles.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: _attachedFiles.map((file) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: VizareColors.obsidianSurface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    file.name,
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  GestureDetector(
+                                    onTap: () => setState(
+                                        () => _attachedFiles.remove(file)),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      size: 14,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submitSupportTicket,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: VizareColors.champagneGold,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'Submit',
+                            style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
             ),
           ),
         ),
@@ -268,67 +346,56 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
 
   Widget _buildTextFieldLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8.0, left: 2.0),
       child: Text(
         text,
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 16,
-          color: Colors.white,
+        style: GoogleFonts.inter(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+          color: VizareColors.champagneGold,
+          letterSpacing: 0.2,
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildInput({
     required TextEditingController controller,
     required String hintText,
+    required IconData icon,
     int maxLines = 1,
   }) {
-    return TextField(
-      controller: controller,
-      style: const TextStyle(color: Colors.black, fontFamily: 'Poppins'),
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(
-          color: Colors.grey[600],
-          fontFamily: 'Poppins',
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide.none,
+    return Container(
+      decoration: BoxDecoration(
+        color: VizareColors.obsidianSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
         ),
       ),
-    );
-  }
-
-  Widget _buildAttachedFilesList() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
-        children: _attachedFiles.map((file) {
-          return Chip(
-            label: Text(
-              file.name,
-              style: const TextStyle(
-                  fontFamily: 'Poppins', color: Colors.black87),
-            ),
-            backgroundColor: Colors.white,
-            onDeleted: () {
-              setState(() {
-                _attachedFiles.remove(file);
-              });
-            },
-            deleteIconColor: Colors.black54,
-          );
-        }).toList(),
+      child: TextField(
+        controller: controller,
+        style: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 14,
+        ),
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          prefixIcon: Icon(
+            icon,
+            color: VizareColors.champagneGold.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          hintText: hintText,
+          hintStyle: GoogleFonts.inter(
+            color: VizareColors.textMuted,
+            fontSize: 13,
+          ),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
       ),
     );
   }

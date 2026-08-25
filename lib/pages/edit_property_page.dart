@@ -1,13 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 import 'package:untitled/models/property_model.dart';
 
 class EditPropertyPage extends StatefulWidget {
-  final Property property; // The property being edited
+  final Property property;
 
   const EditPropertyPage({super.key, required this.property});
 
@@ -18,16 +21,14 @@ class EditPropertyPage extends StatefulWidget {
 class _EditPropertyPageState extends State<EditPropertyPage> {
   final _logger = Logger();
 
-  // Controllers
   late TextEditingController _titleController;
   late TextEditingController _priceController;
   late TextEditingController _descriptionController;
   late TextEditingController _locationController;
   final _tagInputController = TextEditingController();
 
-  // State
   List<PlatformFile> _newSelectedImages = [];
-  final List<String> _tags = ['lorem', 'ipsum'];
+  final List<String> _tags = ['luxury', 'renovated', 'prime-location'];
 
   bool _isForRent = false;
   bool _isForSale = true;
@@ -36,12 +37,12 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   @override
   void initState() {
     super.initState();
-    // PRE-FILL DATA FROM EXISTING PROPERTY
     _titleController = TextEditingController(text: widget.property.name);
-    // Remove "RM " prefix if you store it in DB, or just keep it raw
     _priceController = TextEditingController(text: widget.property.price);
-    _descriptionController = TextEditingController(text: widget.property.description);
-    _locationController = TextEditingController(text: widget.property.location);
+    _descriptionController =
+        TextEditingController(text: widget.property.description);
+    _locationController =
+        TextEditingController(text: widget.property.location);
   }
 
   @override
@@ -54,8 +55,6 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     super.dispose();
   }
 
-  // --- 1. PICKERS ---
-
   Future<void> _pickImages() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -64,9 +63,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         withData: true,
       );
       final selectedFile = result?.files.single;
-      if (!mounted || selectedFile == null) {
-        return;
-      }
+      if (!mounted || selectedFile == null) return;
 
       setState(() {
         _newSelectedImages = [selectedFile];
@@ -76,17 +73,18 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     }
   }
 
-  // --- 2. UPLOAD LOGIC ---
-
   Future<String?> _uploadToSupabase(PlatformFile image) =>
       ApiService.uploadPropertyAsset(image);
 
-  // --- 3. SUBMIT LOGIC (UPDATE) ---
-
   Future<void> _updateProperty() async {
-    if (_titleController.text.isEmpty || _priceController.text.isEmpty) {
+    if (_titleController.text.trim().isEmpty ||
+        _priceController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title and Price cannot be empty.')),
+        SnackBar(
+          content: Text('Title and Price cannot be empty.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
       );
       return;
     }
@@ -95,9 +93,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
     try {
       final previousImageUrl = widget.property.imagePath;
-      String finalImageUrl = widget.property.imagePath; // Default to OLD URL
+      String finalImageUrl = widget.property.imagePath;
 
-      // A. If a NEW image was picked, upload it
       if (_newSelectedImages.isNotEmpty) {
         final newUrl = await _uploadToSupabase(_newSelectedImages.first);
         if (newUrl != null) {
@@ -107,22 +104,20 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         }
       }
 
-      // B. Get User
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User not logged in");
 
-      // C. Send to PHP (Edit Endpoint)
       final response = await ApiService.post(
         'edit_property.php',
         body: {
           'email': email,
-          'property_id': widget.property.id.toString(), // Critical
-          'name': _titleController.text,
-          'location': _locationController.text,
-          'price': _priceController.text,
-          'description': _descriptionController.text,
-          'image_path': finalImageUrl, // Sends either old or new URL
+          'property_id': widget.property.id.toString(),
+          'name': _titleController.text.trim(),
+          'location': _locationController.text.trim(),
+          'price': _priceController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'image_path': finalImageUrl,
         },
       );
 
@@ -132,19 +127,26 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Property updated!'), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text('Property specifications updated!',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              backgroundColor: VizareColors.emeraldGreen,
+            ),
           );
-          Navigator.pop(context, true); // Return true to refresh
+          Navigator.pop(context, true);
         }
       } else {
         throw Exception("Server error: ${response.body}");
       }
-
     } catch (e) {
       _logger.e("Update error", error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update property.')),
+          SnackBar(
+            content: Text('Failed to update property: $e',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
         );
       }
     } finally {
@@ -152,133 +154,211 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     }
   }
 
-  // --- UI BUILDERS ---
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+          title: Text(
+            'Edit Estate Listing',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildGradientTitle("Edit Property"),
-            const SizedBox(height: 24),
-
-            // Image Gallery (Modified for Edit)
-            _buildImagePreview(),
-            const SizedBox(height: 24),
-
-            // Title Field
-            _buildLabel("Title"),
-            _buildTextField(controller: _titleController),
-
-            const SizedBox(height: 16),
-
-            // Price and Checkboxes Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                Text(
+                  'Update Specifications',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Refine property details, pricing tiers, and architectural photography.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildImagePreview(),
+                const SizedBox(height: 24),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLabel("Price"),
-                      _buildTextField(
-                          controller: _priceController,
-                          keyboardType: TextInputType.number
+                      _buildLabel('Listing Title'),
+                      _buildInput(
+                        controller: _titleController,
+                        hintText: 'Listing Title',
+                        icon: Icons.home_work_rounded,
                       ),
+                      const SizedBox(height: 18),
+                      _buildLabel('Listing Price'),
+                      _buildInput(
+                        controller: _priceController,
+                        hintText: 'e.g. RM 4,850,000',
+                        icon: Icons.payments_rounded,
+                      ),
+                      const SizedBox(height: 18),
+                      _buildLabel('Location / Vicinity'),
+                      _buildInput(
+                        controller: _locationController,
+                        hintText: 'Location',
+                        icon: Icons.location_on_rounded,
+                      ),
+                      const SizedBox(height: 18),
+                      _buildLabel('Architectural Description'),
+                      _buildInput(
+                        controller: _descriptionController,
+                        hintText: 'Description',
+                        icon: Icons.notes_rounded,
+                        maxLines: 5,
+                      ),
+                      const SizedBox(height: 18),
+                      _buildLabel('Listing Type'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildCheckbox('For Sale', _isForSale, (v) {
+                              setState(() {
+                                _isForSale = v ?? false;
+                                if (_isForSale) _isForRent = false;
+                              });
+                            }),
+                          ),
+                          Expanded(
+                            child: _buildCheckbox('For Rent', _isForRent, (v) {
+                              setState(() {
+                                _isForRent = v ?? false;
+                                if (_isForRent) _isForSale = false;
+                              });
+                            }),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      _buildLabel('Tags & Keywords'),
+                      _buildTagsSection(),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCheckbox("For rent", _isForRent, (val) {
-                      setState(() { _isForRent = val!; if(_isForRent) _isForSale = false; });
-                    }),
-                    const SizedBox(height: 8),
-                    _buildCheckbox("For sale", _isForSale, (val) {
-                      setState(() { _isForSale = val!; if(_isForSale) _isForRent = false; });
-                    }),
-                    const SizedBox(height: 3),
-                  ],
+                const SizedBox(height: 32),
+                LuxuryGradientButton(
+                  text: 'Save Modifications',
+                  icon: Icons.check_circle_rounded,
+                  isLoading: _isUploading,
+                  onPressed: _updateProperty,
                 ),
+                const SizedBox(height: 32),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            _buildLabel("Description"),
-            _buildTextField(controller: _descriptionController, maxLines: 6),
-
-            const SizedBox(height: 16),
-
-            _buildLabel("Location"),
-            _buildTextField(controller: _locationController),
-
-            const SizedBox(height: 16),
-
-            _buildLabel("Tags"),
-            _buildTagsSection(),
-
-            const SizedBox(height: 40),
-
-            // Bottom Buttons
-            Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFDF00FF),
-                      side: const BorderSide(color: Color(0xFFDF00FF), width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text("Cancel", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: _isUploading ? null : _updateProperty,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDF00FF),
-                      foregroundColor: const Color(0xFF0D0D0D),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _isUploading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Color(0xFF0D0D0D), strokeWidth: 2))
-                        : const Text("Update", style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  // --- WIDGET HELPERS ---
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 2.0),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: VizareColors.champagneGold,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: VizareColors.obsidianSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          prefixIcon: Icon(
+            icon,
+            color: VizareColors.champagneGold.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          hintText: hintText,
+          hintStyle: GoogleFonts.inter(
+            color: VizareColors.textMuted,
+            fontSize: 13,
+          ),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCheckbox(
+      String label, bool value, ValueChanged<bool?> onChanged) {
+    return Row(
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          activeColor: VizareColors.champagneGold,
+          checkColor: Colors.black,
+        ),
+        Text(
+          label,
+          style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+        ),
+      ],
+    );
+  }
 
   Widget _buildImagePreview() {
-    // Logic: Show NEW file if picked, else show EXISTING network url
     ImageProvider imageProvider;
     if (_newSelectedImages.isNotEmpty) {
       final selected = _newSelectedImages.first;
@@ -292,34 +372,47 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     return Stack(
       children: [
         Container(
-          height: 200,
+          height: 180,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: (0.1)),
+            color: VizareColors.obsidianSurface,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: VizareColors.champagneGold.withValues(alpha: 0.3),
+            ),
             image: DecorationImage(
               image: imageProvider,
               fit: BoxFit.cover,
             ),
           ),
         ),
-        // "Change Photo" Button overlay
         Positioned(
-          bottom: 10,
-          right: 10,
+          bottom: 12,
+          right: 12,
           child: GestureDetector(
             onTap: _pickImages,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: (0.7)),
+                color: Colors.black87,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: VizareColors.champagneGold.withValues(alpha: 0.5),
+                ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.camera_alt, color: Colors.white, size: 16),
-                  SizedBox(width: 6),
-                  Text("Change Photo", style: TextStyle(color: Colors.white, fontSize: 12)),
+                  const Icon(Icons.camera_alt_rounded,
+                      color: VizareColors.champagneGold, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Replace Photo",
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -329,112 +422,68 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     );
   }
 
-  Widget _buildGradientTitle(String title) {
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        colors: [
-          Colors.white,
-          Color(0xFFDF00FF),
-        ],
-      ).createShader(bounds),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 32, fontFamily: 'Poppins', fontWeight: FontWeight.bold, color: Colors.white, height: 1.05),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        text,
-        style: TextStyle(color: Colors.white.withValues(alpha: (0.5)), fontFamily: 'Poppins', fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildTextField({required TextEditingController controller, int maxLines = 1, TextInputType? keyboardType}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
-        decoration: InputDecoration(
-          hintStyle: TextStyle(color: Colors.grey[500], fontWeight: FontWeight.normal),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCheckbox(String label, bool value, ValueChanged<bool?> onChanged) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 24,
-          height: 24,
-          child: Checkbox(
-            value: value,
-            onChanged: onChanged,
-            checkColor: Colors.black,
-            activeColor: Colors.white,
-            fillColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) return Colors.white;
-              return Colors.transparent;
-            }),
-            side: const BorderSide(color: Colors.white, width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14)),
-      ],
-    );
-  }
-
   Widget _buildTagsSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _tags.map((tag) => Chip(
-              label: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 12)),
-              backgroundColor: Colors.grey[600],
-              deleteIcon: const Icon(Icons.cancel, size: 14, color: Colors.white),
-              onDeleted: () {
-                setState(() {
-                  _tags.remove(tag);
-                });
-              },
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
-              padding: const EdgeInsets.all(0),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            )).toList(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _tags
+              .map(
+                (tag) => Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: VizareColors.obsidianSurface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color:
+                          VizareColors.champagneGold.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '#$tag',
+                        style: GoogleFonts.inter(
+                          color: VizareColors.champagneGold,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () => setState(() => _tags.remove(tag)),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: Colors.white60,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: VizareColors.obsidianSurface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
-          if (_tags.isNotEmpty) const SizedBox(height: 8),
-          TextField(
+          child: TextField(
             controller: _tagInputController,
-            decoration: const InputDecoration(
-              hintText: "Type tag and press enter...",
-              hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
-              isDense: true,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Type keyword and press Enter...',
+              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
               border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
             onSubmitted: (val) {
               if (val.trim().isNotEmpty) {
@@ -445,8 +494,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
               }
             },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

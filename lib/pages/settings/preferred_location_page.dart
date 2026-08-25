@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 import '../utils/location_geocoder.dart';
 
 class PreferredLocationPage extends StatefulWidget {
@@ -16,7 +19,6 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
   final TextEditingController _searchController = TextEditingController();
   final _logger = Logger();
 
-  // Default to Shah Alam (used if nothing is saved)
   String _selectedLocationName = 'Shah Alam, Selangor';
   LatLng _selectedLocationCoords = const LatLng(3.0689, 101.5183);
   bool _showConfirmation = true;
@@ -26,13 +28,15 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
   @override
   void initState() {
     super.initState();
-    // Load saved settings instead of just using default
     _loadPreferences();
   }
 
-  // --- Logic ---
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  // 1. LOAD SAVED DATA
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -41,27 +45,25 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
     final String? name = prefs.getString('pref_name');
 
     if (lat != null && lng != null && name != null) {
-      // Found saved data, update UI
-      setState(() {
-        _selectedLocationCoords = LatLng(lat, lng);
-        _selectedLocationName = name;
-        _showConfirmation = true;
-        _updateMarker();
-      });
+      if (mounted) {
+        setState(() {
+          _selectedLocationCoords = LatLng(lat, lng);
+          _selectedLocationName = name;
+          _showConfirmation = true;
+          _updateMarker();
+        });
+      }
 
-      // Wait a bit for map to initialize, then move camera
       Future.delayed(const Duration(milliseconds: 500), () {
         _mapController?.animateCamera(
           CameraUpdate.newLatLngZoom(_selectedLocationCoords, 14.0),
         );
       });
     } else {
-      // No saved data, just show default marker
       _updateMarker();
     }
   }
 
-  // 2. SAVE DATA
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -74,10 +76,13 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Location preference saved!"),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(
+          "Location preference updated!",
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: VizareColors.emeraldGreen,
+        duration: const Duration(seconds: 2),
       ),
     );
 
@@ -97,207 +102,249 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
     });
   }
 
-  // Handle tapping on the map
   Future<void> _onMapTapped(LatLng position) async {
     setState(() {
       _selectedLocationCoords = position;
-      _updateMarker(); // Move the red pin immediately
+      _updateMarker();
     });
 
-    // Animate camera to the tapped spot
-    _mapController?.animateCamera(CameraUpdate.newLatLng(position));
-
     try {
-      final formattedName = await reverseGeocode(
+      final name = await reverseGeocode(
         position.latitude,
         position.longitude,
       );
-      setState(() {
-        _selectedLocationName = formattedName;
-        _updateMarker();
-      });
+
+      if (mounted) {
+        setState(() {
+          _selectedLocationName = name.isNotEmpty
+              ? name
+              : 'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+          _showConfirmation = true;
+        });
+      }
     } catch (e) {
-      _logger.e('Error finding address for tapped location', error: e);
-      setState(() {
-        _selectedLocationName = "Custom Location";
-      });
+      _logger.e("Error getting address from tap", error: e);
+      if (mounted) {
+        setState(() {
+          _selectedLocationName =
+              'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+          _showConfirmation = true;
+        });
+      }
     }
   }
 
   Future<void> _searchLocation() async {
-    final query = _searchController.text;
+    final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
+    FocusScope.of(context).unfocus();
+
     try {
-      final location = await geocodeAddress(query);
-      final coords = LatLng(
-        location['latitude'] as double,
-        location['longitude'] as double,
-      );
+      final target = await geocodeAddress(query);
 
-      setState(() {
-        _selectedLocationCoords = coords;
-        _selectedLocationName = location['name'] as String;
-        _showConfirmation = true;
-        _updateMarker();
-      });
+      if (target['latitude'] != null && target['longitude'] != null) {
+        final double lat = (target['latitude'] as num).toDouble();
+        final double lng = (target['longitude'] as num).toDouble();
+        final String name = (target['name'] as String?) ?? query;
 
-      _mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: coords, zoom: 14.0),
-        ),
-      );
+        if (mounted) {
+          setState(() {
+            _selectedLocationCoords = LatLng(lat, lng);
+            _selectedLocationName = name;
+            _showConfirmation = true;
+            _updateMarker();
+          });
+        }
+
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_selectedLocationCoords, 14.0),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Location not found. Please try another query.",
+                  style: GoogleFonts.inter()),
+              backgroundColor: VizareColors.crimsonRed,
+            ),
+          );
+        }
+      }
     } catch (e) {
-      _logger.e('Error searching location', error: e);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Could not find location.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _logger.e("Error searching location", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error locating address: $e", style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
+      }
     }
   }
 
-  // --- Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
           ),
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Preferred location',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: _searchController,
-                onSubmitted: (_) => _searchLocation(),
-                style: const TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  hintText: 'Search location...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[600],
-                    fontFamily: 'Poppins',
-                  ),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              if (_showConfirmation) ...[
-                const Text(
-                  'Is this correct?',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  _selectedLocationName,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  'Preferred location',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
+                    letterSpacing: -0.6,
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: GoogleMap(
-                      onMapCreated: (controller) {
-                        _mapController = controller;
-                      },
-                      initialCameraPosition: CameraPosition(
-                        target: _selectedLocationCoords,
-                        zoom: 14.0,
+                const SizedBox(height: 6),
+                Text(
+                  'Search a city or tap anywhere on the map to center your curated recommendations.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  decoration: BoxDecoration(
+                    color: VizareColors.obsidianSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      width: 1,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onSubmitted: (_) => _searchLocation(),
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Search city, state, or region...',
+                      hintStyle: GoogleFonts.inter(
+                        color: VizareColors.textMuted,
+                        fontSize: 13,
                       ),
-                      markers: _markers,
-                      onTap: _onMapTapped,
-                      zoomGesturesEnabled: true,
-                      scrollGesturesEnabled: true,
-                      tiltGesturesEnabled: false,
-                      rotateGesturesEnabled: true,
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: VizareColors.champagneGold,
+                        size: 20,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: VizareColors.champagneGold,
+                          size: 18,
+                        ),
+                        onPressed: _searchLocation,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14.0, horizontal: 16.0),
                     ),
                   ),
                 ),
-
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    "Tap anywhere on the map to pinpoint exact location.",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                const SizedBox(height: 20),
+                if (_showConfirmation) ...[
+                  VisionGlassContainer(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_rounded,
+                              color: VizareColors.champagneGold,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _selectedLocationName,
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.5,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(14.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.38,
+                            child: GoogleMap(
+                              onMapCreated: (controller) {
+                                _mapController = controller;
+                              },
+                              initialCameraPosition: CameraPosition(
+                                target: _selectedLocationCoords,
+                                zoom: 14.0,
+                              ),
+                              markers: _markers,
+                              onTap: _onMapTapped,
+                              zoomGesturesEnabled: true,
+                              scrollGesturesEnabled: true,
+                              tiltGesturesEnabled: false,
+                              rotateGesturesEnabled: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Tap anywhere on the spatial map to pinpoint an exact neighborhood.",
+                          style: GoogleFonts.inter(
+                            color: VizareColors.textMuted,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 28),
+                  LuxuryGradientButton(
+                    text: 'Save Vicinity Preference',
+                    icon: Icons.check_circle_rounded,
+                    onPressed: _savePreferences,
+                  ),
+                  const SizedBox(height: 28),
+                ],
               ],
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 26.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _savePreferences,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDF00FF),
-              foregroundColor: const Color(0xFF0D0D0D),
-              minimumSize: const Size(200, 60),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            child: const Text(
-              'Save',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
             ),
           ),
         ),

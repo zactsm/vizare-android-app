@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class NotificationPreferencesPage extends StatefulWidget {
   const NotificationPreferencesPage({super.key});
 
   @override
-  State<NotificationPreferencesPage> createState() => _NotificationPreferencesPageState();
+  State<NotificationPreferencesPage> createState() =>
+      _NotificationPreferencesPageState();
 }
 
-class _NotificationPreferencesPageState extends State<NotificationPreferencesPage> {
-  // Checkbox states
+class _NotificationPreferencesPageState
+    extends State<NotificationPreferencesPage> {
   final Map<String, bool> generalNotifications = {
     'Property Recommendations': false,
     'Price Drops & Property Updates': false,
     'Inquiry Responses': false,
     'Saved Property Updates': false,
-    'Promotions or News': false,
+    'Promotions & Architectural News': false,
   };
 
   final Map<String, bool> deliveryMethods = {
@@ -28,225 +30,222 @@ class _NotificationPreferencesPageState extends State<NotificationPreferencesPag
   @override
   void initState() {
     super.initState();
-    _loadPreferences(); // Load saved checkbox states
+    _loadPreferences();
   }
 
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load general notifications
     for (var key in generalNotifications.keys) {
       if (prefs.containsKey(key)) {
         generalNotifications[key] = prefs.getBool(key)!;
       }
     }
 
-    // Load delivery methods
     for (var key in deliveryMethods.keys) {
       if (prefs.containsKey(key)) {
         deliveryMethods[key] = prefs.getBool(key)!;
       }
     }
 
-    setState(() {}); // Refresh UI after loading
+    if (mounted) setState(() {});
   }
 
+  Future<void> _savePreference(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Set system overlay for dark mode
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
-    );
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
           ),
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: false,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: ListView(
-          children: [
-            const SizedBox(height: 8),
-            const Text(
-              'Notification preferences',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'General',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // General notifications checkboxes
-            ...generalNotifications.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: _CheckboxTile(
-                  title: entry.key,
-                  subtitle: _getSubtitle(entry.key),
-                  value: entry.value,
-                  onChanged: (value) async {
-                    setState(() {
-                      generalNotifications[entry.key] = value!;
-                    });
-                    final prefs = await SharedPreferences.getInstance();
-                    prefs.setBool(entry.key, value!);
-                  },
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            children: [
+              Text(
+                'Notification preferences',
+                style: GoogleFonts.poppins(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.6,
                 ),
-              );
-            }),
-
-            const SizedBox(height: 24),
-            Divider(color: Colors.white.withValues(alpha: (0.1)), thickness: 1),
-            const SizedBox(height: 24),
-
-            const Text(
-              'Delivery Methods',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
               ),
-            ),
-            const SizedBox(height: 15),
-
-            // Delivery method checkboxes
-            ...deliveryMethods.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: _CheckboxTile(
-                  title: entry.key,
-                  value: entry.value,
-                  onChanged: (value) async {
-                    setState(() {
-                      deliveryMethods[entry.key] = value!;
-                    });
-                    final prefs = await SharedPreferences.getInstance();
-                    prefs.setBool(entry.key, value!);
-                  },
+              const SizedBox(height: 6),
+              Text(
+                'Select the notifications and delivery channels you want to receive.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: VizareColors.textSecondary,
                 ),
-              );
-            }),
-          ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'ALERT CATEGORIES',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                  color: VizareColors.champagneGold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              VisionGlassContainer(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: generalNotifications.keys.map((key) {
+                    final subtitle = _getSubtitle(key);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Switch.adaptive(
+                            value: generalNotifications[key] ?? false,
+                            activeThumbColor: VizareColors.champagneGold,
+                            activeTrackColor:
+                                VizareColors.champagneGold.withValues(alpha: 0.3),
+                            inactiveThumbColor: Colors.white60,
+                            inactiveTrackColor: Colors.white12,
+                            onChanged: (val) async {
+                              setState(() {
+                                generalNotifications[key] = val;
+                              });
+                              await _savePreference(key, val);
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  key,
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (subtitle != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    subtitle,
+                                    style: GoogleFonts.inter(
+                                      color: VizareColors.textMuted,
+                                      fontSize: 11.5,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'DELIVERY CHANNELS',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                  color: VizareColors.champagneGold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              VisionGlassContainer(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: deliveryMethods.keys.map((key) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        children: [
+                          Switch.adaptive(
+                            value: deliveryMethods[key] ?? false,
+                            activeThumbColor: VizareColors.champagneGold,
+                            activeTrackColor:
+                                VizareColors.champagneGold.withValues(alpha: 0.3),
+                            inactiveThumbColor: Colors.white60,
+                            inactiveTrackColor: Colors.white12,
+                            onChanged: (val) async {
+                              setState(() {
+                                deliveryMethods[key] = val;
+                              });
+                              await _savePreference(key, val);
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              key,
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Optional subtitles for General section
   String? _getSubtitle(String key) {
     switch (key) {
       case 'Property Recommendations':
-        return 'Get notified about new listings that match your preferences.';
+        return 'Tailored luxury architectural listings matching your saved criteria.';
       case 'Price Drops & Property Updates':
-        return 'Alerts when prices change or listings are updated.';
+        return 'Instant notifications when monitored estates update pricing or availability.';
       case 'Inquiry Responses':
-        return 'Get notified when an agent or homeowner replies to your inquiry.';
+        return 'Direct communications from estate owners and concierge advisors.';
       case 'Saved Property Updates':
-        return "Changes to properties you've favorited.";
-      case 'Promotions or News':
-        return 'Receive updates on new app features or real estate trends.';
+        return 'Status adjustments for homes bookmarked in your portfolio.';
+      case 'Promotions & Architectural News':
+        return 'Curated updates on spatial 3D releases and architectural insights.';
       default:
         return null;
     }
   }
 }
-
-// Custom reusable checkbox list tile
-class _CheckboxTile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final bool value;
-  final ValueChanged<bool?> onChanged;
-
-  const _CheckboxTile({
-    required this.title,
-    required this.value,
-    required this.onChanged,
-    this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
-      children: [
-        Transform.translate(
-          offset: const Offset(0, -2), // Slight downward shift to align with text
-          child: Checkbox(
-            value: value,
-            onChanged: onChanged,
-            side: const BorderSide(color: Colors.white, width: 1.5),
-            activeColor: Colors.white,
-            checkColor: Colors.black,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center, // Keeps text aligned better
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  subtitle!,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-

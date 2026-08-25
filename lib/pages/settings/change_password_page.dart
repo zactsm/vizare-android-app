@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:untitled/pages/utils/api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
-import 'dart:convert';
+import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/premium_background.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -13,17 +14,15 @@ class ChangePasswordPage extends StatefulWidget {
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _logger = Logger();
-  // Add controller for the new field
   final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // State for password visibility
-  bool _isCurrentPasswordVisible = false; // Add state for new field
+  bool _isCurrentPasswordVisible = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isSaving = false;
 
-  // State for validation
   bool _hasMinLength = false;
   bool _hasUppercase = false;
   bool _hasLowercase = false;
@@ -39,16 +38,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   void dispose() {
     _passwordController.removeListener(_validatePassword);
-    _currentPasswordController.dispose(); // Dispose new controller
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // --- Logic ---
-
   void _validatePassword() {
-    // ... (this function is unchanged)
     final password = _passwordController.text;
     setState(() {
       _hasMinLength = password.length >= 8;
@@ -59,14 +55,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     });
   }
 
-  // save function
   Future<void> _savePassword() async {
     final currentPassword = _currentPasswordController.text;
     final newPassword = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // --- Start Client-Side Validation ---
-    if (currentPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+    if (currentPassword.isEmpty ||
+        newPassword.isEmpty ||
+        confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields.'),
@@ -84,9 +80,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     if (!isPasswordValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please ensure your new password meets all requirements.'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: Text('New password does not meet security criteria.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
         ),
       );
       return;
@@ -94,36 +91,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     if (newPassword != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('New passwords do not match.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text('New passwords do not match.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
         ),
       );
       return;
     }
-    // --- End Client-Side Validation ---
 
-    // --- HTTP Logic to talk to PHP ---
+    setState(() => _isSaving = true);
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('user_email');
-
-      if (email == null) {
-        _logger.e('User email not found in SharedPreferences.');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error: User session not found. Please log in again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       final response = await ApiService.post(
         'change_password.php',
         body: {
-          'email': email,
           'current_password': currentPassword,
           'new_password': newPassword,
         },
@@ -131,168 +113,198 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       if (!mounted) return;
 
-
-      // Decode the JSON response from PHP
-      final responseData = jsonDecode(response.body);
-      final message = responseData['message'] ?? 'Unknown error';
-
-      if (!mounted) return;
-
       if (response.statusCode == 200) {
-        // Success
-        _logger.i('Password changed successfully: $message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
-      } else {
-        // Handle server-side errors (e.g., "Incorrect current password")
-        _logger.w('Failed to change password: $message');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $message'), // Show the specific error from PHP
-            backgroundColor: Colors.red,
+            content: Text('Password updated successfully!',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            backgroundColor: VizareColors.emeraldGreen,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update password. Check current password.',
+                style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
           ),
         );
       }
     } catch (e) {
-      _logger.e('Error changing password', error: e);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _logger.e("Error changing password", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Connection error: $e', style: GoogleFonts.inter()),
+            backgroundColor: VizareColors.crimsonRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  // --- Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        // ... (app bar code is unchanged) ...
-        backgroundColor: const Color(0xFF121212),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ... (title text is unchanged) ...
-              const SizedBox(height: 16),
-              const Text(
-                'Change password',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
+    return PremiumBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: VisionGlassPill(
+              padding: const EdgeInsets.all(8),
+              onTap: () => Navigator.pop(context),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
               ),
-              const SizedBox(height: 32),
-
-              // "Current Password" field
-              _buildTextFieldLabel('Current Password'),
-              _buildPasswordField(
-                controller: _currentPasswordController,
-                isVisible: _isCurrentPasswordVisible,
-                hintText: 'Enter your current password', // Custom hint
-                onToggleVisibility: () {
-                  setState(() => _isCurrentPasswordVisible = !_isCurrentPasswordVisible);
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // --- Password Field ---
-              _buildTextFieldLabel('New Password'),
-              _buildPasswordField(
-                controller: _passwordController,
-                isVisible: _isPasswordVisible,
-                hintText: 'Enter new password', // Custom hint
-                onToggleVisibility: () {
-                  setState(() => _isPasswordVisible = !_isPasswordVisible);
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // --- Confirm Password Field ---
-              _buildTextFieldLabel('Confirm new password'),
-              _buildPasswordField(
-                controller: _confirmPasswordController,
-                isVisible: _isConfirmPasswordVisible,
-                hintText: 'Confirm new password', // Custom hint
-                onToggleVisibility: () {
-                  setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // --- Validation Checklist ---
-              // ... (validation checklist is unchanged) ...
-              _ValidationChecklistItem(
-                label: 'Minimum 8 characters',
-                isValid: _hasMinLength,
-              ),
-              _ValidationChecklistItem(
-                label: 'At least one uppercase letter',
-                isValid: _hasUppercase,
-              ),
-              _ValidationChecklistItem(
-                label: 'At least one lowercase letter',
-                isValid: _hasLowercase,
-              ),
-              _ValidationChecklistItem(
-                label: 'At least one numeral (0-9)',
-                isValid: _hasNumber,
-              ),
-              _ValidationChecklistItem(
-                label: 'At least one symbol (!@#^...?)',
-                isValid: _hasSymbol,
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 26.0),
-        child: ElevatedButton(
-          onPressed: _savePassword, // calls the async function
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFDF00FF),
-            foregroundColor: const Color(0xFF0D0D0D),
-            minimumSize: const Size(200, 60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
             ),
           ),
-          child: const Text(
-            'Save',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+          title: Text(
+            'Settings',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          centerTitle: true,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Change password',
+                  style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Ensure your account is protected with a strong, distinct passphrase.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: VizareColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLabel('Current Password'),
+                      _buildPasswordField(
+                        controller: _currentPasswordController,
+                        isVisible: _isCurrentPasswordVisible,
+                        hintText: 'Enter current password',
+                        onToggleVisibility: () {
+                          setState(() => _isCurrentPasswordVisible =
+                              !_isCurrentPasswordVisible);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('New Password'),
+                      _buildPasswordField(
+                        controller: _passwordController,
+                        isVisible: _isPasswordVisible,
+                        hintText: 'Enter new password',
+                        onToggleVisibility: () {
+                          setState(
+                              () => _isPasswordVisible = !_isPasswordVisible);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      _buildLabel('Confirm new password'),
+                      _buildPasswordField(
+                        controller: _confirmPasswordController,
+                        isVisible: _isConfirmPasswordVisible,
+                        hintText: 'Confirm new password',
+                        onToggleVisibility: () {
+                          setState(() => _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _ValidationChecklistItem(
+                        label: 'Minimum 8 characters',
+                        isValid: _hasMinLength,
+                      ),
+                      _ValidationChecklistItem(
+                        label: 'At least one uppercase letter (A-Z)',
+                        isValid: _hasUppercase,
+                      ),
+                      _ValidationChecklistItem(
+                        label: 'At least one lowercase letter (a-z)',
+                        isValid: _hasLowercase,
+                      ),
+                      _ValidationChecklistItem(
+                        label: 'At least one numeral (0-9)',
+                        isValid: _hasNumber,
+                      ),
+                      _ValidationChecklistItem(
+                        label: 'At least one special symbol (!@#\$%...)',
+                        isValid: _hasSymbol,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 80),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 24.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _savePassword,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VizareColors.champagneGold,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 4,
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.black,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Save',
+                      style: GoogleFonts.poppins(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -300,17 +312,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     );
   }
 
-  // --- Helper Widgets ---
-
-  Widget _buildTextFieldLabel(String text) {
+  Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8.0, left: 2.0),
       child: Text(
         text,
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 16,
-          color: Colors.white,
+        style: GoogleFonts.inter(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+          color: VizareColors.champagneGold,
         ),
       ),
     );
@@ -320,34 +330,50 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     required TextEditingController controller,
     required bool isVisible,
     required VoidCallback onToggleVisibility,
-    String hintText = '************', // Added hintText parameter
+    String hintText = '••••••••••••',
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: !isVisible,
-      style: const TextStyle(color: Colors.black, fontFamily: 'Poppins'),
-      decoration: InputDecoration(
-        hintText: hintText, // Use the parameter
-        hintStyle: TextStyle(color: Colors.grey[600]),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 12.0),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide.none,
+    return Container(
+      decoration: BoxDecoration(
+        color: VizareColors.obsidianSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 1,
         ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            isVisible ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey[600],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: !isVisible,
+        style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          prefixIcon: const Icon(
+            Icons.lock_outline_rounded,
+            color: VizareColors.champagneGold,
+            size: 20,
           ),
-          onPressed: onToggleVisibility,
+          suffixIcon: IconButton(
+            icon: Icon(
+              isVisible
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              color: Colors.white70,
+              size: 20,
+            ),
+            onPressed: onToggleVisibility,
+          ),
+          hintText: hintText,
+          hintStyle: GoogleFonts.inter(
+            color: VizareColors.textMuted,
+            fontSize: 13,
+          ),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 }
-
 
 class _ValidationChecklistItem extends StatelessWidget {
   final String label;
@@ -365,17 +391,17 @@ class _ValidationChecklistItem extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isValid ? Icons.check_circle : Icons.check_circle_outline,
-            color: isValid ? Colors.green : Colors.grey,
-            size: 20,
+            isValid ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+            color: isValid ? VizareColors.emeraldGreen : Colors.white24,
+            size: 18,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Text(
             label,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: isValid ? Colors.white : Colors.grey,
-              fontSize: 14,
+            style: GoogleFonts.inter(
+              color: isValid ? Colors.white : VizareColors.textMuted,
+              fontSize: 12.5,
+              fontWeight: isValid ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ],
