@@ -52,33 +52,40 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchProfile() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
-    final userEmail = prefs.getString('user_email');
+    String? userEmail = prefs.getString('user_email');
     final userType = prefs.getString('user_type');
 
-    if (userEmail == null) {
+    if (userEmail == null || userEmail.isEmpty) {
+      userEmail = Supabase.instance.client.auth.currentUser?.email;
+    }
+
+    if (userEmail == null || userEmail.isEmpty) {
       if (mounted) setState(() => _isLoading = false);
       return;
     }
 
     try {
-      final response = await ApiService.post(
-        'get_profile.php',
-        body: {'email': userEmail},
+      final response = await ApiService.get(
+        'get_user_profile.php',
+        {'email': userEmail},
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
           setState(() {
-            _nameController.text = data['full_name'] ?? '';
-            _emailController.text = data['email'] ?? userEmail;
+            _nameController.text = data['full_name'] ?? data['name'] ?? '';
+            _emailController.text = data['email'] ?? userEmail!;
             _phoneController.text = data['phone'] ?? '';
             _networkImage = data['profile_pic'];
-            _dateJoined = data['created_at'] != null
-                ? data['created_at'].toString().split('T').first
-                : 'Unknown';
-            _isHomeowner = (data['role'] == 'homeowner') || (userType == 'homeowner');
-            _isHomebuyer = (data['role'] == 'homebuyer') || (userType == 'homebuyer');
+            if (data['created_at'] != null && data['created_at'].toString().isNotEmpty) {
+              _dateJoined = data['created_at'].toString().split('T').first;
+            } else {
+              _dateJoined = 'Member';
+            }
+            final fetchedRole = (data['role'] ?? data['user_type'] ?? userType ?? '').toString().toLowerCase();
+            _isHomeowner = fetchedRole == 'homeowner';
+            _isHomebuyer = fetchedRole == 'homebuyer';
           });
         }
       }
@@ -240,18 +247,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           actions: [
-            if (_isHomeowner)
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: IconButton(
-                  onPressed: _logout,
-                  icon: const Icon(
-                    Icons.logout_rounded,
-                    color: VizareColors.crimsonRed,
-                    size: 22,
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: IconButton(
+                onPressed: _logout,
+                tooltip: 'Log out',
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: VizareColors.crimsonRed,
+                  size: 22,
                 ),
               ),
+            ),
           ],
           title: Text(
             'Member Identity',
@@ -469,6 +476,32 @@ class _ProfilePageState extends State<ProfilePage> {
                         icon: Icons.check_circle_rounded,
                         isLoading: _isSaving,
                         onPressed: _saveProfile,
+                      ),
+                      const SizedBox(height: 14),
+                      VisionGlassPill(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        borderColor: VizareColors.crimsonRed.withValues(alpha: 0.4),
+                        onTap: _logout,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.logout_rounded,
+                              color: VizareColors.crimsonRed,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Log Out',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: VizareColors.crimsonRed,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 32),
                     ],
