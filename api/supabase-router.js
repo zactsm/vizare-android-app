@@ -214,29 +214,67 @@ async function dispatch(name, request, admin, publicClient) {
     if (!email || !password || !fullName) {
       return [400, { message: 'Name, email, and password are required.' }];
     }
-    const result = await publicClient.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, role, has_password: true } },
-    });
-    if (result.error) {
-      return [result.error.status || 400, { message: result.error.message }];
+    if (password.length < 6) {
+      return [400, { message: 'Password must be at least 6 characters long.' }];
     }
-    if (!result.data.user || result.data.user.identities?.length === 0) {
-      return [409, { message: 'An account with this email already exists.' }];
+
+    let user = null;
+    let session = null;
+    try {
+      const adminCreate = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName, role, has_password: true },
+      });
+
+      if (adminCreate.error) {
+        if (
+          adminCreate.error.message?.toLowerCase().includes('already exists') ||
+          adminCreate.error.status === 422 ||
+          adminCreate.error.status === 409
+        ) {
+          return [409, { message: 'An account with this email already exists. Please log in.' }];
+        }
+        throw adminCreate.error;
+      }
+      user = adminCreate.data.user;
+
+      const signInResult = await publicClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+      session = signInResult.data?.session || null;
+    } catch (adminErr) {
+      console.warn('Admin user creation notice, falling back to public signUp:', adminErr?.message);
+      const result = await publicClient.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, role, has_password: true } },
+      });
+      if (result.error) {
+        return [result.error.status || 400, { message: result.error.message }];
+      }
+      if (!result.data.user || result.data.user.identities?.length === 0) {
+        return [409, { message: 'An account with this email already exists. Please log in.' }];
+      }
+      user = result.data.user;
+      session = result.data.session;
     }
-    const profile = await ensureProfile(admin, result.data.user, {
+
+    const profile = await ensureProfile(admin, user, {
       full_name: fullName,
       role,
       has_password: true,
     });
+
     return [
       200,
-      authPayload(result.data.session, profile, {
-        message: result.data.session
+      authPayload(session, profile, {
+        message: session
           ? 'Account created successfully.'
           : 'Account created. Check your email to confirm your account.',
-        requires_email_confirmation: !result.data.session,
+        requires_email_confirmation: !session,
       }),
     ];
   }
