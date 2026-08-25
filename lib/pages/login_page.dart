@@ -37,35 +37,11 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: VizareColors.obsidianElevated,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-        ),
-        title: Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        content: Text(
-          message,
-          style: GoogleFonts.inter(color: VizareColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "OK",
-              style: GoogleFonts.poppins(
-                color: VizareColors.champagneGold,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          )
-        ],
+      builder: (_) => VizareDialog(
+        title: title,
+        message: message,
+        confirmText: "OK",
+        onConfirm: () => Navigator.pop(context),
       ),
     );
   }
@@ -382,12 +358,15 @@ class _LoginPageState extends State<LoginPage> {
                       GestureDetector(
                         onTap: () =>
                             Navigator.pushNamed(context, '/create-account'),
-                        child: Text(
-                          'Sign up',
-                          style: GoogleFonts.poppins(
-                            color: VizareColors.champagneGold,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13.5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          child: Text(
+                            'Sign up',
+                            style: GoogleFonts.poppins(
+                              color: VizareColors.champagneGold,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13.5,
+                            ),
                           ),
                         ),
                       ),

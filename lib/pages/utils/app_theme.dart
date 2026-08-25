@@ -316,3 +316,213 @@ class SpatialBadge extends StatelessWidget {
     );
   }
 }
+
+/// Standardized Accessible Glass Dialog Modal
+class VizareDialog extends StatelessWidget {
+  final String title;
+  final String message;
+  final String confirmText;
+  final String? cancelText;
+  final VoidCallback onConfirm;
+  final VoidCallback? onCancel;
+  final Color confirmColor;
+
+  const VizareDialog({
+    super.key,
+    required this.title,
+    required this.message,
+    this.confirmText = 'OK',
+    this.cancelText,
+    required this.onConfirm,
+    this.onCancel,
+    this.confirmColor = VizareColors.champagneGold,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: VizareColors.obsidianElevated,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: VizareColors.glassBorderSpecular, width: 1.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: VizareColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: VizareColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (cancelText != null) ...[
+                  SizedBox(
+                    height: 48,
+                    child: TextButton(
+                      onPressed: onCancel ?? () => Navigator.pop(context),
+                      child: Text(
+                        cancelText!,
+                        style: GoogleFonts.poppins(
+                          color: VizareColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: confirmColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    child: Text(
+                      confirmText,
+                      style: GoogleFonts.poppins(
+                        color: confirmColor == VizareColors.champagneGold || confirmColor == VizareColors.goldLight
+                            ? VizareColors.obsidianBlack
+                            : VizareColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Standardized Top App Bar Component
+class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final List<Widget>? actions;
+  final VoidCallback? onBackPressed;
+  final bool showBackButton;
+
+  const VizareAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.onBackPressed,
+    this.showBackButton = true,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(60.0);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      leading: showBackButton
+          ? Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: VisionGlassPill(
+                padding: const EdgeInsets.all(10),
+                onTap: onBackPressed ?? () => Navigator.pop(context),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: VizareColors.textPrimary,
+                  size: 16,
+                ),
+              ),
+            )
+          : null,
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(
+          color: VizareColors.textPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      actions: actions,
+    );
+  }
+}
+
+/// Shimmer Skeleton Loading Card for Property Grid/List
+class VizareCardSkeleton extends StatelessWidget {
+  final double height;
+  final double width;
+
+  const VizareCardSkeleton({
+    super.key,
+    this.height = 240,
+    this.width = double.infinity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return VisionGlassContainer(
+      height: height,
+      width: width,
+      margin: const EdgeInsets.only(bottom: 16),
+      borderRadius: 24,
+      backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.7),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: VizareColors.glassFillElevated,
+                borderRadius: BorderRadius.circular(18),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: 140,
+            height: 16,
+            decoration: BoxDecoration(
+              color: VizareColors.glassFill,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 80,
+            height: 14,
+            decoration: BoxDecoration(
+              color: VizareColors.glassFill,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

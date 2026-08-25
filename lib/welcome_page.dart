@@ -267,42 +267,31 @@ class _WelcomePageState extends State<WelcomePage> {
                               },
                             ),
                             const SizedBox(height: 14),
-                            VisionGlassContainer(
-                              padding: EdgeInsets.zero,
-                              borderRadius: 30,
+                            VisionGlassPill(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              borderColor: VizareColors.glassBorderSpecular,
                               onTap: () {
                                 Navigator.pushNamed(context, '/login');
                               },
-                              child: Container(
-                                height: 54,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                    width: 1.2,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.login_rounded,
+                                    color: VizareColors.textPrimary,
+                                    size: 18,
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.login_rounded,
-                                      color: Colors.white,
-                                      size: 18,
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Log In',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: VizareColors.textPrimary,
+                                      letterSpacing: 0.5,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Log In',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 12),

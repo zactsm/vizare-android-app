@@ -607,6 +607,11 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                   width: 22,
                   height: 22,
                   color: VizareColors.champagneGold,
+                  errorBuilder: (c, e, s) => const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: VizareColors.champagneGold,
+                    size: 22,
+                  ),
                 ),
               ),
             ],

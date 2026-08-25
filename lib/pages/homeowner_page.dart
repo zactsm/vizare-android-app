@@ -103,42 +103,14 @@ class _HomeownerPageState extends State<HomeownerPage> {
   Future<void> _deleteProperty(int propertyId) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: VizareColors.obsidianElevated,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-        ),
-        title: Text(
-          "Delete Listing",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-        content: Text(
-          "Are you sure you want to permanently remove this property listing?",
-          style: GoogleFonts.inter(color: VizareColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              "Cancel",
-              style: GoogleFonts.poppins(color: Colors.white60),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              "Delete",
-              style: GoogleFonts.poppins(
-                color: VizareColors.crimsonRed,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
+      builder: (context) => VizareDialog(
+        title: "Delete Listing",
+        message: "Are you sure you want to permanently remove this property listing?",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        confirmColor: VizareColors.crimsonRed,
+        onConfirm: () => Navigator.pop(context, true),
+        onCancel: () => Navigator.pop(context, false),
       ),
     );
 
@@ -260,8 +232,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
   }
 
   Widget _buildTopBar(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
-      top: 14.0,
+      top: topInset + 8.0,
       left: 16.0,
       right: 16.0,
       child: VisionGlassContainer(

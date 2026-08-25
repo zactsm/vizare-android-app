@@ -327,51 +327,55 @@ class _AdminPageState extends State<AdminPage> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.check_circle_rounded,
-                        size: 18, color: Colors.white),
-                    label: Text(
-                      'Approve',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: Colors.white,
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.check_circle_rounded,
+                          size: 18, color: VizareColors.textPrimary),
+                      label: Text(
+                        'Approve',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: VizareColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    onPressed: () =>
-                        _updateStatus(property.id, 'approved'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: VizareColors.emeraldGreen,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      onPressed: () =>
+                          _updateStatus(property.id, 'approved'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: VizareColors.emeraldGreen,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.cancel_rounded,
-                        size: 18, color: VizareColors.crimsonRed),
-                    label: Text(
-                      'Reject',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: VizareColors.crimsonRed,
+                  child: SizedBox(
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.cancel_rounded,
+                          size: 18, color: VizareColors.crimsonRed),
+                      label: Text(
+                        'Reject',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: VizareColors.crimsonRed,
+                        ),
                       ),
-                    ),
-                    onPressed: () =>
-                        _updateStatus(property.id, 'rejected'),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                          color: VizareColors.crimsonRed, width: 1.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      onPressed: () =>
+                          _updateStatus(property.id, 'rejected'),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                            color: VizareColors.crimsonRed, width: 1.2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),

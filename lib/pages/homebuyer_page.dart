@@ -193,9 +193,14 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
       fit: StackFit.expand,
       children: [
         _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  color: VizareColors.champagneGold,
+            ? SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 104),
+                    const VizareCardSkeleton(height: 260),
+                    const VizareCardSkeleton(height: 200),
+                  ],
                 ),
               )
             : SingleChildScrollView(
@@ -757,8 +762,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
   }
 
   Widget _buildTopSearchCapsule(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
-      top: 14.0,
+      top: topInset + 8.0,
       left: 16.0,
       right: 16.0,
       child: VisionGlassContainer(
