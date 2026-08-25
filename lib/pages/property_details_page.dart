@@ -222,28 +222,6 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                               letterSpacing: -0.5,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: VizareColors.champagneGold
-                                  .withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: VizareColors.champagneGold
-                                    .withValues(alpha: 0.4),
-                              ),
-                            ),
-                            child: Text(
-                              'VERIFIED LISTING',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: VizareColors.champagneGold,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 4),

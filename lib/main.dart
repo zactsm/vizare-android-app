@@ -251,9 +251,24 @@ class MyApp extends StatelessWidget {
         return Scaffold(
           backgroundColor: const Color(0xFF050608),
           body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: child ?? const SizedBox.shrink(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxW = constraints.maxWidth < 480 ? constraints.maxWidth : 480.0;
+                final maxH = maxW * (19.5 / 9.0);
+                final actualH = constraints.maxHeight < maxH ? constraints.maxHeight : maxH;
+
+                return SizedBox(
+                  width: maxW,
+                  height: actualH,
+                  child: AspectRatio(
+                    aspectRatio: 9.0 / 19.5,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(constraints.maxWidth > 500 ? 32 : 0),
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );

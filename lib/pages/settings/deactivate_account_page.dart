@@ -157,36 +157,15 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     return PremiumBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: VisionGlassPill(
-              padding: const EdgeInsets.all(8),
-              onTap: () {
-                if (_isPasswordStep) {
-                  setState(() => _isPasswordStep = false);
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-          ),
-          title: Text(
-            'Settings',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          centerTitle: true,
+        appBar: VizareAppBar(
+          title: 'Deactivate Account',
+          onBackPressed: () {
+            if (_isPasswordStep) {
+              setState(() => _isPasswordStep = false);
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
         body: SafeArea(
           child: SingleChildScrollView(

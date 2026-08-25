@@ -234,15 +234,12 @@ class _ProfilePageState extends State<ProfilePage> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: VisionGlassPill(
-              padding: const EdgeInsets.all(8),
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 16,
+          leading: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: VisionGlassCircleButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                onTap: () => Navigator.pop(context),
               ),
             ),
           ),

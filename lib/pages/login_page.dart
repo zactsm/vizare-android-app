@@ -51,9 +51,11 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final result = await GoogleAuthService.signIn(
         requestedRole: 'homebuyer',
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Google sign-in timed out. Please try again.'),
       );
       if (result == null || !mounted) {
-        setState(() => _isLoading = false);
         return;
       }
       final userType = result.userType;
@@ -72,8 +74,11 @@ class _LoginPageState extends State<LoginPage> {
             context, '/homebuyer', (Route<dynamic> route) => false);
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-      _showErrorDialog("Error", "An unexpected error occurred during Google Sign-In.");
+      _showErrorDialog("Google Sign-In Notice", "Sign-in could not be completed: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

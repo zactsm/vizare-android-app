@@ -312,13 +312,19 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               ],
             ),
           ),
-          Text(
-            'VIEW ALL',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: VizareColors.champagneGold,
-              letterSpacing: 1.0,
+          GestureDetector(
+            onTap: widget.onSearchTap,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                'VIEW ALL',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: VizareColors.champagneGold,
+                  letterSpacing: 1.0,
+                ),
+              ),
             ),
           ),
         ],

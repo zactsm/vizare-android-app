@@ -48,7 +48,7 @@ class _WelcomePageState extends State<WelcomePage> {
       [
         const TextSpan(
           text: 'Experience ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'living spaces\n',
@@ -59,20 +59,20 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         const TextSpan(
           text: 'in spatial ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: '3D reality.',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: VizareColors.spatialCyan,
+            color: VizareColors.champagneGold,
           ),
         ),
       ],
       [
         const TextSpan(
           text: 'Ultra-luxury ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'properties\n',
@@ -83,20 +83,20 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         const TextSpan(
           text: 'crafted for ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'next-gen living.',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: VizareColors.neonPurple,
+            color: VizareColors.champagneGold,
           ),
         ),
       ],
       [
         const TextSpan(
           text: 'Step inside ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'your future\n',
@@ -107,20 +107,20 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         const TextSpan(
           text: 'architectural ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'sanctuary.',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: VizareColors.goldLight,
+            color: VizareColors.champagneGold,
           ),
         ),
       ],
       [
         const TextSpan(
           text: 'Explore ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'spaces\n',
@@ -131,20 +131,20 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         const TextSpan(
           text: 'with real-time ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'AR tours.',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: VizareColors.spatialCyan,
+            color: VizareColors.champagneGold,
           ),
         ),
       ],
       [
         const TextSpan(
           text: 'Walk through ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'estates\n',
@@ -155,13 +155,13 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
         const TextSpan(
           text: 'before you ',
-          style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.w300, color: VizareColors.goldLight),
         ),
         const TextSpan(
           text: 'walk in.',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: VizareColors.neonPurple,
+            color: VizareColors.champagneGold,
           ),
         ),
       ],
@@ -197,7 +197,7 @@ class _WelcomePageState extends State<WelcomePage> {
                               errorBuilder: (context, error, stackTrace) =>
                                   const SizedBox(width: 54, height: 54),
                             ),
-                            const SizedBox(height: 48),
+                            const SizedBox(height: 110),
                             // Dynamic Heading Switcher
                             Padding(
                               padding: const EdgeInsets.only(right: 12.0),

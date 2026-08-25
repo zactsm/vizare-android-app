@@ -420,6 +420,56 @@ class VizareDialog extends StatelessWidget {
   }
 }
 
+/// VisionOS Circle Button Widget (100% Perfect Circle for Back Buttons & Icon Actions)
+class VisionGlassCircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  final double size;
+  final Color iconColor;
+  final Color? color;
+  final Color? borderColor;
+
+  const VisionGlassCircleButton({
+    super.key,
+    required this.icon,
+    this.onTap,
+    this.size = 40.0,
+    this.iconColor = VizareColors.textPrimary,
+    this.color,
+    this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipOval(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color ?? Colors.white.withValues(alpha: 0.08),
+              border: Border.all(
+                color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+                width: 1.0,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Standardized Top App Bar Component
 class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -446,15 +496,12 @@ class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       automaticallyImplyLeading: false,
       leading: showBackButton
-          ? Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: VisionGlassPill(
-                padding: const EdgeInsets.all(10),
-                onTap: onBackPressed ?? () => Navigator.pop(context),
-                child: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: VizareColors.textPrimary,
-                  size: 16,
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: VisionGlassCircleButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onTap: onBackPressed ?? () => Navigator.pop(context),
                 ),
               ),
             )

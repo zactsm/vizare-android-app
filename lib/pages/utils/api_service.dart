@@ -183,8 +183,15 @@ class ApiService {
     }
   }
 
+  static final Map<String, _CachedResponse> _responseCache = {};
+
+  static void clearCache() {
+    _responseCache.clear();
+  }
+
   static Future<http.Response> post(String script,
       {Map<String, String>? body, Map<String, String>? headers}) async {
+    _responseCache.clear(); // Invalidate cache on data mutation
     final base = baseUrl;
     final cleanScript = script.startsWith('/') ? script.substring(1) : script;
     final url = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
@@ -231,12 +238,25 @@ class ApiService {
           ?.map((key, value) => MapEntry(key, value.toString())),
     });
 
+    final cacheKey = url.toString();
+    final now = DateTime.now();
+    if (_responseCache.containsKey(cacheKey)) {
+      final cached = _responseCache[cacheKey]!;
+      if (now.difference(cached.timestamp).inSeconds < 15) {
+        _logger.d('Serving cached GET for $url');
+        return cached.response;
+      }
+    }
+
     _logger.d('GET to $url');
     try {
       final response = await http
           .get(url, headers: _authenticatedHeaders())
           .timeout(const Duration(seconds: 15));
       _logResponse(response);
+      if (response.statusCode == 200) {
+        _responseCache[cacheKey] = _CachedResponse(response, now);
+      }
       return response;
     } catch (e) {
       _logger.e('Error during GET to $url', error: e);
@@ -252,4 +272,10 @@ class ApiService {
           'Response ${response.statusCode} from ${response.request?.url}: ${response.body}');
     }
   }
+}
+
+class _CachedResponse {
+  final http.Response response;
+  final DateTime timestamp;
+  _CachedResponse(this.response, this.timestamp);
 }
