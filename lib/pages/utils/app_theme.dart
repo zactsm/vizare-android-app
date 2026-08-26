@@ -30,8 +30,8 @@ class VizareColors {
 
   // Typography Colors
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF94A3B8);
-  static const Color textMuted = Color(0xFF64748B);
+  static const Color textSecondary = Color(0xFFCBD5E1);
+  static const Color textMuted = Color(0xFF94A3B8);
 
   // Gradients
   static const LinearGradient goldGradient = LinearGradient(
@@ -152,6 +152,7 @@ class VisionGlassPill extends StatelessWidget {
   final Color? color;
   final Color? borderColor;
   final VoidCallback? onTap;
+  final String? semanticLabel;
 
   const VisionGlassPill({
     super.key,
@@ -160,27 +161,32 @@ class VisionGlassPill extends StatelessWidget {
     this.color,
     this.borderColor,
     this.onTap,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: color ?? Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: borderColor ?? Colors.white.withValues(alpha: 0.2),
-                width: 1.0,
+    return Semantics(
+      button: onTap != null,
+      label: semanticLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Container(
+              padding: padding,
+              decoration: BoxDecoration(
+                color: color ?? Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+                  width: 1.0,
+                ),
               ),
+              child: child,
             ),
-            child: child,
           ),
         ),
       ),
@@ -428,40 +434,47 @@ class VisionGlassCircleButton extends StatelessWidget {
   final Color iconColor;
   final Color? color;
   final Color? borderColor;
+  final String? semanticLabel;
 
   const VisionGlassCircleButton({
     super.key,
     required this.icon,
     this.onTap,
-    this.size = 40.0,
+    this.size = 48.0,
     this.iconColor = VizareColors.textPrimary,
     this.color,
     this.borderColor,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color ?? Colors.white.withValues(alpha: 0.08),
-              border: Border.all(
-                color: borderColor ?? Colors.white.withValues(alpha: 0.2),
-                width: 1.0,
+    return Semantics(
+      button: true,
+      label: semanticLabel ?? 'Button',
+      enabled: onTap != null,
+      child: GestureDetector(
+        onTap: onTap,
+        child: ClipOval(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color ?? Colors.white.withValues(alpha: 0.08),
+                border: Border.all(
+                  color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+                  width: 1.0,
+                ),
               ),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 16,
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 18,
+              ),
             ),
           ),
         ),

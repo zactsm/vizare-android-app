@@ -25,6 +25,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
   String? _selectedReason;
   bool _isPasswordVisible = false;
   bool _isDeactivating = false;
+  bool _isPermanentDeletion = false;
 
   final Map<String, bool> _reasons = {
     'I found a property': false,
@@ -96,8 +97,9 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         return;
       }
 
+      final endpoint = _isPermanentDeletion ? 'delete_account.php' : 'deactivate_account.php';
       final response = await ApiService.post(
-        'deactivate_account.php',
+        endpoint,
         body: {'email': email, 'password': password},
       );
 
@@ -116,8 +118,12 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Account deactivated successfully.',
-                style: GoogleFonts.inter()),
+            content: Text(
+              _isPermanentDeletion
+                  ? 'Account and personal data permanently erased.'
+                  : 'Account deactivated successfully.',
+              style: GoogleFonts.inter(),
+            ),
             backgroundColor: VizareColors.emeraldGreen,
           ),
         );
@@ -130,7 +136,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Deactivation failed. Check your password.',
+            content: Text('Operation failed. Check your password.',
                 style: GoogleFonts.inter()),
             backgroundColor: VizareColors.crimsonRed,
           ),
@@ -174,7 +180,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Deactivate account',
+                  _isPermanentDeletion ? 'Permanently Delete Account' : 'Deactivate account',
                   style: GoogleFonts.poppins(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
@@ -184,14 +190,73 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Deactivating will archive your profile, spatial favorites, and listing views.',
+                  _isPermanentDeletion
+                      ? 'Under GDPR Art. 17 / CCPA, your account, authentication tokens, profile data, and media files will be permanently erased.'
+                      : 'Deactivating will archive your profile, spatial favorites, and listing views. You can reactivate anytime by logging in.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: VizareColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 20),
-                if (!_isPasswordStep)
+                if (!_isPasswordStep) ...[
+                  VisionGlassContainer(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _isPermanentDeletion = false),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.15) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.5) : Colors.transparent,
+                                ),
+                              ),
+                              child: Text(
+                                'Temporary',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: !_isPermanentDeletion ? VizareColors.champagneGold : VizareColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _isPermanentDeletion = true),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.2) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.5) : Colors.transparent,
+                                ),
+                              ),
+                              child: Text(
+                                'Permanent Erasure',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _isPermanentDeletion ? Colors.redAccent : VizareColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: Text(
@@ -203,6 +268,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                       ),
                     ),
                   ),
+                ],
                 _isPasswordStep ? _buildPasswordView() : _buildReasonsView(),
                 const SizedBox(height: 32),
                 SizedBox(

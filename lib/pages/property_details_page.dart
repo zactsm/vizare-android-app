@@ -327,11 +327,32 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   }
 
   Widget _buildSpecsBentoGrid() {
+    final has3D = widget.property.modelPath.isNotEmpty;
+    final nameLower = widget.property.name.toLowerCase();
+    final isVilla = nameLower.contains('villa') || nameLower.contains('mansion') || nameLower.contains('estate');
+    final isPenthouse = nameLower.contains('penthouse') || nameLower.contains('residence') || nameLower.contains('sky');
+
     final specs = [
-      {'label': 'Bedrooms', 'value': '4 Beds', 'icon': Icons.bed_rounded},
-      {'label': 'Bathrooms', 'value': '3.5 Baths', 'icon': Icons.bathtub_rounded},
-      {'label': 'Living Space', 'value': '3,850 SqFt', 'icon': Icons.square_foot_rounded},
-      {'label': 'Parking', 'value': '2 Garage', 'icon': Icons.garage_rounded},
+      {
+        'label': 'Architecture',
+        'value': isVilla ? 'Villa / Estate' : (isPenthouse ? 'Penthouse' : 'Modern Luxury'),
+        'icon': Icons.architecture_rounded,
+      },
+      {
+        'label': 'Spatial 3D',
+        'value': has3D ? 'Interactive GLB' : 'Standard 2D',
+        'icon': has3D ? Icons.view_in_ar_rounded : Icons.photo_library_rounded,
+      },
+      {
+        'label': 'Status',
+        'value': widget.property.status.toUpperCase(),
+        'icon': Icons.verified_outlined,
+      },
+      {
+        'label': 'Experience',
+        'value': widget.property.isFeatured ? 'Curated Premier' : 'Verified Listing',
+        'icon': Icons.star_border_rounded,
+      },
     ];
 
     return GridView.builder(

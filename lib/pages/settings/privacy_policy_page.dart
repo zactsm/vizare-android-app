@@ -42,21 +42,33 @@ class PrivacyPolicyPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader('1. Information Collection'),
+                    _buildSectionHeader('1. Data Controller & Scope'),
                     _buildSectionBody(
-                        'We collect account profile credentials, architectural preference tags, and spatial telemetry to provide high-fidelity 3D and AR visualization services.'),
+                        'Vizare Technologies Inc. acts as the Data Controller under EU GDPR and Business entity under California CCPA/CPRA. This policy governs how we process personal information across our mobile and web applications.'),
                     const SizedBox(height: 18),
-                    _buildSectionHeader('2. Spatial & Sensor Data'),
+                    _buildSectionHeader('2. Information Collection & Legal Bases'),
                     _buildSectionBody(
-                        'AR camera and gyro sensors operate locally on-device to project 3D models into your physical environment. Raw camera feeds are never stored or transmitted to external servers.'),
+                        'Under GDPR Art. 6, we process account credentials (full name, email, encrypted password), phone numbers, inquiry records, and interaction telemetry based on contractual necessity (Art. 6(1)(b)) and legitimate interest in platform security (Art. 6(1)(f)).'),
                     const SizedBox(height: 18),
-                    _buildSectionHeader('3. Security & Row-Level Protection'),
+                    _buildSectionHeader('3. Spatial, AR & Camera Privacy'),
                     _buildSectionBody(
-                        'Personal data, saved bookmarks, and inquiry communications are safeguarded by cryptographic Row-Level Security (RLS) policies and HTTPS encrypted tunnels.'),
+                        'AR camera feeds, LiDAR, and gyro sensors operate exclusively on-device for real-time WebGL/glTF model rendering. Raw camera frames and spatial room meshes are never recorded, persisted, or transmitted to remote servers.'),
                     const SizedBox(height: 18),
-                    _buildSectionHeader('4. Contact & Compliance'),
+                    _buildSectionHeader('4. Sub-Processors & Data Transfers'),
                     _buildSectionBody(
-                        'For data deletion requests or privacy inquiries, contact our data protection officer via the Concierge Support page.'),
+                        'We utilize vetted third-party service providers bound by Data Processing Agreements (DPAs):\n• Supabase Inc. (Database, Authentication, Storage - AWS us-east)\n• Google LLC (Google Maps API, Google Sign-In)\n• EmailJS (Support ticket relay)'),
+                    const SizedBox(height: 18),
+                    _buildSectionHeader('5. Your Rights (GDPR & CCPA/CPRA)'),
+                    _buildSectionBody(
+                        'You have enforceable rights regarding your personal information:\n• Right of Access & Portability (Art. 15/20 GDPR): Download machine-readable JSON data via Account Settings.\n• Right to Erasure (Art. 17 GDPR, CCPA § 1798.105): Permanently purge your profile, auth credentials, and uploaded files.\n• CCPA Notice: We DO NOT sell or share your personal data with third-party data brokers for cross-context behavioral advertising.'),
+                    const SizedBox(height: 18),
+                    _buildSectionHeader('6. Data Retention & Erasure'),
+                    _buildSectionBody(
+                        'Account and listing data are retained while your account is active. When you execute an Account Erasure request, all personally identifiable records and storage files are immediately deleted or irrevocably anonymized.'),
+                    const SizedBox(height: 18),
+                    _buildSectionHeader('7. Data Protection Contact'),
+                    _buildSectionBody(
+                        'To exercise your statutory data subject rights or reach our Data Protection Officer (DPO), submit a request via Settings > Contact Support or email privacy@vizare.app.'),
                   ],
                 ),
               ),

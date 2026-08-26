@@ -54,6 +54,19 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
                     PhotoViewHeroAttributes(tag: '$imagePath-$index'),
                 minScale: PhotoViewComputedScale.contained,
                 maxScale: PhotoViewComputedScale.covered * 2.5,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.broken_image_outlined, color: VizareColors.textMuted, size: 48),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Image unavailable',
+                        style: GoogleFonts.inter(color: VizareColors.textSecondary, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
             loadingBuilder: (context, event) => const Center(

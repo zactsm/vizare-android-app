@@ -53,7 +53,16 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: _currentIndex == NavPageIndex.home,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != NavPageIndex.home) {
+          _pageController.animateToPage(
+            NavPageIndex.home.index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      },
       child: Scaffold(
         backgroundColor: VizareColors.obsidianBlack,
         body: AbstractBackground(
@@ -156,7 +165,10 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     }
   }
 
+  String? _errorMessage;
+
   Future<void> _fetchProperties() async {
+    setState(() => _errorMessage = null);
     try {
       final response = await ApiService.get('get_all_listings.php');
 
@@ -164,8 +176,18 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        final properties =
-            data.map((json) => Property.fromJson(json)).toList();
+        final List<Property> properties = [];
+        for (final item in data) {
+          try {
+            if (item is Map<String, dynamic>) {
+              properties.add(Property.fromJson(item));
+            } else if (item is Map) {
+              properties.add(Property.fromJson(Map<String, dynamic>.from(item)));
+            }
+          } catch (itemErr) {
+            _logger.w('Skipping malformed property item', error: itemErr);
+          }
+        }
 
         setState(() {
           _featuredProperties =
@@ -174,15 +196,22 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               properties.where((p) => !p.isFeatured).toList();
           _popularProperties = List.from(properties)..shuffle();
           _isLoading = false;
+          _errorMessage = null;
         });
       } else {
         _logger.w('Failed to load properties: ${response.statusCode}');
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Unable to load real estate catalog (HTTP ${response.statusCode}).';
+        });
       }
     } catch (e) {
       _logger.e('Error fetching properties', error: e);
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Network connection interrupted. Please verify connection and retry.';
+        });
       }
     }
   }
@@ -203,9 +232,14 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   ],
                 ),
               )
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            : RefreshIndicator(
+                color: VizareColors.champagneGold,
+                backgroundColor: VizareColors.obsidianElevated,
+                onRefresh: _fetchProperties,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 96), // Spacer for top floating bar
 
@@ -251,6 +285,37 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                     ),
                     const SizedBox(height: 12),
 
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                        child: VisionGlassContainer(
+                          padding: const EdgeInsets.all(24),
+                          border: Border.all(color: VizareColors.crimsonRed.withValues(alpha: 0.4)),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.cloud_off_rounded, color: VizareColors.crimsonRed, size: 48),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Connection Notice',
+                                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(fontSize: 13, color: VizareColors.textSecondary),
+                              ),
+                              const SizedBox(height: 18),
+                              LuxuryGradientButton(
+                                text: 'Retry Connection',
+                                icon: Icons.refresh_rounded,
+                                onPressed: _fetchProperties,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     // 1. Featured Architectural Showcase
                     if (_featuredProperties.isNotEmpty) ...[
                       _buildSectionHeader('Exclusive', 'Showcase'),
@@ -259,15 +324,15 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                       const SizedBox(height: 32),
                     ],
 
-                    // 2. Nearby Properties
+                    // 2. Discover Nearby Section
                     if (_nearbyProperties.isNotEmpty) ...[
-                      _buildSectionHeader('Nearby', 'Residences'),
+                      _buildSectionHeader('Nearby', 'Properties'),
                       const SizedBox(height: 14),
                       _buildNearbyCarousel(context, _nearbyProperties),
                       const SizedBox(height: 32),
                     ],
 
-                    // 3. Popular Property Bento Feed
+                    // 3. Spatial Real Estate Picks
                     if (_popularProperties.isNotEmpty) ...[
                       _buildSectionHeader('Curated', 'Portfolio'),
                       const SizedBox(height: 14),
@@ -277,6 +342,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   ],
                 ),
               ),
+            ),
 
         // Floating VisionOS Top Search Capsule
         _buildTopSearchCapsule(context),

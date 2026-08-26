@@ -2,15 +2,49 @@ const { createClient } = require('@supabase/supabase-js');
 
 const MAX_BODY_SIZE = 1024 * 1024; // 1 MB payload limit
 
+// In-memory sliding window rate limiter
+const rateLimitMap = new Map();
+function checkRateLimit(key, maxAttempts, windowMs) {
+  const now = Date.now();
+  const records = rateLimitMap.get(key) || [];
+  const validRecords = records.filter(ts => now - ts < windowMs);
+  if (validRecords.length >= maxAttempts) {
+    return false;
+  }
+  validRecords.push(now);
+  rateLimitMap.set(key, validRecords);
+  return true;
+}
+
+function validatePasswordStrength(password) {
+  if (typeof password !== 'string' || password.length < 8) {
+    return 'Password must be at least 8 characters long.';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must contain at least one uppercase letter (A-Z).';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Password must contain at least one lowercase letter (a-z).';
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Password must contain at least one number (0-9).';
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return 'Password must contain at least one special character (!@#$%...).';
+  }
+  return null;
+}
+
 function corsHeaders(request) {
   const origin = request.headers.origin;
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://vizare.app,https://vizare.vercel.app,http://localhost:3000';
+  const allowedOrigins = rawAllowed
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 
   let allowOrigin = '';
-  if (origin && (allowedOrigins.length === 0 || allowedOrigins.includes(origin))) {
+  if (origin && allowedOrigins.includes(origin)) {
     allowOrigin = origin;
   }
 
@@ -202,8 +236,13 @@ async function assertPropertyOwner(admin, profile, propertyId) {
 
 async function dispatch(name, request, admin, publicClient) {
   const input = request.method === 'GET' ? query(request) : await readBody(request);
+  const clientIp = request.headers['x-forwarded-for'] || request.socket?.remoteAddress || 'unknown';
 
   if (name === 'create_account.php') {
+    if (!checkRateLimit(`create_${clientIp}`, 10, 3600000)) {
+      return [429, { message: 'Too many account creation attempts. Please try again later.' }];
+    }
+
     const role =
       String(input.isHomeBuyer).toLowerCase() === 'true'
         ? 'homebuyer'
@@ -214,8 +253,9 @@ async function dispatch(name, request, admin, publicClient) {
     if (!email || !password || !fullName) {
       return [400, { message: 'Name, email, and password are required.' }];
     }
-    if (password.length < 6) {
-      return [400, { message: 'Password must be at least 6 characters long.' }];
+    const passwordError = validatePasswordStrength(password);
+    if (passwordError) {
+      return [400, { message: passwordError }];
     }
 
     let user = null;
@@ -266,6 +306,9 @@ async function dispatch(name, request, admin, publicClient) {
       full_name: fullName,
       role,
       has_password: true,
+      consent_terms_at: new Date().toISOString(),
+      consent_privacy_at: new Date().toISOString(),
+      consent_version: 'v1.0',
     });
 
     return [
@@ -280,8 +323,12 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'login.php') {
+    const email = String(input.email || '').trim().toLowerCase();
+    if (!checkRateLimit(`login_${clientIp}_${email}`, 10, 300000)) {
+      return [429, { message: 'Too many login attempts. Please try again in a few minutes.' }];
+    }
     const result = await publicClient.auth.signInWithPassword({
-      email: String(input.email || '').trim().toLowerCase(),
+      email,
       password: String(input.password || ''),
     });
     if (result.error) return [401, { message: 'Invalid email or password.' }];
@@ -303,7 +350,8 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'search_properties.php') {
-    const term = String(input.term || '').trim().replace(/[^a-zA-Z0-9\s-]/g, '');
+    const rawTerm = String(input.term || '').trim().slice(0, 100);
+    const term = rawTerm.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, ' ');
     let builder = admin
       .from('properties')
       .select('*')
@@ -335,13 +383,13 @@ async function dispatch(name, request, admin, publicClient) {
     }
     if (propCheck.data.status !== 'approved') {
       const authUser = await getAuthUser(request, publicClient);
-      if (!authUser) return [403, { message: 'Access denied.' }];
+      if (!authUser) return [404, { message: 'Property not found.' }];
       const callerProfile = await profileForUser(admin, authUser);
       if (
         !callerProfile ||
         (callerProfile.role !== 'admin' && callerProfile.id !== propCheck.data.homeowner_id)
       ) {
-        return [403, { message: 'Access denied.' }];
+        return [404, { message: 'Property not found.' }];
       }
     }
     const result = await admin
@@ -407,15 +455,19 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'send_inquiry.php') {
-    const message = String(input.message || '').trim();
+    const message = String(input.message || '').trim().slice(0, 2500);
     if (!message) return [400, { message: 'A message is required.' }];
 
     const propertyResult = await admin
       .from('properties')
-      .select('id,homeowner_id,name,image_path')
+      .select('id,homeowner_id,name,image_path,status')
       .eq('id', input.property_id)
-      .single();
+      .eq('status', 'approved')
+      .maybeSingle();
     failOn(propertyResult.error);
+    if (!propertyResult.data) {
+      return [404, { message: 'Property not found or unavailable for inquiries.' }];
+    }
     const property = propertyResult.data;
 
     const result = await admin.from('inquiries').insert({
@@ -441,8 +493,8 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'create_support_ticket.php') {
-    const subject = String(input.subject || '').trim();
-    const description = String(input.description || '').trim();
+    const subject = String(input.subject || '').trim().slice(0, 200);
+    const description = String(input.description || '').trim().slice(0, 5000);
     if (!subject || !description) {
       return [400, { message: 'Subject and description are required.' }];
     }
@@ -456,6 +508,7 @@ async function dispatch(name, request, admin, publicClient) {
     if (!Array.isArray(attachmentUrls)) {
       return [400, { message: 'Invalid attachment list.' }];
     }
+    attachmentUrls = attachmentUrls.slice(0, 10).map(u => String(u).trim().slice(0, 500));
 
     const result = await admin.from('support_tickets').insert({
       profile_id: profile.id,
@@ -472,16 +525,27 @@ async function dispatch(name, request, admin, publicClient) {
     if (!['homeowner', 'admin'].includes(profile.role)) {
       return [403, { message: 'Only homeowners can add properties.' }];
     }
+    const nameStr = String(input.name || '').trim().slice(0, 150);
+    const locStr = String(input.location || '').trim().slice(0, 200);
+    const priceStr = String(input.price || '').trim().slice(0, 50);
+    const descStr = String(input.description || '').trim().slice(0, 5000);
+    const imagePathStr = String(input.image_path || '').trim().slice(0, 500);
+    const modelPathStr = String(input.model_path || '').trim().slice(0, 500);
+
+    if (!nameStr || !locStr || !priceStr || !imagePathStr) {
+      return [400, { message: 'Title, location, price, and primary image are required.' }];
+    }
+
     const result = await admin
       .from('properties')
       .insert({
         homeowner_id: profile.id,
-        name: input.name,
-        location: input.location,
-        price: input.price,
-        description: input.description,
-        image_path: input.image_path,
-        model_path: input.model_path || '',
+        name: nameStr,
+        location: locStr,
+        price: priceStr,
+        description: descStr,
+        image_path: imagePathStr,
+        model_path: modelPathStr,
         status: profile.role === 'admin' ? 'approved' : 'pending',
       })
       .select('id')
@@ -490,8 +554,9 @@ async function dispatch(name, request, admin, publicClient) {
 
     const images = String(input.gallery_images || '')
       .split(',')
-      .map((url) => url.trim())
+      .map((url) => url.trim().slice(0, 500))
       .filter(Boolean)
+      .slice(0, 20)
       .map((image_url, sort_order) => ({
         property_id: result.data.id,
         image_url,
@@ -506,12 +571,20 @@ async function dispatch(name, request, admin, publicClient) {
 
   if (name === 'edit_property.php') {
     await assertPropertyOwner(admin, profile, input.property_id);
+    const nameStr = String(input.name || '').trim().slice(0, 150);
+    const locStr = String(input.location || '').trim().slice(0, 200);
+    const priceStr = String(input.price || '').trim().slice(0, 50);
+    const descStr = String(input.description || '').trim().slice(0, 5000);
+    const imagePathStr = String(input.image_path || '').trim().slice(0, 500);
+    const modelPathStr = String(input.model_path || '').trim().slice(0, 500);
+
     const updates = {
-      name: input.name,
-      location: input.location,
-      price: input.price,
-      description: input.description,
-      image_path: input.image_path,
+      name: nameStr,
+      location: locStr,
+      price: priceStr,
+      description: descStr,
+      image_path: imagePathStr,
+      model_path: modelPathStr,
     };
     if (profile.role !== 'admin') updates.status = 'pending';
     const result = await admin
@@ -605,15 +678,23 @@ async function dispatch(name, request, admin, publicClient) {
   }
 
   if (name === 'change_password.php') {
+    const currentPassword = String(input.current_password || '');
+    const newPassword = String(input.new_password || '');
+
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
+      return [400, { message: passwordError }];
+    }
+
     const verified = await publicClient.auth.signInWithPassword({
       email: user.email,
-      password: String(input.current_password || ''),
+      password: currentPassword,
     });
     if (verified.error) {
       return [401, { message: 'Current password is incorrect.' }];
     }
     const result = await admin.auth.admin.updateUserById(user.id, {
-      password: String(input.new_password || ''),
+      password: newPassword,
       user_metadata: { ...user.user_metadata, has_password: true },
     });
     failOn(result.error);
@@ -641,8 +722,100 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, { message: 'Account deactivated successfully.' }];
   }
 
+  if (name === 'delete_account.php') {
+    // GDPR Art. 17 / CCPA § 1798.105: Permanent Right to Erasure
+    if (profile.has_password) {
+      const verified = await publicClient.auth.signInWithPassword({
+        email: user.email,
+        password: String(input.password || ''),
+      });
+      if (verified.error) return [401, { message: 'Password is incorrect.' }];
+    }
+
+    // 1. Delete user files from storage buckets
+    try {
+      if (profile.profile_pic) {
+        const urlSegments = profile.profile_pic.split('/avatars/');
+        if (urlSegments.length > 1) {
+          await admin.storage.from('avatars').remove([urlSegments[1]]);
+        }
+      }
+    } catch (_) {}
+
+    // 2. Anonymize user records in inquiries
+    await admin
+      .from('inquiries')
+      .update({ buyer_email: `anonymized_${profile.id}@erased.vizare.com` })
+      .eq('buyer_email', profile.email);
+
+    // 3. Purge user profile & notification preferences
+    await admin.from('favorites').delete().eq('profile_id', profile.id);
+    await admin.from('notification_preferences').delete().eq('profile_id', profile.id);
+    await admin.from('support_tickets').delete().eq('profile_id', profile.id);
+    await admin.from('profiles').delete().eq('id', profile.id);
+
+    // 4. Delete auth user
+    if (user && user.id) {
+      await admin.auth.admin.deleteUser(user.id);
+    }
+
+    return [200, { message: 'Account and personal data permanently erased.' }];
+  }
+
+  if (name === 'export_my_data.php') {
+    // GDPR Art. 20 / CCPA § 1798.130: Right of Access & Data Portability
+    const [propertiesRes, favoritesRes, inquiriesRes, ticketsRes, prefsRes] = await Promise.all([
+      admin.from('properties').select('*').eq('homeowner_id', profile.id),
+      admin.from('favorites').select('properties(*)').eq('profile_id', profile.id),
+      admin.from('inquiries').select('*').or(`homeowner_id.eq.${profile.id},buyer_email.eq.${profile.email}`),
+      admin.from('support_tickets').select('*').eq('profile_id', profile.id),
+      admin.from('notification_preferences').select('*').eq('profile_id', profile.id).maybeSingle(),
+    ]);
+
+    return [
+      200,
+      {
+        profile: {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          phone: profile.phone,
+          role: profile.role,
+          created_at: profile.created_at,
+          consent_terms_at: profile.consent_terms_at,
+          consent_privacy_at: profile.consent_privacy_at,
+          consent_version: profile.consent_version,
+        },
+        properties: propertiesRes.data || [],
+        favorites: (favoritesRes.data || []).map(f => f.properties).filter(Boolean),
+        inquiries: inquiriesRes.data || [],
+        support_tickets: ticketsRes.data || [],
+        notification_preferences: prefsRes.data || null,
+        exported_at: new Date().toISOString(),
+      },
+    ];
+  }
+
   return [404, { message: `Unknown API route: ${name}` }];
 }
+
+const MUTATING_ROUTES = new Set([
+  'create_account.php',
+  'login.php',
+  'google_login.php',
+  'update_profile.php',
+  'send_inquiry.php',
+  'create_support_ticket.php',
+  'add_property.php',
+  'edit_property.php',
+  'delete_property.php',
+  'update_property_status.php',
+  'add_favorite.php',
+  'remove_favorite.php',
+  'change_password.php',
+  'deactivate_account.php',
+  'delete_account.php',
+]);
 
 module.exports = async function handler(request, response) {
   Object.entries(corsHeaders(request)).forEach(([key, value]) =>
@@ -654,6 +827,9 @@ module.exports = async function handler(request, response) {
   }
 
   const name = routeName(request);
+  if (MUTATING_ROUTES.has(name) && request.method !== 'POST') {
+    return response.status(405).json({ message: `HTTP method ${request.method} not allowed for ${name}. Must use POST.` });
+  }
   try {
     if (name === 'client_config.php') {
       return response.status(200).json({

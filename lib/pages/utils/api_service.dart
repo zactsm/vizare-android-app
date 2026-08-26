@@ -83,7 +83,7 @@ class ApiService {
       if (signedUrl) {
         return await Supabase.instance.client.storage
             .from(bucket)
-            .createSignedUrl(objectPath, 60 * 60 * 24 * 365);
+            .createSignedUrl(objectPath, 900); // 15 minutes validity
       }
 
       return Supabase.instance.client.storage.from(bucket).getPublicUrl(objectPath);
@@ -191,7 +191,6 @@ class ApiService {
 
   static Future<http.Response> post(String script,
       {Map<String, String>? body, Map<String, String>? headers}) async {
-    _responseCache.clear(); // Invalidate cache on data mutation
     final base = baseUrl;
     final cleanScript = script.startsWith('/') ? script.substring(1) : script;
     final url = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
@@ -219,6 +218,9 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 15));
       _logResponse(response);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        _responseCache.clear(); // Safe invalidation on successful mutation
+      }
       return response;
     } catch (e) {
       _logger.e('Error during POST to $url', error: e);

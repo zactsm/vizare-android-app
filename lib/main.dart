@@ -17,6 +17,8 @@ import 'pages/settings_page.dart';
 import 'pages/search_page.dart';
 import 'pages/homeowner_page.dart';
 import 'pages/admin_page.dart';
+import 'pages/settings/tos_page.dart';
+import 'pages/settings/privacy_policy_page.dart';
 import 'pages/utils/role_guard.dart';
 
 void main() async {
@@ -254,19 +256,15 @@ class MyApp extends StatelessWidget {
           body: Center(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final maxW = constraints.maxWidth < 480 ? constraints.maxWidth : 480.0;
-                final maxH = maxW * (19.5 / 9.0);
-                final actualH = constraints.maxHeight < maxH ? constraints.maxHeight : maxH;
+                final isWideScreen = constraints.maxWidth > 500;
+                final containerWidth = isWideScreen ? 460.0 : constraints.maxWidth;
 
                 return SizedBox(
-                  width: maxW,
-                  height: actualH,
-                  child: AspectRatio(
-                    aspectRatio: 9.0 / 19.5,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(constraints.maxWidth > 500 ? 32 : 0),
-                      child: child ?? const SizedBox.shrink(),
-                    ),
+                  width: containerWidth,
+                  height: constraints.maxHeight,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(isWideScreen ? 24 : 0),
+                    child: child ?? const SizedBox.shrink(),
                   ),
                 );
               },
@@ -280,6 +278,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomePage(),
         '/create-account': (context) => const CreateAccountPage(),
         '/login': (context) => const LoginPage(),
+        '/tos': (context) => const TOSPage(),
+        '/privacy': (context) => const PrivacyPolicyPage(),
         '/home': (context) => const RoleGuard(
               allowedRoles: ['homebuyer', 'homeowner', 'admin'],
               routeName: '/home',
