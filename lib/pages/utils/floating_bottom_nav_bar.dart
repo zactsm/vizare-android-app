@@ -124,41 +124,42 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       'assets/images/white_settings_icon.png',
     ];
 
-    const double iconWidth = 19.0;
-    const double gapWidth = 7.0;
-    const double ovalPaddingH = 16.0;
+    const double iconWidth = 18.0;
+    const double gapWidth = 6.0;
+    const double ovalPaddingH = 11.0;
 
     final Map<int, double> textWidths = {};
     final Map<int, double> targetOvalWidths = {};
 
     for (int i = 0; i < labels.length; i++) {
-      final double tw = _getTextWidth(labels[i], labelStyle) + 2.0;
+      final double tw = _getTextWidth(labels[i], labelStyle) + 1.5;
       textWidths[i] = tw;
       targetOvalWidths[i] = iconWidth + gapWidth + tw + (2 * ovalPaddingH);
     }
 
-    final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
-    final double barWidth = maxBarWidth - 32;
-    const double pillInset = 4.0;
-    final double innerWidth = barWidth - (2 * pillInset);
+    final double maxBarWidth = screenWidth > 400 ? 330 : (screenWidth - 48);
+    final double barWidth = maxBarWidth.clamp(280.0, 330.0);
+    const double pillInsetH = 5.0;
+    const double pillInsetV = 6.0;
+    final double innerWidth = barWidth - (2 * pillInsetH);
 
     // Dynamic space allocation:
     // When a tab is active (closeness = 1.0), it expands to its target active width.
     // Inactive tabs compress down to collapsedWidth, freeing up space for the active pill.
-    const double collapsedWidth = 40.0;
+    const double collapsedWidth = 36.0;
     final List<double> tabCloseness = [];
     final List<double> tabWidths = [];
 
     for (int i = 0; i < 4; i++) {
       final double c = (1.0 - (pageProgress - i).abs()).clamp(0.0, 1.0);
       tabCloseness.add(c);
-      final double targetW = targetOvalWidths[i] ?? 96.0;
+      final double targetW = targetOvalWidths[i] ?? 92.0;
       tabWidths.add(collapsedWidth + (targetW - collapsedWidth) * c);
     }
 
     final double totalTabWidths = tabWidths.reduce((a, b) => a + b);
     final double availableSpace = innerWidth - totalTabWidths;
-    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 60.0);
+    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 40.0);
 
     // Compute continuous left coordinates for each item
     final List<double> tabLefts = [];
@@ -294,15 +295,19 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(35),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
-              height: 72,
-              padding: const EdgeInsets.all(pillInset),
+              width: barWidth,
+              height: 70,
+              padding: const EdgeInsets.symmetric(
+                horizontal: pillInsetH,
+                vertical: pillInsetV,
+              ),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(36),
+                borderRadius: BorderRadius.circular(35),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
@@ -341,7 +346,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: BorderRadius.circular(29),
                         boxShadow: [
                           BoxShadow(
                             color: VizareColors.champagneGold.withValues(alpha: 0.35),
