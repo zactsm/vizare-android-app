@@ -236,7 +236,10 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     // Safe boundaries to prevent clipping at rounded ends:
     final double safeInset = config.pillInsetV.clamp(0.0, containerRadius - 4.0);
-    final double usableSpan = barWidth - (2.0 * safeInset);
+    final double leftInset = safeInset;
+    // Compensate right-side curve offset so Settings gap is visually identical to Explore
+    final double rightInset = safeInset + 3.5;
+    final double usableSpan = barWidth - leftInset - rightInset;
 
     // Dynamic width for each tab based on its closeness to being active:
     final List<double> tabCloseness = [];
@@ -255,7 +258,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     // Compute exact left coordinates for each tab:
     final List<double> tabLefts = [];
-    double currentX = safeInset;
+    double currentX = leftInset;
 
     for (int i = 0; i < 4; i++) {
       tabLefts.add(currentX);
