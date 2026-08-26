@@ -97,7 +97,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
         : _animController.value;
 
     final labelStyle = GoogleFonts.poppins(
-      fontSize: 10.5,
+      fontSize: 11.0,
       fontWeight: FontWeight.w800,
       letterSpacing: 0.4,
       color: VizareColors.obsidianBlack,
@@ -124,9 +124,9 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       'assets/images/white_settings_icon.png',
     ];
 
-    const double iconWidth = 18.0;
-    const double gapWidth = 6.0;
-    const double ovalPaddingH = 12.0;
+    const double iconWidth = 19.0;
+    const double gapWidth = 7.0;
+    const double ovalPaddingH = 16.0;
 
     final Map<int, double> textWidths = {};
     final Map<int, double> targetOvalWidths = {};
@@ -139,20 +139,20 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
     final double barWidth = maxBarWidth - 32;
-    const double pillInset = 6.0;
+    const double pillInset = 4.0;
     final double innerWidth = barWidth - (2 * pillInset);
 
     // Dynamic space allocation:
     // When a tab is active (closeness = 1.0), it expands to its target active width.
-    // Inactive tabs compress down to collapsedWidth (36.0), freeing up space for the active pill.
-    const double collapsedWidth = 36.0;
+    // Inactive tabs compress down to collapsedWidth, freeing up space for the active pill.
+    const double collapsedWidth = 40.0;
     final List<double> tabCloseness = [];
     final List<double> tabWidths = [];
 
     for (int i = 0; i < 4; i++) {
       final double c = (1.0 - (pageProgress - i).abs()).clamp(0.0, 1.0);
       tabCloseness.add(c);
-      final double targetW = targetOvalWidths[i] ?? 88.0;
+      final double targetW = targetOvalWidths[i] ?? 96.0;
       tabWidths.add(collapsedWidth + (targetW - collapsedWidth) * c);
     }
 
@@ -262,7 +262,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                         left: gapWidth * closeness,
                       ),
                       child: SizedBox(
-                        height: 16,
+                        height: 18,
                         width: (textWidths[index] ?? 50.0) * closeness,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -294,15 +294,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(36),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
-              height: 64,
+              height: 72,
               padding: const EdgeInsets.all(pillInset),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(36),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
@@ -341,7 +341,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
-                        borderRadius: BorderRadius.circular(26),
+                        borderRadius: BorderRadius.circular(32),
                         boxShadow: [
                           BoxShadow(
                             color: VizareColors.champagneGold.withValues(alpha: 0.35),
