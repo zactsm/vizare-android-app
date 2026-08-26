@@ -615,6 +615,84 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, result.data.map(propertyJson)];
   }
 
+  if (name === 'get_all_properties_admin.php' || name === 'get_all_admin_properties.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const result = await admin
+      .from('properties')
+      .select('*, profiles:homeowner_id(full_name, email)')
+      .order('created_at', { ascending: false });
+    failOn(result.error);
+    return [200, result.data.map(propertyJson)];
+  }
+
+  if (name === 'get_admin_users.php' || name === 'get_all_users.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const result = await admin
+      .from('profiles')
+      .select('id, full_name, email, role, phone_number, profile_pic, created_at')
+      .order('created_at', { ascending: false });
+    failOn(result.error);
+    return [200, result.data];
+  }
+
+  if (name === 'update_user_role.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const allowedRoles = new Set(['homebuyer', 'homeowner', 'admin']);
+    if (!allowedRoles.has(input.role)) {
+      return [400, { message: 'Invalid role specified.' }];
+    }
+    let query = admin.from('profiles').update({ role: input.role });
+    if (input.user_id) {
+      query = query.eq('id', input.user_id);
+    } else if (input.email) {
+      query = query.eq('email', input.email);
+    } else {
+      return [400, { message: 'user_id or email is required.' }];
+    }
+    const result = await query;
+    failOn(result.error);
+    return [200, { message: 'User role updated successfully.' }];
+  }
+
+  if (name === 'get_admin_stats.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const [usersRes, propsRes, pendingRes, inquiriesRes, favoritesRes] = await Promise.all([
+      admin.from('profiles').select('id', { count: 'exact', head: true }),
+      admin.from('properties').select('id', { count: 'exact', head: true }),
+      admin.from('properties').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      admin.from('inquiries').select('id', { count: 'exact', head: true }),
+      admin.from('favorites').select('id', { count: 'exact', head: true }),
+    ]);
+    return [200, {
+      total_users: usersRes.count || 0,
+      total_properties: propsRes.count || 0,
+      pending_moderation: pendingRes.count || 0,
+      total_inquiries: inquiriesRes.count || 0,
+      total_favorites: favoritesRes.count || 0,
+    }];
+  }
+
+  if (name === 'toggle_property_featured.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const isFeatured = input.is_featured === true || input.is_featured === '1' || input.is_featured === 'true';
+    const result = await admin
+      .from('properties')
+      .update({ is_featured: isFeatured })
+      .eq('id', input.property_id);
+    failOn(result.error);
+    return [200, { message: `Property marked as ${isFeatured ? 'featured' : 'standard'}.` }];
+  }
+
   if (name === 'update_property_status.php') {
     if (profile.role !== 'admin') {
       return [403, { message: 'Admin access required.' }];

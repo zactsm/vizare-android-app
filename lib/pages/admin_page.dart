@@ -6,10 +6,12 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/models/property_model.dart';
+import 'package:untitled/models/user_profile_model.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
+import 'package:untitled/widgets/admin_drawer.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
@@ -19,9 +21,33 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
-  final _logger = Logger();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final Logger _logger = Logger();
+
+  AdminView _currentView = AdminView.moderation;
+  String? _adminEmail;
+
+  // 1. Moderation Queue state
   List<Property> _pendingProperties = [];
-  bool _isLoading = true;
+  bool _isLoadingPending = true;
+
+  // 2. All Listings state
+  List<Property> _allProperties = [];
+  List<Property> _filteredProperties = [];
+  bool _isLoadingListings = false;
+  String _listingStatusFilter = 'all';
+  final TextEditingController _listingSearchController = TextEditingController();
+
+  // 3. User Management state
+  List<UserProfile> _allUsers = [];
+  List<UserProfile> _filteredUsers = [];
+  bool _isLoadingUsers = false;
+  String _userRoleFilter = 'all';
+  final TextEditingController _userSearchController = TextEditingController();
+
+  // 4. Analytics state
+  Map<String, dynamic> _stats = {};
+  bool _isLoadingStats = false;
 
   @override
   void initState() {
@@ -33,11 +59,20 @@ class _AdminPageState extends State<AdminPage> {
         statusBarBrightness: Brightness.dark,
       ),
     );
-    _verifyAdminRole();
+    _loadAdminInfo();
     _fetchPendingProperties();
+    _listingSearchController.addListener(_filterListings);
+    _userSearchController.addListener(_filterUsers);
   }
 
-  Future<void> _verifyAdminRole() async {
+  @override
+  void dispose() {
+    _listingSearchController.dispose();
+    _userSearchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAdminInfo() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('user_type')?.toLowerCase();
     final email = prefs.getString('user_email');
@@ -54,29 +89,140 @@ class _AdminPageState extends State<AdminPage> {
         );
         Navigator.pushReplacementNamed(context, '/homebuyer');
       }
+    } else {
+      if (mounted) {
+        setState(() => _adminEmail = email);
+      }
     }
   }
 
+  void _onViewSelected(AdminView view) {
+    setState(() => _currentView = view);
+    if (view == AdminView.moderation && _pendingProperties.isEmpty) {
+      _fetchPendingProperties();
+    } else if (view == AdminView.listings && _allProperties.isEmpty) {
+      _fetchAllProperties();
+    } else if (view == AdminView.users && _allUsers.isEmpty) {
+      _fetchAllUsers();
+    } else if (view == AdminView.analytics && _stats.isEmpty) {
+      _fetchStats();
+    }
+  }
+
+  // ==========================================
+  // DATA FETCHING & MUTATION METHODS
+  // ==========================================
+
   Future<void> _fetchPendingProperties() async {
+    setState(() => _isLoadingPending = true);
     try {
       final response = await ApiService.get('get_pending_properties.php');
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _pendingProperties =
-              data.map((json) => Property.fromJson(json)).toList();
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _pendingProperties =
+                data.map((json) => Property.fromJson(json)).toList();
+            _isLoadingPending = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingPending = false);
       }
     } catch (e) {
-      _logger.e("Error fetching pending", error: e);
-      setState(() => _isLoading = false);
+      _logger.e("Error fetching pending properties", error: e);
+      if (mounted) setState(() => _isLoadingPending = false);
     }
   }
 
-  Future<void> _updateStatus(int propertyId, String newStatus) async {
+  Future<void> _fetchAllProperties() async {
+    setState(() => _isLoadingListings = true);
+    try {
+      final response = await ApiService.get('get_all_properties_admin.php');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _allProperties =
+                data.map((json) => Property.fromJson(json)).toList();
+            _filterListings();
+            _isLoadingListings = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingListings = false);
+      }
+    } catch (e) {
+      _logger.e("Error fetching all properties", error: e);
+      if (mounted) setState(() => _isLoadingListings = false);
+    }
+  }
+
+  Future<void> _fetchAllUsers() async {
+    setState(() => _isLoadingUsers = true);
+    try {
+      final response = await ApiService.get('get_admin_users.php');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _allUsers =
+                data.map((json) => UserProfile.fromJson(json)).toList();
+            _filterUsers();
+            _isLoadingUsers = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingUsers = false);
+      }
+    } catch (e) {
+      _logger.e("Error fetching users", error: e);
+      if (mounted) setState(() => _isLoadingUsers = false);
+    }
+  }
+
+  Future<void> _fetchStats() async {
+    setState(() => _isLoadingStats = true);
+    try {
+      final response = await ApiService.get('get_admin_stats.php');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _stats = data;
+            _isLoadingStats = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingStats = false);
+      }
+    } catch (e) {
+      _logger.e("Error fetching stats", error: e);
+      if (mounted) setState(() => _isLoadingStats = false);
+    }
+  }
+
+  Future<void> _updatePropertyStatus(int propertyId, String newStatus) async {
     setState(() {
       _pendingProperties.removeWhere((p) => p.id == propertyId);
+      final index = _allProperties.indexWhere((p) => p.id == propertyId);
+      if (index != -1) {
+        final current = _allProperties[index];
+        _allProperties[index] = Property(
+          id: current.id,
+          homeownerId: current.homeownerId,
+          name: current.name,
+          location: current.location,
+          price: current.price,
+          description: current.description,
+          imagePath: current.imagePath,
+          modelPath: current.modelPath,
+          isFeatured: current.isFeatured,
+          createdAt: current.createdAt,
+          status: newStatus,
+        );
+        _filterListings();
+      }
     });
 
     try {
@@ -91,12 +237,14 @@ class _AdminPageState extends State<AdminPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Property listing $newStatus',
+            'Property listing marked as $newStatus',
             style: GoogleFonts.inter(fontWeight: FontWeight.w600),
           ),
           backgroundColor: newStatus == 'approved'
               ? VizareColors.emeraldGreen
-              : VizareColors.crimsonRed,
+              : newStatus == 'rejected'
+                  ? VizareColors.crimsonRed
+                  : VizareColors.champagneGold,
           duration: const Duration(milliseconds: 900),
         ),
       );
@@ -110,92 +258,259 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  Future<void> _toggleFeatured(int propertyId, bool currentVal) async {
+    final newVal = !currentVal;
+    setState(() {
+      final index = _allProperties.indexWhere((p) => p.id == propertyId);
+      if (index != -1) {
+        final current = _allProperties[index];
+        _allProperties[index] = Property(
+          id: current.id,
+          homeownerId: current.homeownerId,
+          name: current.name,
+          location: current.location,
+          price: current.price,
+          description: current.description,
+          imagePath: current.imagePath,
+          modelPath: current.modelPath,
+          isFeatured: newVal,
+          createdAt: current.createdAt,
+          status: current.status,
+        );
+        _filterListings();
+      }
+    });
+
+    try {
+      await ApiService.post(
+        'toggle_property_featured.php',
+        body: {
+          'property_id': propertyId.toString(),
+          'is_featured': newVal.toString(),
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(newVal ? 'Property featured' : 'Property unfeatured'),
+          duration: const Duration(milliseconds: 700),
+        ),
+      );
+    } catch (e) {
+      _logger.e("Error toggling featured", error: e);
+    }
+  }
+
+  Future<void> _updateUserRole(UserProfile user, String newRole) async {
+    final String oldRole = user.role;
+    setState(() {
+      final index = _allUsers.indexWhere((u) => u.id == user.id);
+      if (index != -1) {
+        _allUsers[index] = user.copyWith(role: newRole);
+        _filterUsers();
+      }
+    });
+
+    try {
+      final res = await ApiService.post(
+        'update_user_role.php',
+        body: {
+          'user_id': user.id,
+          'role': newRole,
+        },
+      );
+      if (res.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user.fullName} role updated to ${newRole.toUpperCase()}'),
+            backgroundColor: VizareColors.emeraldGreen,
+            duration: const Duration(milliseconds: 900),
+          ),
+        );
+      } else {
+        setState(() {
+          final index = _allUsers.indexWhere((u) => u.id == user.id);
+          if (index != -1) {
+            _allUsers[index] = user.copyWith(role: oldRole);
+            _filterUsers();
+          }
+        });
+      }
+    } catch (e) {
+      _logger.e("Error updating user role", error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update role')),
+        );
+      }
+    }
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      try {
+        await GoogleAuthService.signOut();
+      } catch (_) {}
+    } catch (_) {}
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+
+  // ==========================================
+  // FILTERING LOGIC
+  // ==========================================
+
+  void _filterListings() {
+    final query = _listingSearchController.text.toLowerCase();
+    setState(() {
+      _filteredProperties = _allProperties.where((prop) {
+        final matchesQuery = prop.name.toLowerCase().contains(query) ||
+            prop.location.toLowerCase().contains(query) ||
+            prop.price.toLowerCase().contains(query);
+        final matchesStatus = _listingStatusFilter == 'all' ||
+            prop.status.toLowerCase() == _listingStatusFilter;
+        return matchesQuery && matchesStatus;
+      }).toList();
+    });
+  }
+
+  void _filterUsers() {
+    final query = _userSearchController.text.toLowerCase();
+    setState(() {
+      _filteredUsers = _allUsers.where((u) {
+        final matchesQuery = u.fullName.toLowerCase().contains(query) ||
+            u.email.toLowerCase().contains(query) ||
+            u.phoneNumber.toLowerCase().contains(query);
+        final matchesRole = _userRoleFilter == 'all' ||
+            u.role.toLowerCase() == _userRoleFilter;
+        return matchesQuery && matchesRole;
+      }).toList();
+    });
+  }
+
+  // ==========================================
+  // MAIN BUILD & VIEW ROUTING
+  // ==========================================
+
+  String get _viewTitle {
+    switch (_currentView) {
+      case AdminView.moderation:
+        return 'Moderation Queue';
+      case AdminView.listings:
+        return 'Listings Management';
+      case AdminView.users:
+        return 'User Management';
+      case AdminView.analytics:
+        return 'Platform Overview';
+    }
+  }
+
+  String get _viewSubtitle {
+    switch (_currentView) {
+      case AdminView.moderation:
+        return 'Review & approve submitted property listings.';
+      case AdminView.listings:
+        return 'Manage and monitor all platform real estate listings.';
+      case AdminView.users:
+        return 'Manage buyer, homeowner, and administrator profiles.';
+      case AdminView.analytics:
+        return 'High-level metrics and platform operations.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: VizareColors.obsidianBlack,
+      drawer: AdminDrawer(
+        currentView: _currentView,
+        pendingCount: _pendingProperties.length,
+        adminEmail: _adminEmail,
+        onViewSelected: _onViewSelected,
+        onSignOut: _signOut,
+      ),
       body: AbstractBackground(
         child: SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Header with Admin Terminal Badge
+                // Top Header with Hamburger Button & Section Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text(
-                          'Moderation Queue',
-                          style: GoogleFonts.poppins(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
+                        VisionGlassPill(
+                          padding: const EdgeInsets.all(10),
+                          onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                          child: const Icon(
+                            Icons.menu_rounded,
                             color: Colors.white,
-                            letterSpacing: -0.6,
+                            size: 22,
                           ),
+                        ),
+                        const SizedBox(width: 14),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _viewTitle,
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                     VisionGlassPill(
                       padding: const EdgeInsets.all(10),
-                      onTap: () async {
-                        try {
-                          await Supabase.instance.client.auth.signOut(
-                            scope: SignOutScope.local,
-                          );
-                          final prefs =
-                              await SharedPreferences.getInstance();
-                          await prefs.clear();
-                          try {
-                            await GoogleAuthService.signOut();
-                          } catch (_) {}
-                        } catch (_) {}
-                        if (context.mounted) {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/login',
-                            (route) => false,
-                          );
+                      onTap: () {
+                        if (_currentView == AdminView.moderation) {
+                          _fetchPendingProperties();
+                        } else if (_currentView == AdminView.listings) {
+                          _fetchAllProperties();
+                        } else if (_currentView == AdminView.users) {
+                          _fetchAllUsers();
+                        } else if (_currentView == AdminView.analytics) {
+                          _fetchStats();
                         }
                       },
                       child: const Icon(
-                        Icons.logout_rounded,
-                        color: Colors.white,
-                        size: 18,
+                        Icons.refresh_rounded,
+                        color: VizareColors.champagneGold,
+                        size: 20,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'Review submitted 3D property listings before publishing.',
-                  style: GoogleFonts.inter(
-                    color: VizareColors.textSecondary,
-                    fontSize: 13,
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
+                  child: Text(
+                    _viewSubtitle,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
 
-                // Review Queue List
+                // View Body Content
                 Expanded(
-                  child: _isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: VizareColors.champagneGold),
-                        )
-                      : _pendingProperties.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.builder(
-                              itemCount: _pendingProperties.length,
-                              itemBuilder: (context, index) {
-                                return _buildAdminCard(
-                                    _pendingProperties[index]);
-                              },
-                            ),
+                  child: _buildCurrentViewBody(),
                 ),
               ],
             ),
@@ -205,39 +520,772 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: VizareColors.emeraldGreen.withValues(alpha: 0.1),
+  Widget _buildCurrentViewBody() {
+    switch (_currentView) {
+      case AdminView.moderation:
+        return _buildModerationQueueView();
+      case AdminView.listings:
+        return _buildListingsManagementView();
+      case AdminView.users:
+        return _buildUserManagementView();
+      case AdminView.analytics:
+        return _buildPlatformOverviewView();
+    }
+  }
+
+  // ==========================================
+  // VIEW 1: MODERATION QUEUE
+  // ==========================================
+
+  Widget _buildModerationQueueView() {
+    if (_isLoadingPending) {
+      return const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      );
+    }
+
+    if (_pendingProperties.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: VizareColors.emeraldGreen.withValues(alpha: 0.1),
+              ),
+              child: const Icon(
+                Icons.verified_rounded,
+                size: 48,
+                color: VizareColors.emeraldGreen,
+              ),
             ),
-            child: const Icon(
-              Icons.verified_rounded,
-              size: 48,
-              color: VizareColors.emeraldGreen,
+            const SizedBox(height: 18),
+            Text(
+              "Moderation Queue Clean",
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "All submitted property listings have been reviewed.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                color: VizareColors.textMuted,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: _pendingProperties.length,
+      itemBuilder: (context, index) {
+        final property = _pendingProperties[index];
+        final bool hasModel = property.modelPath.isNotEmpty;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: VisionGlassContainer(
+            padding: const EdgeInsets.all(14),
+            borderRadius: 22,
+            backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.12),
+              width: 1.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Image.network(
+                        property.imagePath,
+                        width: 78,
+                        height: 78,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) =>
+                            const Icon(Icons.broken_image, color: Colors.white24),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            property.name,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            property.price,
+                            style: GoogleFonts.poppins(
+                              color: VizareColors.champagneGold,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            property.location,
+                            style: GoogleFonts.inter(
+                              color: VizareColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (hasModel)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: const SpatialBadge(
+                      text: 'INCLUDES 3D AR MODEL',
+                      icon: Icons.view_in_ar_rounded,
+                      primaryColor: VizareColors.spatialCyan,
+                    ),
+                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.check_circle_rounded,
+                              size: 18, color: VizareColors.textPrimary),
+                          label: Text(
+                            'Approve',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: VizareColors.textPrimary,
+                            ),
+                          ),
+                          onPressed: () =>
+                              _updatePropertyStatus(property.id, 'approved'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: VizareColors.emeraldGreen,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 46,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.cancel_rounded,
+                              size: 18, color: VizareColors.crimsonRed),
+                          label: Text(
+                            'Reject',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: VizareColors.crimsonRed,
+                            ),
+                          ),
+                          onPressed: () =>
+                              _updatePropertyStatus(property.id, 'rejected'),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                                color: VizareColors.crimsonRed, width: 1.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 18),
+        );
+      },
+    );
+  }
+
+  // ==========================================
+  // VIEW 2: LISTINGS MANAGEMENT
+  // ==========================================
+
+  Widget _buildListingsManagementView() {
+    if (_isLoadingListings) {
+      return const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      );
+    }
+
+    return Column(
+      children: [
+        // Search & Filter row
+        VisionGlassContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          borderRadius: 18,
+          backgroundColor: Colors.white.withValues(alpha: 0.05),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          child: TextField(
+            controller: _listingSearchController,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+            decoration: InputDecoration(
+              icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
+              hintText: 'Search listings by name, city, price...',
+              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Status Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterChip('All', 'all', _listingStatusFilter, (v) {
+                setState(() => _listingStatusFilter = v);
+                _filterListings();
+              }),
+              _buildFilterChip('Approved', 'approved', _listingStatusFilter, (v) {
+                setState(() => _listingStatusFilter = v);
+                _filterListings();
+              }),
+              _buildFilterChip('Pending', 'pending', _listingStatusFilter, (v) {
+                setState(() => _listingStatusFilter = v);
+                _filterListings();
+              }),
+              _buildFilterChip('Sold', 'sold', _listingStatusFilter, (v) {
+                setState(() => _listingStatusFilter = v);
+                _filterListings();
+              }),
+              _buildFilterChip('Rejected', 'rejected', _listingStatusFilter, (v) {
+                setState(() => _listingStatusFilter = v);
+                _filterListings();
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Listings List
+        Expanded(
+          child: _filteredProperties.isEmpty
+              ? Center(
+                  child: Text(
+                    'No listings matching filter criteria.',
+                    style: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _filteredProperties.length,
+                  itemBuilder: (context, index) {
+                    final p = _filteredProperties[index];
+                    return _buildAllListingCard(p);
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllListingCard(Property p) {
+    Color statusColor;
+    switch (p.status.toLowerCase()) {
+      case 'approved':
+        statusColor = VizareColors.emeraldGreen;
+        break;
+      case 'pending':
+        statusColor = VizareColors.champagneGold;
+        break;
+      case 'sold':
+        statusColor = VizareColors.spatialCyan;
+        break;
+      case 'rejected':
+        statusColor = VizareColors.crimsonRed;
+        break;
+      default:
+        statusColor = VizareColors.textMuted;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: VisionGlassContainer(
+        padding: const EdgeInsets.all(12),
+        borderRadius: 20,
+        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.network(
+                p.imagePath,
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    const Icon(Icons.broken_image, color: Colors.white24),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p.name,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: statusColor.withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: Text(
+                          p.status.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    p.price,
+                    style: GoogleFonts.poppins(
+                      color: VizareColors.champagneGold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  Text(
+                    p.location,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textMuted,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      // Featured Toggle Button
+                      InkWell(
+                        onTap: () => _toggleFeatured(p.id, p.isFeatured),
+                        child: Row(
+                          children: [
+                            Icon(
+                              p.isFeatured ? Icons.star_rounded : Icons.star_outline_rounded,
+                              size: 16,
+                              color: p.isFeatured ? VizareColors.champagneGold : VizareColors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              p.isFeatured ? 'Featured' : 'Feature',
+                              style: GoogleFonts.inter(
+                                color: p.isFeatured ? VizareColors.champagneGold : VizareColors.textMuted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Status Change Menu
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70, size: 20),
+                        color: VizareColors.obsidianElevated,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        onSelected: (newStatus) => _updatePropertyStatus(p.id, newStatus),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(value: 'approved', child: Text('Mark as Approved', style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(value: 'pending', child: Text('Mark as Pending', style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(value: 'sold', child: Text('Mark as Sold', style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(value: 'rejected', child: Text('Mark as Rejected', style: TextStyle(color: Colors.white))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // VIEW 3: USER MANAGEMENT
+  // ==========================================
+
+  Widget _buildUserManagementView() {
+    if (_isLoadingUsers) {
+      return const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      );
+    }
+
+    return Column(
+      children: [
+        // User Search Bar
+        VisionGlassContainer(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          borderRadius: 18,
+          backgroundColor: Colors.white.withValues(alpha: 0.05),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          child: TextField(
+            controller: _userSearchController,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+            decoration: InputDecoration(
+              icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
+              hintText: 'Search users by name, email, role...',
+              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Role Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterChip('All Users', 'all', _userRoleFilter, (v) {
+                setState(() => _userRoleFilter = v);
+                _filterUsers();
+              }),
+              _buildFilterChip('Homebuyers', 'homebuyer', _userRoleFilter, (v) {
+                setState(() => _userRoleFilter = v);
+                _filterUsers();
+              }),
+              _buildFilterChip('Homeowners', 'homeowner', _userRoleFilter, (v) {
+                setState(() => _userRoleFilter = v);
+                _filterUsers();
+              }),
+              _buildFilterChip('Admins', 'admin', _userRoleFilter, (v) {
+                setState(() => _userRoleFilter = v);
+                _filterUsers();
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Users List
+        Expanded(
+          child: _filteredUsers.isEmpty
+              ? Center(
+                  child: Text(
+                    'No user profiles found.',
+                    style: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final u = _filteredUsers[index];
+                    return _buildUserCard(u);
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserCard(UserProfile u) {
+    Color roleColor;
+    switch (u.role.toLowerCase()) {
+      case 'admin':
+        roleColor = VizareColors.crimsonRed;
+        break;
+      case 'homeowner':
+        roleColor = VizareColors.champagneGold;
+        break;
+      default:
+        roleColor = VizareColors.spatialCyan;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: VisionGlassContainer(
+        padding: const EdgeInsets.all(14),
+        borderRadius: 20,
+        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        child: Row(
+          children: [
+            // User Avatar
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: roleColor.withValues(alpha: 0.15),
+                border: Border.all(color: roleColor.withValues(alpha: 0.4), width: 1.0),
+              ),
+              child: Center(
+                child: Text(
+                  u.fullName.isNotEmpty ? u.fullName[0].toUpperCase() : 'U',
+                  style: GoogleFonts.poppins(
+                    color: roleColor,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          u.fullName,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: roleColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: roleColor.withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: Text(
+                          u.role.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            color: roleColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    u.email,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textMuted,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (u.phoneNumber.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      u.phoneNumber,
+                      style: GoogleFonts.inter(
+                        color: VizareColors.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Change Role Menu
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.shield_outlined, color: Colors.white70, size: 20),
+              color: VizareColors.obsidianElevated,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              tooltip: 'Change user role',
+              onSelected: (newRole) => _updateUserRole(u, newRole),
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'homebuyer', child: Text('Role: Homebuyer', style: TextStyle(color: Colors.white))),
+                const PopupMenuItem(value: 'homeowner', child: Text('Role: Homeowner', style: TextStyle(color: Colors.white))),
+                const PopupMenuItem(value: 'admin', child: Text('Role: Administrator', style: TextStyle(color: Colors.white))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // VIEW 4: PLATFORM OVERVIEW & ANALYTICS
+  // ==========================================
+
+  Widget _buildPlatformOverviewView() {
+    if (_isLoadingStats) {
+      return const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      );
+    }
+
+    final totalUsers = _stats['total_users'] ?? _allUsers.length;
+    final totalProperties = _stats['total_properties'] ?? _allProperties.length;
+    final pendingMod = _stats['pending_moderation'] ?? _pendingProperties.length;
+    final totalInquiries = _stats['total_inquiries'] ?? 0;
+    final totalFavorites = _stats['total_favorites'] ?? 0;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            "Moderation Queue Clean",
+            'Core Metrics',
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 17,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'Total Users',
+                  value: totalUsers.toString(),
+                  icon: Icons.people_alt_rounded,
+                  color: VizareColors.spatialCyan,
+                  onTap: () => _onViewSelected(AdminView.users),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'Total Listings',
+                  value: totalProperties.toString(),
+                  icon: Icons.home_work_rounded,
+                  color: VizareColors.champagneGold,
+                  onTap: () => _onViewSelected(AdminView.listings),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'Pending Review',
+                  value: pendingMod.toString(),
+                  icon: Icons.pending_actions_rounded,
+                  color: VizareColors.crimsonRed,
+                  onTap: () => _onViewSelected(AdminView.moderation),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'Inquiries Sent',
+                  value: totalInquiries.toString(),
+                  icon: Icons.mark_chat_read_rounded,
+                  color: VizareColors.emeraldGreen,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildMetricCard(
+            title: 'Buyer Saved Favorites',
+            value: totalFavorites.toString(),
+            icon: Icons.favorite_rounded,
+            color: VizareColors.pastelPurple,
+          ),
+          const SizedBox(height: 24),
           Text(
-            "All submitted property listings have been reviewed.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: VizareColors.textMuted,
-              fontSize: 13,
+            'Quick Operations',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          VisionGlassContainer(
+            padding: const EdgeInsets.all(16),
+            borderRadius: 20,
+            backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            child: Column(
+              children: [
+                _buildQuickActionTile(
+                  icon: Icons.verified_user_rounded,
+                  title: 'Review Pending Submissions',
+                  subtitle: '$pendingMod listings waiting for review',
+                  color: VizareColors.champagneGold,
+                  onTap: () => _onViewSelected(AdminView.moderation),
+                ),
+                const Divider(color: VizareColors.obsidianBorder, height: 20),
+                _buildQuickActionTile(
+                  icon: Icons.group_add_rounded,
+                  title: 'Manage System Users',
+                  subtitle: 'Inspect user roles and permissions',
+                  color: VizareColors.spatialCyan,
+                  onTap: () => _onViewSelected(AdminView.users),
+                ),
+                const Divider(color: VizareColors.obsidianBorder, height: 20),
+                _buildQuickActionTile(
+                  icon: Icons.real_estate_agent_rounded,
+                  title: 'Manage All Listings',
+                  subtitle: 'Search and update live properties',
+                  color: VizareColors.emeraldGreen,
+                  onTap: () => _onViewSelected(AdminView.listings),
+                ),
+              ],
             ),
           ),
         ],
@@ -245,143 +1293,139 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildAdminCard(Property property) {
-    final bool hasModel = property.modelPath.isNotEmpty;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: VisionGlassContainer(
-        padding: const EdgeInsets.all(14),
-        borderRadius: 22,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
-          width: 1.0,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Image.network(
-                    property.imagePath,
-                    width: 78,
-                    height: 78,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) =>
-                        const Icon(Icons.broken_image, color: Colors.white24),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        property.name,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        property.price,
-                        style: GoogleFonts.poppins(
-                          color: VizareColors.champagneGold,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        property.location,
-                        style: GoogleFonts.inter(
-                          color: VizareColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (hasModel)
+  Widget _buildMetricCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return VisionGlassContainer(
+      padding: const EdgeInsets.all(16),
+      borderRadius: 20,
+      backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+      border: Border.all(color: color.withValues(alpha: 0.25)),
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: const SpatialBadge(
-                  text: 'INCLUDES 3D AR MODEL',
-                  icon: Icons.view_in_ar_rounded,
-                  primaryColor: VizareColors.spatialCyan,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.15),
                 ),
+                child: Icon(icon, color: color, size: 20),
               ),
-            // Approve / Reject Action Buttons
-            Row(
+              if (onTap != null)
+                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white38),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              color: VizareColors.textMuted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.15),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.check_circle_rounded,
-                          size: 18, color: VizareColors.textPrimary),
-                      label: Text(
-                        'Approve',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: VizareColors.textPrimary,
-                        ),
-                      ),
-                      onPressed: () =>
-                          _updateStatus(property.id, 'approved'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: VizareColors.emeraldGreen,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.cancel_rounded,
-                          size: 18, color: VizareColors.crimsonRed),
-                      label: Text(
-                        'Reject',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: VizareColors.crimsonRed,
-                        ),
-                      ),
-                      onPressed: () =>
-                          _updateStatus(property.id, 'rejected'),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                            color: VizareColors.crimsonRed, width: 1.2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    color: VizareColors.textMuted,
+                    fontSize: 11.5,
                   ),
                 ),
               ],
             ),
-          ],
+          ),
+          const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(
+    String label,
+    String value,
+    String currentValue,
+    ValueChanged<String> onSelected,
+  ) {
+    final isSelected = currentValue == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: InkWell(
+        onTap: () => onSelected(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? VizareColors.champagneGold
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? VizareColors.champagneGold
+                  : Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              color: isSelected ? VizareColors.obsidianBlack : Colors.white,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );

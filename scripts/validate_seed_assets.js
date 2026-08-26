@@ -57,6 +57,25 @@ function validateImageUrl(url) {
  */
 function validateGlbModel(url) {
   return new Promise((resolve) => {
+    if (url.includes('sketchfab.com')) {
+      const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
+        res.on('data', () => {});
+        res.on('end', () => {});
+        req.destroy();
+        const isOk = res.statusCode === 200 || res.statusCode === 202;
+        resolve({
+          url,
+          valid: isOk,
+          isSketchfab: true,
+          statusCode: res.statusCode,
+          error: isOk ? null : `HTTP ${res.statusCode}`
+        });
+      });
+      req.on('error', (err) => resolve({ url, valid: false, isSketchfab: true, error: err.message }));
+      req.setTimeout(15000, () => { req.destroy(); resolve({ url, valid: false, isSketchfab: true, error: 'Timeout' }); });
+      return;
+    }
+
     const client = url.startsWith('https:') ? https : http;
     const req = client.get(url, { headers: { 'User-Agent': 'VizareDataSeederValidator/1.0' } }, (res) => {
       if (res.statusCode !== 200) {
@@ -190,7 +209,7 @@ async function runValidation() {
   assert.strictEqual(uniqueModels.size, 20, 'All 20 3D models must be unique and non-empty');
 
   // Validate 3D Models
-  console.log(`\n${bold}--- [1/2] Validating 20 Unique 3D House Models (.glb) ---${reset}`);
+  console.log(`\n${bold}--- [1/2] Validating 20 Unique 3D House Models (GLB / Sketchfab) ---${reset}`);
   const modelResults = [];
   for (const l of listings) {
     process.stdout.write(`Testing Model #${l.id.toString().padStart(2, '0')}: ${l.name.padEnd(38, ' ')} ... `);
@@ -198,8 +217,12 @@ async function runValidation() {
     modelResults.push({ listing: l, result });
 
     if (result.valid) {
-      const sizeKb = ((result.totalLength || result.contentLengthHeader) / 1024).toFixed(1);
-      console.log(`${green}PASS${reset} (${cyan}GLB v${result.version}${reset}, ${sizeKb} KB)`);
+      if (result.isSketchfab) {
+        console.log(`${green}PASS${reset} (${cyan}Sketchfab 3D Model URL${reset})`);
+      } else {
+        const sizeKb = ((result.totalLength || result.contentLengthHeader) / 1024).toFixed(1);
+        console.log(`${green}PASS${reset} (${cyan}GLB v${result.version}${reset}, ${sizeKb} KB)`);
+      }
     } else {
       console.log(`${red}FAIL${reset} (${result.error})`);
     }
