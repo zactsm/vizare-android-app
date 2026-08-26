@@ -276,52 +276,78 @@ class MyApp extends StatelessWidget {
                 const double topSafeArea = 54.0; // Dynamic Island / Status Bar
                 const double bottomSafeArea = 34.0; // Home indicator
 
+                // PNG Mockup Dimensions (image aspect ratio: 1300x2642, screen: 1244x2606)
+                const double frameWidth = targetWidth * (1300.0 / 1244.0); // ~410.7
+                const double frameHeight = targetHeight * (2642.0 / 2606.0); // ~863.8
+                const double sideOffset = (frameWidth - targetWidth) / 2.0; // ~8.85
+                const double vertOffset = (frameHeight - targetHeight) / 2.0; // ~5.89
+
                 return FittedBox(
                   fit: BoxFit.contain,
                   child: Container(
                     margin: const EdgeInsets.symmetric(
                         vertical: 24.0, horizontal: 24.0),
-                    width: targetWidth,
-                    height: targetHeight,
+                    width: frameWidth,
+                    height: frameHeight,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF050608),
-                      borderRadius: BorderRadius.circular(52.0),
-                      border: Border.all(
-                        color: VizareColors.champagneGold.withValues(alpha: 0.35),
-                        width: 2.5,
-                      ),
+                      borderRadius: BorderRadius.circular(55.0),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          blurRadius: 36,
+                          color: Colors.black.withValues(alpha: 0.75),
+                          blurRadius: 40,
                           spreadRadius: 8,
-                          offset: const Offset(0, 14),
+                          offset: const Offset(0, 16),
                         ),
                         BoxShadow(
-                          color: VizareColors.champagneGold.withValues(alpha: 0.12),
-                          blurRadius: 24,
-                          spreadRadius: 2,
+                          color:
+                              VizareColors.champagneGold.withValues(alpha: 0.08),
+                          blurRadius: 30,
+                          spreadRadius: 1,
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(49.0),
-                      child: MediaQuery(
-                        data: MediaQuery.of(context).copyWith(
-                          size: const Size(targetWidth, targetHeight),
-                          padding: const EdgeInsets.only(
-                            top: topSafeArea,
-                            bottom: bottomSafeArea,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // 1. Interactive Flutter App Screen (clipped inside mockup bezel)
+                        Positioned(
+                          top: vertOffset,
+                          bottom: vertOffset,
+                          left: sideOffset,
+                          right: sideOffset,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50.0),
+                            child: MediaQuery(
+                              data: MediaQuery.of(context).copyWith(
+                                size: const Size(targetWidth, targetHeight),
+                                padding: const EdgeInsets.only(
+                                  top: topSafeArea,
+                                  bottom: bottomSafeArea,
+                                ),
+                                viewPadding: const EdgeInsets.only(
+                                  top: topSafeArea,
+                                  bottom: bottomSafeArea,
+                                ),
+                                textScaler: const TextScaler.linear(1.0),
+                                devicePixelRatio: 3.0,
+                              ),
+                              child: child ?? const SizedBox.shrink(),
+                            ),
                           ),
-                          viewPadding: const EdgeInsets.only(
-                            top: topSafeArea,
-                            bottom: bottomSafeArea,
-                          ),
-                          textScaler: const TextScaler.linear(1.0),
-                          devicePixelRatio: 3.0,
                         ),
-                        child: child ?? const SizedBox.shrink(),
-                      ),
+
+                        // 2. Realistic iPhone 17 Pro Mockup Frame Overlay
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Image.asset(
+                              'assets/iphone17pro.png',
+                              width: frameWidth,
+                              height: frameHeight,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
