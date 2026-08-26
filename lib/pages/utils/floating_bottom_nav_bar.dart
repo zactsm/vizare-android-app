@@ -183,7 +183,9 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     final double activeCenter =
         prevCenter + (nextCenter - prevCenter) * fraction;
 
-    final double ovalLeft = activeCenter - (activeOvalWidth / 2);
+    final double ovalLeftRaw = activeCenter - (activeOvalWidth / 2);
+    final double ovalLeft =
+        ovalLeftRaw.clamp(0.0, innerWidth - activeOvalWidth);
     final double itemTouchWidth = innerWidth / 4.0;
 
     Widget buildNavItem(int index, String inactiveIcon) {
