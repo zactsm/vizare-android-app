@@ -76,6 +76,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     super.dispose();
   }
 
+  double _getTextWidth(String text, TextStyle style) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.size.width;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -87,24 +96,19 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
             : widget.activeIndex.index.toDouble())
         : _animController.value;
 
-    final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
-    final double barWidth = maxBarWidth - 32;
-    final double innerWidth = barWidth - 12;
-    final double segmentWidth = innerWidth / 4;
+    final labelStyle = GoogleFonts.poppins(
+      fontSize: 11.0,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.5,
+      color: VizareColors.obsidianBlack,
+    );
 
-    final Map<int, double> ovalWidths = {
-      0: 116.0, // EXPLORE
-      1: 108.0, // SEARCH
-      2: 126.0, // FAVORITES
-      3: 118.0, // SETTINGS
-    };
-
-    final Map<int, double> textWidths = {
-      0: 68.0,
-      1: 60.0,
-      2: 82.0,
-      3: 72.0,
-    };
+    final List<String> labels = [
+      'EXPLORE',
+      'SEARCH',
+      'FAVORITES',
+      'SETTINGS',
+    ];
 
     final List<String> activeIcons = [
       'assets/images/home_icon.png',
@@ -120,39 +124,79 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       'assets/images/white_settings_icon.png',
     ];
 
-    final List<String> labels = [
-      'EXPLORE',
-      'SEARCH',
-      'FAVORITES',
-      'SETTINGS',
+    const double iconWidth = 18.0;
+    const double gapWidth = 6.0;
+    const double ovalPaddingH = 12.0;
+
+    final Map<int, double> textWidths = {};
+    final Map<int, double> targetOvalWidths = {};
+
+    for (int i = 0; i < labels.length; i++) {
+      final double tw = _getTextWidth(labels[i], labelStyle);
+      textWidths[i] = tw;
+      targetOvalWidths[i] = iconWidth + gapWidth + tw + (2 * ovalPaddingH);
+    }
+
+    final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
+    final double barWidth = maxBarWidth - 32;
+    const double containerPaddingH = 6.0;
+    final double innerWidth = barWidth - (2 * containerPaddingH);
+
+    const double safetyMargin = 4.0;
+    final double halfWidth0 = (targetOvalWidths[0] ?? 90.0) / 2.0;
+    final double halfWidth3 = (targetOvalWidths[3] ?? 90.0) / 2.0;
+
+    final double defaultCenter0 = innerWidth * 0.125;
+    final double defaultCenter3 = innerWidth * 0.875;
+
+    final double minCenter0 = halfWidth0 + safetyMargin;
+    final double maxCenter3 = innerWidth - halfWidth3 - safetyMargin;
+
+    final double center0 =
+        minCenter0 > defaultCenter0 ? minCenter0 : defaultCenter0;
+    final double center3 =
+        maxCenter3 < defaultCenter3 ? maxCenter3 : defaultCenter3;
+
+    final double step = (center3 - center0) / 3.0;
+    final List<double> tabCenters = [
+      center0,
+      center0 + step,
+      center0 + 2 * step,
+      center3,
     ];
 
     final int activeIndexInt = pageProgress.round().clamp(0, 3);
     final double closeness =
         (1.0 - (pageProgress - activeIndexInt).abs() * 2).clamp(0.0, 1.0);
 
-    final double maxWidthForActive = ovalWidths[activeIndexInt] ?? 116.0;
+    final double activeTargetWidth = targetOvalWidths[activeIndexInt] ?? 90.0;
+    const double collapsedWidth = 44.0;
     final double activeOvalWidth =
-        48.0 + (maxWidthForActive - 48.0) * closeness;
+        collapsedWidth + (activeTargetWidth - collapsedWidth) * closeness;
 
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
-    final double fraction = pageProgress - pageProgress.floor();
+    final double fraction = pageProgress - prevIndex;
 
-    final double prevCenter = segmentWidth * (prevIndex + 0.5);
-    final double nextCenter = segmentWidth * (nextIndex + 0.5);
+    final double prevCenter = tabCenters[prevIndex];
+    final double nextCenter = tabCenters[nextIndex];
     final double activeCenter =
         prevCenter + (nextCenter - prevCenter) * fraction;
 
-    final double ovalLeft = (activeCenter - (activeOvalWidth / 2))
-        .clamp(4.0, innerWidth - activeOvalWidth - 4.0);
+    final double ovalLeft = activeCenter - (activeOvalWidth / 2);
+    final double itemTouchWidth = innerWidth / 4.0;
 
     Widget buildNavItem(int index, String inactiveIcon) {
       final double closenessAtTab =
           (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
       final double opacity = (1.0 - closenessAtTab).clamp(0.0, 1.0);
+      final double centerPos = tabCenters[index];
 
-      return Expanded(
+      return Positioned(
+        left: centerPos - (itemTouchWidth / 2.0),
+        top: 0,
+        bottom: 0,
+        width: itemTouchWidth,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
@@ -185,17 +229,14 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
               }
             }
           },
-          child: SizedBox(
-            height: double.infinity,
-            child: Center(
-              child: Opacity(
-                opacity: opacity,
-                child: Image.asset(
-                  inactiveIcon,
-                  width: 20,
-                  height: 20,
-                  color: VizareColors.textSecondary,
-                ),
+          child: Center(
+            child: Opacity(
+              opacity: opacity,
+              child: Image.asset(
+                inactiveIcon,
+                width: 20,
+                height: 20,
+                color: VizareColors.textSecondary,
               ),
             ),
           ),
@@ -217,7 +258,10 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
             filter: ImageFilter.blur(sigmaX: 24.0, sigmaY: 24.0),
             child: Container(
               height: 74,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: containerPaddingH,
+                vertical: 6,
+              ),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.80),
                 borderRadius: BorderRadius.circular(40),
@@ -265,30 +309,26 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                           children: [
                             Image.asset(
                               activeIcons[activeIndexInt],
-                              width: 19,
-                              height: 19,
+                              width: iconWidth,
+                              height: iconWidth,
                               color: VizareColors.obsidianBlack,
                             ),
                             ClipRect(
                               child: Opacity(
                                 opacity: closeness,
                                 child: Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 7.0 * closeness),
+                                  padding: EdgeInsets.only(
+                                    left: gapWidth * closeness,
+                                  ),
                                   child: SizedBox(
                                     height: 18,
-                                    width: (textWidths[activeIndexInt] ?? 64.0) *
+                                    width: (textWidths[activeIndexInt] ?? 50.0) *
                                         closeness,
                                     child: Text(
                                       labels[activeIndexInt],
                                       maxLines: 1,
                                       overflow: TextOverflow.clip,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.6,
-                                        color: VizareColors.obsidianBlack,
-                                      ),
+                                      style: labelStyle,
                                     ),
                                   ),
                                 ),
@@ -299,16 +339,11 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                       ),
                     ),
                   ),
-                  // Inactive items row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      buildNavItem(0, inactiveIcons[0]),
-                      buildNavItem(1, inactiveIcons[1]),
-                      buildNavItem(2, inactiveIcons[2]),
-                      buildNavItem(3, inactiveIcons[3]),
-                    ],
-                  ),
+                  // Inactive items positioned centered on each tab center
+                  buildNavItem(0, inactiveIcons[0]),
+                  buildNavItem(1, inactiveIcons[1]),
+                  buildNavItem(2, inactiveIcons[2]),
+                  buildNavItem(3, inactiveIcons[3]),
                 ],
               ),
             ),
