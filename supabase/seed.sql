@@ -340,7 +340,7 @@ begin
     '$4,850,000',
     'An architectural masterpiece perched in the hills, featuring panoramic floor-to-ceiling glass walls, an infinity edge pool, open-concept living pavilion, and custom Italian designer finishes. Includes interactive 3D model view.',
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_home_2.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_wooden_cabine.glb',
     true,
     'approved'::public.property_status
   )
@@ -366,7 +366,7 @@ begin
     '$3,200,000',
     'Spectacular multi-level urban penthouse overlooking the neon skyline. Features automated smart home climate systems, private sky deck, bespoke woodwork, and fully furnished spatial layout.',
     'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_wooden_cabine.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/building_no_19_form_tokyo_otemachi_building_pack.glb',
     true,
     'approved'::public.property_status
   )
@@ -392,7 +392,7 @@ begin
     '$2,450,000',
     'Modern Scandinavian architectural retreat crafted with sustainable Douglas fir beams, polished concrete radiant floors, and floor-to-ceiling forest views. Includes bespoke timber exterior model.',
     'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_home_1.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_medieval_house_5.glb',
     true,
     'approved'::public.property_status
   )
@@ -418,7 +418,7 @@ begin
     '$6,900,000',
     'Prime waterfront estate with private deep-water yacht dock, expansive outdoor entertaining terrace, resort-style heated pool, and lush tropical landscape architecture.',
     'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_1.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_stylized_home.glb',
     true,
     'approved'::public.property_status
   )
@@ -444,7 +444,7 @@ begin
     '$1,875,000',
     'Dramatic steel and cedar cantilever residence nestled into the hillside. Boasts energy-positive solar arrays, smart automated illumination, and custom industrial fixture fittings.',
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/residential_family_house.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/residential_family_house.glb',
     false,
     'approved'::public.property_status
   )
@@ -470,7 +470,7 @@ begin
     '$5,400,000',
     'High-floor Tribeca loft penthouse with 14-foot ceilings, direct key-elevator access, private wrap-around terrace, custom marble fireplace lounge, and breathtaking river vistas.',
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_5.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_1.glb',
     false,
     'approved'::public.property_status
   )
@@ -496,7 +496,7 @@ begin
     '$1,650,000',
     'Elegantly restored 1920s Craftsman residence featuring handcrafted mahogany joinery, original river rock fireplace, stone masonry accents, and detached guest carriage house.',
     'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/residential_complex_modern_apartment_building.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/building_no_6_form_tokyo_otemachi_building_pack.glb',
     false,
     'approved'::public.property_status
   )
@@ -522,7 +522,7 @@ begin
     '$1,290,000',
     'Top-floor modern gallery loft in downtown Seattle featuring exposed industrial trusses, polished epoxy floors, museum lighting grid, and avant-garde architectural sculptures.',
     'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_2.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_medieval_house_4.glb',
     false,
     'approved'::public.property_status
   )
@@ -548,7 +548,7 @@ begin
     '$2,950,000',
     'Newly constructed desert modern estate featuring rammed-earth accent walls, zero-edge reflection pool, indoor-outdoor glass pocket doors, and iridescent ambient illumination.',
     'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_medieval_house_5.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_4.glb',
     false,
     'pending'::public.property_status
   )
@@ -574,7 +574,7 @@ begin
     '$3,750,000',
     'Custom timber and stone alpine retreat with private ski trail access, heated driveway, wellness sauna pavilion, and state-of-the-art acoustic listening lounge.',
     'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/building_7.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/residential_complex_modern_apartment_building.glb',
     false,
     'draft'::public.property_status
   )
@@ -600,7 +600,7 @@ begin
     '$4,100,000',
     'Exclusive SoMa tech penthouse with high-security biometric entry, private roof garden, and panoramic city views across the futuristic downtown skyline.',
     'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_medieval_house_2.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_home_1.glb',
     false,
     'sold'::public.property_status
   )
@@ -626,7 +626,7 @@ begin
     '$1,450,000',
     'Pastoral country estate with 10 rolling acres, equestrian stables, heritage millhouse lodge architecture, and natural creek frontage.',
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_3.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/building_7.glb',
     false,
     'rejected'::public.property_status
   )
@@ -652,7 +652,7 @@ begin
     '$8,250,000',
     'Gated oceanfront compound with dual Mediterranean guest villas, private bluff staircase to beach, infinity jacuzzi, and expansive terracotta loggias overlooking the Pacific.',
     'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_medieval_house_3.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_3-2.glb',
     true,
     'approved'::public.property_status
   )
@@ -678,7 +678,7 @@ begin
     '$5,600,000',
     'Expansive alpine valley estate surrounded by pristine aspen groves. Includes main chalet, secondary guest lodge, private trout stream, and heated outdoor stone terrace.',
     'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_stylized_home.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_2.glb',
     false,
     'approved'::public.property_status
   )
@@ -704,7 +704,7 @@ begin
     '$2,150,000',
     'Historic antebellum brick manor with wrought-iron balconies, private courtyard gardens, restored heart-pine flooring, and 12-foot double-hung sash windows.',
     'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_3-2.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_home_2.glb',
     false,
     'approved'::public.property_status
   )
@@ -730,7 +730,7 @@ begin
     '$3,890,000',
     'Stately Garden District mansion featuring gothic architecture, soaring turrets, original gas-flame lanterns, ornate plaster molding, and secluded magnolia grounds.',
     'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/building_no_19_form_tokyo_otemachi_building_pack.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_medieval_house_2.glb',
     false,
     'approved'::public.property_status
   )
@@ -756,7 +756,7 @@ begin
     '$3,450,000',
     'Cast-iron building corner loft with barrel-vaulted brick ceilings, oversized Corinthian columns, polished concrete floors, and custom minimalist steel architectural framing.',
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_medieval_house_1.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_5.glb',
     false,
     'approved'::public.property_status
   )
@@ -782,7 +782,7 @@ begin
     '$2,780,000',
     'Luxury two-story duplex penthouse overlooking Lake Michigan. Features custom floating glass staircase, 800 sq ft private terrace with outdoor fireplace, and smart Lutron automation.',
     'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_medieval_house_4.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_medieval_house_1.glb',
     false,
     'approved'::public.property_status
   )
@@ -808,7 +808,7 @@ begin
     '$3,120,000',
     'Mid-century modern desert oasis with iconic structural archway, sunken fire pit lounge, saltwater lap pool, and panoramic views of the San Jacinto mountain range.',
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/low_poly_house_4.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_house_3.glb',
     false,
     'pending'::public.property_status
   )
@@ -834,7 +834,7 @@ begin
     '$1,980,000',
     'LEED Platinum certified hillside residence featuring green roof garden, geo-thermal heating, triple-pane floor-to-ceiling glass, and sustainable western red cedar siding.',
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    'assets/models/building_no_6_form_tokyo_otemachi_building_pack.glb',
+    'https://ttuxazxgkgrpakdedngw.supabase.co/storage/v1/object/public/property-assets/3d_models/low_poly_medieval_house_3.glb',
     false,
     'approved'::public.property_status
   )
