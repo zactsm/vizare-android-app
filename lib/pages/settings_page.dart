@@ -14,6 +14,7 @@ import 'package:untitled/pages/settings/preferred_location_page.dart';
 import 'package:untitled/pages/settings/preferred_property_types_page.dart';
 import 'package:untitled/pages/settings/privacy_policy_page.dart';
 import 'package:untitled/pages/settings/tos_page.dart';
+import 'package:untitled/pages/settings/nav_bar_sandbox_page.dart';
 
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'utils/floating_bottom_nav_bar.dart';
@@ -182,6 +183,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const PrivacyPolicyPage()),
+                  );
+                },
+                showDivider: false,
+              ),
+            ]),
+            _buildSectionHeader('Developer & Sandbox'),
+            _buildSettingsGroup([
+              _buildSettingsItem(
+                'Bottom Nav Bar Tuner',
+                Icons.tune_rounded,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const NavBarSandboxPage()),
                   );
                 },
                 showDivider: false,

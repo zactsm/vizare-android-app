@@ -10,16 +10,62 @@ import 'package:untitled/pages/utils/page_transitions.dart';
 
 enum NavPageIndex { home, search, favorites, settings }
 
+class NavBarConfig {
+  final double height;
+  final double barWidth;
+  final double pillInsetH;
+  final double pillInsetV;
+  final double ovalPaddingH;
+  final double gapWidth;
+  final double collapsedWidth;
+  final double bottomMargin;
+
+  const NavBarConfig({
+    this.height = 70.0,
+    this.barWidth = 330.0,
+    this.pillInsetH = 5.0,
+    this.pillInsetV = 6.0,
+    this.ovalPaddingH = 11.0,
+    this.gapWidth = 6.0,
+    this.collapsedWidth = 36.0,
+    this.bottomMargin = 24.0,
+  });
+
+  NavBarConfig copyWith({
+    double? height,
+    double? barWidth,
+    double? pillInsetH,
+    double? pillInsetV,
+    double? ovalPaddingH,
+    double? gapWidth,
+    double? collapsedWidth,
+    double? bottomMargin,
+  }) {
+    return NavBarConfig(
+      height: height ?? this.height,
+      barWidth: barWidth ?? this.barWidth,
+      pillInsetH: pillInsetH ?? this.pillInsetH,
+      pillInsetV: pillInsetV ?? this.pillInsetV,
+      ovalPaddingH: ovalPaddingH ?? this.ovalPaddingH,
+      gapWidth: gapWidth ?? this.gapWidth,
+      collapsedWidth: collapsedWidth ?? this.collapsedWidth,
+      bottomMargin: bottomMargin ?? this.bottomMargin,
+    );
+  }
+}
+
 class FloatingBottomNavBar extends StatefulWidget {
   final NavPageIndex activeIndex;
   final PageController? pageController;
   final ValueChanged<NavPageIndex>? onTap;
+  final NavBarConfig? customConfig;
 
   const FloatingBottomNavBar({
     super.key,
     required this.activeIndex,
     this.pageController,
     this.onTap,
+    this.customConfig,
   });
 
   @override
@@ -88,6 +134,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final config = widget.customConfig ?? const NavBarConfig();
 
     final double pageProgress = widget.pageController != null
         ? (widget.pageController!.hasClients
@@ -125,8 +172,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     ];
 
     const double iconWidth = 18.0;
-    const double gapWidth = 6.0;
-    const double ovalPaddingH = 11.0;
+    final double gapWidth = config.gapWidth;
+    final double ovalPaddingH = config.ovalPaddingH;
 
     final Map<int, double> textWidths = {};
     final Map<int, double> targetOvalWidths = {};
@@ -137,16 +184,18 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       targetOvalWidths[i] = iconWidth + gapWidth + tw + (2 * ovalPaddingH);
     }
 
-    final double maxBarWidth = screenWidth > 400 ? 330 : (screenWidth - 48);
-    final double barWidth = maxBarWidth.clamp(280.0, 330.0);
-    const double pillInsetH = 5.0;
-    const double pillInsetV = 6.0;
+    final double barWidth = widget.customConfig != null
+        ? config.barWidth
+        : (screenWidth > 400 ? config.barWidth : (screenWidth - 48))
+            .clamp(280.0, 330.0);
+    final double pillInsetH = config.pillInsetH;
+    final double pillInsetV = config.pillInsetV;
     final double innerWidth = barWidth - (2 * pillInsetH);
 
     // Dynamic space allocation:
     // When a tab is active (closeness = 1.0), it expands to its target active width.
     // Inactive tabs compress down to collapsedWidth, freeing up space for the active pill.
-    const double collapsedWidth = 36.0;
+    final double collapsedWidth = config.collapsedWidth;
     final List<double> tabCloseness = [];
     final List<double> tabWidths = [];
 
@@ -286,28 +335,32 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       );
     }
 
+    final double containerRadius = (config.height / 2.0).clamp(20.0, 45.0);
+    final double pillHeight = config.height - (2 * pillInsetV);
+    final double pillRadius = (pillHeight / 2.0).clamp(16.0, 40.0);
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(
+        padding: EdgeInsets.only(
           left: 16,
           right: 16,
-          bottom: 24,
+          bottom: config.bottomMargin,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(35),
+          borderRadius: BorderRadius.circular(containerRadius),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
               width: barWidth,
-              height: 70,
-              padding: const EdgeInsets.symmetric(
+              height: config.height,
+              padding: EdgeInsets.symmetric(
                 horizontal: pillInsetH,
                 vertical: pillInsetV,
               ),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(35),
+                borderRadius: BorderRadius.circular(containerRadius),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
@@ -346,7 +399,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
-                        borderRadius: BorderRadius.circular(29),
+                        borderRadius: BorderRadius.circular(pillRadius),
                         boxShadow: [
                           BoxShadow(
                             color: VizareColors.champagneGold.withValues(alpha: 0.35),
