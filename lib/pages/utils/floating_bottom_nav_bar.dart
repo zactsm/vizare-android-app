@@ -255,7 +255,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24.0, sigmaY: 24.0),
+            filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
               height: 74,
               padding: const EdgeInsets.symmetric(
@@ -263,21 +263,31 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface.withValues(alpha: 0.80),
+                color: VizareColors.obsidianSurface.withValues(alpha: 0.68),
                 borderRadius: BorderRadius.circular(40),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.12),
+                    Colors.white.withValues(alpha: 0.03),
+                    VizareColors.obsidianSurface.withValues(alpha: 0.68),
+                  ],
+                  stops: const [0.0, 0.35, 1.0],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 28,
+                    color: Colors.black.withValues(alpha: 0.50),
+                    blurRadius: 30,
                     offset: const Offset(0, 12),
                   ),
                   BoxShadow(
                     color: VizareColors.champagneGold.withValues(alpha: 0.08),
-                    blurRadius: 16,
+                    blurRadius: 18,
                     offset: const Offset(0, 2),
                   ),
                 ],
