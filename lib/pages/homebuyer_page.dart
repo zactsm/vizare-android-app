@@ -840,99 +840,97 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
       top: topInset + 8.0,
       left: 16.0,
       right: 16.0,
-      child: VisionGlassContainer(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-        borderRadius: 30.0,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1.2,
-        ),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/logo.png',
-              width: 38,
-              height: 38,
-              errorBuilder: (context, e, s) =>
-                  const SizedBox(width: 38, height: 38),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: GestureDetector(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Left: App Logo
+          Image.asset(
+            'assets/images/logo.png',
+            width: 38,
+            height: 38,
+            errorBuilder: (context, e, s) =>
+                const SizedBox(width: 38, height: 38),
+          ),
+          // Right: Search Icon + Profile Avatar
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  widget.onSearchTap();
-                },
+                onTap: () => widget.onSearchTap(),
                 child: Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(20),
+                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1.0,
+                      color: VizareColors.champagneGold.withValues(alpha: 0.8),
+                      width: 1.5,
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search_rounded,
-                          color: VizareColors.champagneGold, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Search luxury properties...',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.45),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: VizareColors.champagneGold,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()),
-                );
-              },
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: VizareColors.champagneGold.withValues(alpha: 0.8),
-                    width: 1.5,
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfilePage()),
+                  ).then((_) => _fetchUserProfile());
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: VizareColors.champagneGold.withValues(alpha: 0.8),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    image: _profilePicUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(_profilePicUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  image: _profilePicUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(_profilePicUrl!),
-                          fit: BoxFit.cover,
+                  child: _profilePicUrl == null
+                      ? const Center(
+                          child: Icon(
+                            Icons.person_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 20,
+                          ),
                         )
                       : null,
                 ),
-                child: _profilePicUrl == null
-                    ? const Center(
-                        child: Icon(
-                          Icons.person_rounded,
-                          color: VizareColors.champagneGold,
-                          size: 20,
-                        ),
-                      )
-                    : null,
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -26,6 +26,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
   final _searchController = TextEditingController();
 
   bool _isLoading = true;
+  bool _isSearchExpanded = false;
   List<Property> _myProperties = [];
   List<Property> _filteredProperties = [];
   String? _profilePicUrl;
@@ -237,34 +238,132 @@ class _HomeownerPageState extends State<HomeownerPage> {
       top: topInset + 8.0,
       left: 16.0,
       right: 16.0,
-      child: VisionGlassContainer(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-        borderRadius: 30.0,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
-          width: 1.2,
-        ),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/logo.png',
-              width: 38,
-              height: 38,
-              errorBuilder: (c, e, s) => const SizedBox(width: 38, height: 38),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Container(
-                height: 42,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 1.0,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left: App Logo
+              Image.asset(
+                'assets/images/logo.png',
+                width: 38,
+                height: 38,
+                errorBuilder: (c, e, s) =>
+                    const SizedBox(width: 38, height: 38),
+              ),
+              // Right: Search Icon + Profile Avatar
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        _isSearchExpanded = !_isSearchExpanded;
+                        if (!_isSearchExpanded) {
+                          _searchController.clear();
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _isSearchExpanded
+                            ? VizareColors.champagneGold.withValues(alpha: 0.2)
+                            : VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _isSearchExpanded
+                              ? VizareColors.champagneGold
+                              : VizareColors.champagneGold.withValues(alpha: 0.8),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          _isSearchExpanded
+                              ? Icons.close_rounded
+                              : Icons.search_rounded,
+                          color: VizareColors.champagneGold,
+                          size: 20,
+                        ),
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfilePage()),
+                      ).then((_) => _fetchUserProfile());
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: VizareColors.champagneGold.withValues(alpha: 0.8),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        image: _profilePicUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(_profilePicUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: _profilePicUrl == null
+                          ? const Center(
+                              child: Icon(
+                                Icons.person_rounded,
+                                color: VizareColors.champagneGold,
+                                size: 20,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            crossFadeState: _isSearchExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(width: double.infinity, height: 0),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: VisionGlassContainer(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+                borderRadius: 22.0,
+                backgroundColor:
+                    VizareColors.obsidianSurface.withValues(alpha: 0.92),
+                border: Border.all(
+                  color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                  width: 1.0,
                 ),
                 child: Row(
                   children: [
@@ -277,8 +376,11 @@ class _HomeownerPageState extends State<HomeownerPage> {
                     Expanded(
                       child: TextField(
                         controller: _searchController,
+                        autofocus: true,
                         style: GoogleFonts.inter(
-                            color: Colors.white, fontSize: 13),
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Filter your portfolio...',
                           hintStyle: GoogleFonts.inter(
@@ -287,54 +389,32 @@ class _HomeownerPageState extends State<HomeownerPage> {
                           ),
                           filled: false,
                           isDense: true,
-                          contentPadding: EdgeInsets.zero,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 10),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                         ),
                       ),
                     ),
+                    if (_searchController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                        child: const Icon(
+                          Icons.clear_rounded,
+                          color: Colors.white54,
+                          size: 16,
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()),
-                ).then((_) => _fetchUserProfile());
-              },
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: VizareColors.champagneGold.withValues(alpha: 0.8),
-                    width: 1.5,
-                  ),
-                  image: _profilePicUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(_profilePicUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: _profilePicUrl == null
-                    ? const Center(
-                        child: Icon(
-                          Icons.person_rounded,
-                          color: VizareColors.champagneGold,
-                          size: 20,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
