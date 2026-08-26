@@ -103,14 +103,19 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
     });
 
-    testWidgets('TopBarGradientBlur renders with backdrop filter and gradient',
+    testWidgets('TopBarGradientBlur renders with gradient and ignores pointer',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: Stack(
               children: [
-                TopBarGradientBlur(height: 80),
+                TopBarGradientBlur(height: 56),
+                TopBarGradientBlur(
+                  height: 56,
+                  enableBackdropBlur: true,
+                  blurSigma: 10,
+                ),
               ],
             ),
           ),
@@ -118,14 +123,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(TopBarGradientBlur), findsOneWidget);
+      expect(find.byType(TopBarGradientBlur), findsNWidgets(2));
       expect(find.byType(BackdropFilter), findsOneWidget);
       expect(
         find.descendant(
           of: find.byType(TopBarGradientBlur),
           matching: find.byType(IgnorePointer),
         ),
-        findsOneWidget,
+        findsNWidgets(2),
       );
     });
 

@@ -18,24 +18,17 @@ class FAQPage extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
-              Text(
-                'Frequently Asked Questions (FAQs)',
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.6,
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                child: Text(
+                  'Discover how Vizare transforms luxury real-estate with spatial 3D and AR.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13.5,
+                    color: VizareColors.textSecondary,
+                    height: 1.45,
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Discover how Vizare transforms luxury real-estate with spatial 3D and AR.',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: VizareColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
               const _FAQItem(
                 question: 'What is Vizare Spatial Real Estate?',
                 answer:

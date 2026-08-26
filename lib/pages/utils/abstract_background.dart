@@ -21,20 +21,20 @@ class AbstractBackground extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Ambient Sun / Twilight Radiant Glow 1 (Top-Right Solar Warmth)
+          // Ambient Sun / Twilight Radiant Glow 1 (Mid-Right Solar Warmth)
           if (showSunGlow)
             Positioned(
-              top: -100,
-              right: -80,
+              top: 30,
+              right: -100,
               child: Container(
-                width: 340,
-                height: 340,
+                width: 320,
+                height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      VizareColors.champagneGold.withValues(alpha: 0.22),
-                      VizareColors.goldOchre.withValues(alpha: 0.10),
+                      VizareColors.champagneGold.withValues(alpha: 0.18),
+                      VizareColors.goldOchre.withValues(alpha: 0.08),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.45, 1.0],
@@ -42,6 +42,29 @@ class AbstractBackground extends StatelessWidget {
                 ),
               ),
             ),
+
+          // Clean Obsidian Status Bar Shield (Prevents glow bleed into status bar)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 70,
+            child: IgnorePointer(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      VizareColors.obsidianBlack,
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           // Ambient Radiant Violet / Cosmic Mesh Glow (Mid-Left)
           Positioned(

@@ -36,7 +36,7 @@ void main() {
       await tester.pumpWidget(wrapWithMaterial(const ChangePasswordPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Change password'), findsOneWidget);
+      expect(find.text('Security'), findsOneWidget);
       expect(find.text('Current Password'), findsOneWidget);
       expect(find.text('New Password'), findsOneWidget);
       expect(find.text('Confirm new password'), findsWidgets);
@@ -54,7 +54,7 @@ void main() {
       await tester.pumpWidget(wrapWithMaterial(const DeactivateAccountPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Deactivate account'), findsOneWidget);
+      expect(find.text('Deactivate Account'), findsOneWidget);
       expect(find.text('Reason for Deactivation:'), findsOneWidget);
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
@@ -73,7 +73,8 @@ void main() {
       await tester.pumpWidget(wrapWithMaterial(const FAQPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Frequently Asked Questions (FAQs)'), findsWidgets);
+      expect(find.text('FAQ'), findsWidgets);
+      expect(find.text('What is Vizare Spatial Real Estate?'), findsOneWidget);
     });
 
     testWidgets('NotificationPreferencesPage renders preference toggles',
@@ -82,7 +83,8 @@ void main() {
           .pumpWidget(wrapWithMaterial(const NotificationPreferencesPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Notification preferences'), findsWidgets);
+      expect(find.text('Notification Preferences'), findsWidgets);
+      expect(find.text('ALERT CATEGORIES'), findsOneWidget);
     });
 
     testWidgets('PreferredLocationPage renders location selectors',
@@ -90,7 +92,7 @@ void main() {
       await tester.pumpWidget(wrapWithMaterial(const PreferredLocationPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Preferred location'), findsWidgets);
+      expect(find.text('Preferred Location'), findsWidgets);
     });
 
     testWidgets('PreferredPropertyTypesPage renders type selection options',
@@ -99,7 +101,7 @@ void main() {
           .pumpWidget(wrapWithMaterial(const PreferredPropertyTypesPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Preferred property types'), findsWidgets);
+      expect(find.text('Preferred Property Types'), findsWidgets);
     });
 
     testWidgets('PrivacyPolicyPage renders policy terms', (tester) async {

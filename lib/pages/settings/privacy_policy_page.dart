@@ -18,25 +18,17 @@ class PrivacyPolicyPage extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
-              Text(
-                'Data & Privacy Governance',
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.6,
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                child: Text(
+                  'Effective Date: August 2026',
+                  style: GoogleFonts.inter(
+                    fontSize: 13.0,
+                    color: VizareColors.champagneGold,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Effective Date: August 2026',
-                style: GoogleFonts.inter(
-                  fontSize: 12.5,
-                  color: VizareColors.champagneGold,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 20),
               VisionGlassContainer(
                 padding: const EdgeInsets.all(20),
                 child: Column(

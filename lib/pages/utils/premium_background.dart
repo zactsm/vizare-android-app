@@ -14,21 +14,44 @@ class PremiumBackground extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Solar Champagne Gold Top Glow
+          // Solar Champagne Gold Glow (Positioned below status bar)
           Positioned(
-            top: -120,
+            top: 30,
             right: -100,
             child: Container(
-              width: 380,
-              height: 380,
+              width: 360,
+              height: 360,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    VizareColors.champagneGold.withValues(alpha: 0.25),
-                    VizareColors.goldDark.withValues(alpha: 0.08),
+                    VizareColors.champagneGold.withValues(alpha: 0.20),
+                    VizareColors.goldDark.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
+                ),
+              ),
+            ),
+          ),
+
+          // Clean Obsidian Status Bar Shield (Prevents glow bleed into status bar)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 70,
+            child: IgnorePointer(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      VizareColors.obsidianBlack,
+                      Colors.transparent,
+                    ],
+                    stops: [0.0, 1.0],
+                  ),
                 ),
               ),
             ),

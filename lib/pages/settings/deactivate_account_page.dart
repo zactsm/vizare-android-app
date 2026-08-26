@@ -179,26 +179,19 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _isPermanentDeletion ? 'Permanently Delete Account' : 'Deactivate account',
-                  style: GoogleFonts.poppins(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.6,
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                  child: Text(
+                    _isPermanentDeletion
+                        ? 'Under GDPR Art. 17 / CCPA, your account, authentication tokens, profile data, and media files will be permanently erased.'
+                        : 'Deactivating will archive your profile, spatial favorites, and listing views. You can reactivate anytime by logging in.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      color: VizareColors.textSecondary,
+                      height: 1.45,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  _isPermanentDeletion
-                      ? 'Under GDPR Art. 17 / CCPA, your account, authentication tokens, profile data, and media files will be permanently erased.'
-                      : 'Deactivating will archive your profile, spatial favorites, and listing views. You can reactivate anytime by logging in.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: VizareColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 if (!_isPasswordStep) ...[
                   VisionGlassContainer(
                     padding: const EdgeInsets.all(12),
