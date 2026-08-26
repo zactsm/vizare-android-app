@@ -17,18 +17,6 @@ class NavBarSandboxPage extends StatefulWidget {
 }
 
 class _NavBarSandboxPageState extends State<NavBarSandboxPage> {
-  // Baseline / default values
-  static const NavBarConfig _defaultConfig = NavBarConfig(
-    height: 70.0,
-    barWidth: 330.0,
-    pillInsetH: 5.0,
-    pillInsetV: 6.0,
-    ovalPaddingH: 11.0,
-    gapWidth: 6.0,
-    collapsedWidth: 36.0,
-    bottomMargin: 24.0,
-  );
-
   late NavBarConfig _config;
   NavPageIndex _previewIndex = NavPageIndex.home;
   PreviewBgMode _bgMode = PreviewBgMode.brightSlate;
@@ -36,16 +24,16 @@ class _NavBarSandboxPageState extends State<NavBarSandboxPage> {
   @override
   void initState() {
     super.initState();
-    _config = _defaultConfig;
+    _config = NavBarConfig.platformDefault;
   }
 
   void _resetToDefaults() {
     setState(() {
-      _config = _defaultConfig;
+      _config = NavBarConfig.platformDefault;
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Reset to default values'),
+        content: Text('Reset to platform default values'),
         duration: Duration(seconds: 1),
       ),
     );

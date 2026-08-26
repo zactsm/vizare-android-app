@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/favorites_page.dart';
@@ -21,15 +22,54 @@ class NavBarConfig {
   final double bottomMargin;
 
   const NavBarConfig({
-    this.height = 70.0,
-    this.barWidth = 330.0,
-    this.pillInsetH = 5.0,
+    this.height = 66.0,
+    this.barWidth = 348.0,
+    this.pillInsetH = 4.0,
     this.pillInsetV = 6.0,
-    this.ovalPaddingH = 11.0,
-    this.gapWidth = 6.0,
-    this.collapsedWidth = 36.0,
+    this.ovalPaddingH = 10.0,
+    this.gapWidth = 5.0,
+    this.collapsedWidth = 32.0,
     this.bottomMargin = 24.0,
   });
+
+  /// Automatically picks the tuned preset for Web (Vercel), iOS, or Android
+  static NavBarConfig get platformDefault {
+    if (kIsWeb) {
+      return const NavBarConfig(
+        height: 70.0,
+        barWidth: 400.0,
+        pillInsetV: 6.0,
+        pillInsetH: 5.0,
+        ovalPaddingH: 18.0,
+        gapWidth: 9.0,
+        collapsedWidth: 36.0,
+        bottomMargin: 24.0,
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return const NavBarConfig(
+        height: 66.0,
+        barWidth: 348.0,
+        pillInsetV: 6.0,
+        pillInsetH: 4.0,
+        ovalPaddingH: 10.0,
+        gapWidth: 5.0,
+        collapsedWidth: 32.0,
+        bottomMargin: 24.0,
+      );
+    } else {
+      // Android / other platforms default
+      return const NavBarConfig(
+        height: 66.0,
+        barWidth: 348.0,
+        pillInsetV: 6.0,
+        pillInsetH: 4.0,
+        ovalPaddingH: 10.0,
+        gapWidth: 5.0,
+        collapsedWidth: 32.0,
+        bottomMargin: 24.0,
+      );
+    }
+  }
 
   NavBarConfig copyWith({
     double? height,
@@ -134,7 +174,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final config = widget.customConfig ?? const NavBarConfig();
+    final config = widget.customConfig ?? NavBarConfig.platformDefault;
 
     final double pageProgress = widget.pageController != null
         ? (widget.pageController!.hasClients
