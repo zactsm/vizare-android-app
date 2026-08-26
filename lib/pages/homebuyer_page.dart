@@ -227,7 +227,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    const SizedBox(height: 104),
+                    const SizedBox(height: 130),
                     const VizareCardSkeleton(height: 260),
                     const VizareCardSkeleton(height: 200),
                   ],
@@ -242,7 +242,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 96), // Spacer for top floating bar
+                    const SizedBox(height: 130), // Spacer for top floating bar
 
                     // Luxury Expressive Header
                     Padding(
@@ -838,8 +838,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
     final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
       top: topInset + 8.0,
-      left: 16.0,
-      right: 16.0,
+      left: 20.0,
+      right: 20.0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

@@ -236,8 +236,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
     final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
       top: topInset + 8.0,
-      left: 16.0,
-      right: 16.0,
+      left: 20.0,
+      right: 20.0,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -425,7 +425,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 96),
+          const SizedBox(height: 130),
           Text(
             'Estate Manager',
             style: GoogleFonts.poppins(

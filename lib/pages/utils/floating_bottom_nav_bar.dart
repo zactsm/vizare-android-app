@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/favorites_page.dart';
@@ -32,43 +31,18 @@ class NavBarConfig {
     this.bottomMargin = 24.0,
   });
 
-  /// Automatically picks the tuned preset for Web (Vercel), iOS, or Android
+  /// Standardized navbar configuration across all platforms
   static NavBarConfig get platformDefault {
-    if (kIsWeb) {
-      return const NavBarConfig(
-        height: 70.0,
-        barWidth: 400.0,
-        pillInsetV: 6.0,
-        pillInsetH: 5.0,
-        ovalPaddingH: 24.0,
-        gapWidth: 6.5,
-        collapsedWidth: 56.0,
-        bottomMargin: 24.0,
-      );
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return const NavBarConfig(
-        height: 66.0,
-        barWidth: 348.0,
-        pillInsetV: 6.0,
-        pillInsetH: 4.0,
-        ovalPaddingH: 24.0,
-        gapWidth: 5.0,
-        collapsedWidth: 56.0,
-        bottomMargin: 24.0,
-      );
-    } else {
-      // Android / other platforms default
-      return const NavBarConfig(
-        height: 66.0,
-        barWidth: 348.0,
-        pillInsetV: 6.0,
-        pillInsetH: 4.0,
-        ovalPaddingH: 24.0,
-        gapWidth: 5.0,
-        collapsedWidth: 56.0,
-        bottomMargin: 24.0,
-      );
-    }
+    return const NavBarConfig(
+      height: 66.0,
+      barWidth: 348.0,
+      pillInsetV: 6.0,
+      pillInsetH: 4.0,
+      ovalPaddingH: 24.0,
+      gapWidth: 5.0,
+      collapsedWidth: 56.0,
+      bottomMargin: 24.0,
+    );
   }
 
   NavBarConfig copyWith({

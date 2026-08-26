@@ -273,7 +273,7 @@ class MyApp extends StatelessWidget {
                 // iPhone 16 / 17 Display Specs (393 x 852 logical points, 19.5:9 ratio)
                 const double targetWidth = 393.0;
                 const double targetHeight = 852.0;
-                const double topSafeArea = 54.0; // Dynamic Island / Status Bar
+                const double topSafeArea = 72.0; // Dynamic Island / Status Bar
                 const double bottomSafeArea = 34.0; // Home indicator
 
                 // PNG Mockup Dimensions (image aspect ratio: 1300x2642, screen: 1244x2606)
