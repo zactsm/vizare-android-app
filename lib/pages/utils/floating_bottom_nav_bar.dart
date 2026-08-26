@@ -188,58 +188,53 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
         ? config.barWidth
         : (screenWidth > 400 ? config.barWidth : (screenWidth - 48))
             .clamp(280.0, 330.0);
-    final double pillInsetH = config.pillInsetH;
-    final double pillInsetV = config.pillInsetV;
-    final double innerWidth = barWidth - (2 * pillInsetH);
 
-    // Dynamic space allocation:
-    // When a tab is active (closeness = 1.0), it expands to its target active width.
-    // Inactive tabs compress down to collapsedWidth, freeing up space for the active pill.
-    final double collapsedWidth = config.collapsedWidth;
-    final List<double> tabCloseness = [];
-    final List<double> tabWidths = [];
+    final double containerRadius = config.height / 2.0;
+    final double pillHeight = config.height - (2 * config.pillInsetV);
+    final double pillRadius = (pillHeight / 2.0).clamp(8.0, 45.0);
 
-    for (int i = 0; i < 4; i++) {
-      final double c = (1.0 - (pageProgress - i).abs()).clamp(0.0, 1.0);
-      tabCloseness.add(c);
-      final double targetW = targetOvalWidths[i] ?? 92.0;
-      tabWidths.add(collapsedWidth + (targetW - collapsedWidth) * c);
-    }
+    // Concentric safe boundaries:
+    // Outer container cap centers are at (containerRadius) and (barWidth - containerRadius).
+    // For the inner pill to be concentric with zero clipping at the ends:
+    final double safeInset = config.pillInsetV.clamp(0.0, containerRadius - 4.0);
+    final double minLeft = safeInset;
+    final double maxRight = barWidth - safeInset;
 
-    final double totalTabWidths = tabWidths.reduce((a, b) => a + b);
-    final double availableSpace = innerWidth - totalTabWidths;
-    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 40.0);
+    // Calculate active tab centers
+    final double center0 = minLeft + ((targetOvalWidths[0] ?? 92.0) / 2.0);
+    final double center3 = maxRight - ((targetOvalWidths[3] ?? 92.0) / 2.0);
+    final double step = (center3 - center0) / 3.0;
 
-    // Compute continuous left coordinates for each item
-    final List<double> tabLefts = [];
-    double currentX = (availableSpace - (dynamicGap * 3.0)) / 2.0;
-    if (currentX < 0) currentX = 0;
-
-    for (int i = 0; i < 4; i++) {
-      tabLefts.add(currentX);
-      currentX += tabWidths[i] + dynamicGap;
-    }
+    final List<double> tabCenters = [
+      center0,
+      center0 + step,
+      center0 + (2.0 * step),
+      center3,
+    ];
 
     // Determine the active morphing pill frame (sliding and morphing continuously)
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
     final double fraction = pageProgress - prevIndex;
 
+    final double activeCenter =
+        tabCenters[prevIndex] + (tabCenters[nextIndex] - tabCenters[prevIndex]) * fraction;
+    final double activeWidth = (targetOvalWidths[prevIndex] ?? 92.0) +
+        ((targetOvalWidths[nextIndex] ?? 92.0) - (targetOvalWidths[prevIndex] ?? 92.0)) * fraction;
+
     final double activePillLeft =
-        tabLefts[prevIndex] + (tabLefts[nextIndex] - tabLefts[prevIndex]) * fraction;
-    final double activePillWidth =
-        tabWidths[prevIndex] + (tabWidths[nextIndex] - tabWidths[prevIndex]) * fraction;
+        (activeCenter - (activeWidth / 2.0)).clamp(minLeft, maxRight - activeWidth);
 
     Widget buildNavItem(int index) {
-      final double closeness = tabCloseness[index];
-      final double width = tabWidths[index];
-      final double left = tabLefts[index];
+      final double closeness = (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
+      final double itemWidth = targetOvalWidths[index] ?? 92.0;
+      final double centerPos = tabCenters[index];
 
       return Positioned(
-        left: left,
-        top: 0,
-        bottom: 0,
-        width: width,
+        left: centerPos - (itemWidth / 2.0),
+        top: config.pillInsetV,
+        bottom: config.pillInsetV,
+        width: itemWidth,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
@@ -335,10 +330,6 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       );
     }
 
-    final double containerRadius = (config.height / 2.0).clamp(20.0, 45.0);
-    final double pillHeight = config.height - (2 * pillInsetV);
-    final double pillRadius = (pillHeight / 2.0).clamp(16.0, 40.0);
-
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -354,10 +345,6 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
             child: Container(
               width: barWidth,
               height: config.height,
-              padding: EdgeInsets.symmetric(
-                horizontal: pillInsetH,
-                vertical: pillInsetV,
-              ),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(containerRadius),
@@ -393,9 +380,9 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                   // 1. Fluidly morphing VisionOS Champagne Gold pill
                   Positioned(
                     left: activePillLeft,
-                    top: 0,
-                    bottom: 0,
-                    width: activePillWidth,
+                    top: config.pillInsetV,
+                    bottom: config.pillInsetV,
+                    width: activeWidth,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,

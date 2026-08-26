@@ -32,12 +32,15 @@ void main() async {
   }
 
   // 2. Extract configuration or fetch dynamically on Web
-  String? supabaseUrl = dotenv.env['SUPABASE_URL'];
-  String? supabaseAnonKey =
-      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
-  String? googleMapsKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-  String? googleOAuthId =
-      dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
+  final isDotEnvReady = dotenv.isInitialized;
+  String? supabaseUrl = isDotEnvReady ? dotenv.env['SUPABASE_URL'] : null;
+  String? supabaseAnonKey = isDotEnvReady
+      ? (dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'])
+      : null;
+  String? googleMapsKey = isDotEnvReady ? dotenv.env['GOOGLE_MAPS_API_KEY'] : null;
+  String? googleOAuthId = isDotEnvReady
+      ? (dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'])
+      : null;
 
   if ((supabaseUrl == null || supabaseAnonKey == null) && kIsWeb) {
     try {
