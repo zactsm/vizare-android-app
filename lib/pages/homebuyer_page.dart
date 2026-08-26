@@ -67,6 +67,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
         backgroundColor: VizareColors.obsidianBlack,
         body: AbstractBackground(
           child: SafeArea(
+            bottom: false,
             child: Stack(
               fit: StackFit.expand,
               children: [

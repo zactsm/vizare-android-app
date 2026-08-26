@@ -1,10 +1,13 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/floating_bottom_nav_bar.dart';
+
+enum PreviewBgMode { brightSlate, propertyCard, darkTheme }
 
 class NavBarSandboxPage extends StatefulWidget {
   const NavBarSandboxPage({super.key});
@@ -28,6 +31,7 @@ class _NavBarSandboxPageState extends State<NavBarSandboxPage> {
 
   late NavBarConfig _config;
   NavPageIndex _previewIndex = NavPageIndex.home;
+  PreviewBgMode _bgMode = PreviewBgMode.brightSlate;
 
   @override
   void initState() {
@@ -48,8 +52,12 @@ class _NavBarSandboxPageState extends State<NavBarSandboxPage> {
   }
 
   void _copyValuesToClipboard() {
+    final platformName = kIsWeb
+        ? 'Web (Vercel)'
+        : (defaultTargetPlatform == TargetPlatform.iOS ? 'iOS' : 'Android');
+
     final values = '''
-Nav Bar Tuned Configuration:
+Nav Bar Configuration ($platformName):
 ----------------------------------------
 Container Height:    ${_config.height.toStringAsFixed(1)} px
 Container Width:     ${_config.barWidth.toStringAsFixed(1)} px
@@ -58,7 +66,7 @@ Left/Right Inset:    ${_config.pillInsetH.toStringAsFixed(1)} px
 Pill Inner Padding:  ${_config.ovalPaddingH.toStringAsFixed(1)} px
 Icon-to-Text Gap:    ${_config.gapWidth.toStringAsFixed(1)} px
 Inactive Item Width: ${_config.collapsedWidth.toStringAsFixed(1)} px
-Bottom Elevation:    ${_config.bottomMargin.toStringAsFixed(1)} px
+Bottom Margin:       ${_config.bottomMargin.toStringAsFixed(1)} px
 ----------------------------------------
 Dart Code:
 NavBarConfig(
@@ -80,11 +88,13 @@ NavBarConfig(
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 8),
-            Text(
-              'Tuned values copied to clipboard!',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+            Expanded(
+              child: Text(
+                'Values for $platformName copied to clipboard!',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -120,12 +130,14 @@ NavBarConfig(
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               Container(
@@ -160,7 +172,7 @@ NavBarConfig(
               trackHeight: 4,
             ),
             child: Slider(
-              value: value,
+              value: value.clamp(min, max),
               min: min,
               max: max,
               divisions: divisions,
@@ -172,12 +184,139 @@ NavBarConfig(
     );
   }
 
+  Widget _buildPreviewBackdrop() {
+    switch (_bgMode) {
+      case PreviewBgMode.brightSlate:
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF2C3E50),
+                Color(0xFF4A6572),
+                Color(0xFF78909C),
+              ],
+            ),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Grid lines for visual precision
+              CustomPaint(
+                painter: _GridPainter(),
+              ),
+              Positioned(
+                bottom: 8,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '📱 Screen Bottom Edge',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+      case PreviewBgMode.propertyCard:
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1A365D),
+                Color(0xFF0F766E),
+                Color(0xFF065F46),
+              ],
+            ),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: VizareColors.champagneGold,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.apartment_rounded, color: Colors.black),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Skyline Penthouse • RM 2,450,000',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Kuala Lumpur City Centre • 4 Beds 3 Baths',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 60),
+            ],
+          ),
+        );
+
+      case PreviewBgMode.darkTheme:
+        return Container(
+          color: VizareColors.obsidianBlack,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final platformName = kIsWeb
+        ? 'Web (Vercel)'
+        : (defaultTargetPlatform == TargetPlatform.iOS ? 'iOS' : 'Android');
+
     return Scaffold(
       backgroundColor: VizareColors.obsidianBlack,
       body: AbstractBackground(
         child: SafeArea(
+          bottom: false, // Allows full reach to the true physical bottom of screen
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -192,7 +331,7 @@ NavBarConfig(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: VizareColors.obsidianSurface.withValues(alpha: 0.7),
+                        color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
                         border: Border(
                           bottom: BorderSide(
                             color: Colors.white.withValues(alpha: 0.08),
@@ -211,13 +350,36 @@ NavBarConfig(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Nav Bar Sandbox',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Nav Bar Sandbox',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: VizareColors.champagneGold.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: VizareColors.champagneGold.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        platformName,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: VizareColors.champagneGold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Text(
                                   'Tune values live & copy report',
@@ -243,12 +405,66 @@ NavBarConfig(
 
               // Scrollable Sliders List
               Positioned.fill(
-                top: 70,
-                bottom: 120, // leave space for the preview bar
+                top: 75,
+                bottom: 155, // leaves space for the preview bar
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   children: [
-                    // Action Buttons
+                    // Background Contrast Selector
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: VizareColors.obsidianSurface.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Preview Backdrop Contrast:',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: VizareColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildBgOptionButton(
+                                  label: 'Bright Slate',
+                                  icon: Icons.contrast_rounded,
+                                  mode: PreviewBgMode.brightSlate,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildBgOptionButton(
+                                  label: 'Property Card',
+                                  icon: Icons.image_outlined,
+                                  mode: PreviewBgMode.propertyCard,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildBgOptionButton(
+                                  label: 'Dark Obsidian',
+                                  icon: Icons.dark_mode_rounded,
+                                  mode: PreviewBgMode.darkTheme,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Action Buttons (Copy & Reset)
                     Row(
                       children: [
                         Expanded(
@@ -300,6 +516,16 @@ NavBarConfig(
                     const SizedBox(height: 16),
 
                     _buildSliderRow(
+                      label: 'Bottom Elevation Margin',
+                      value: _config.bottomMargin,
+                      min: 0.0,
+                      max: 60.0,
+                      divisions: 60,
+                      unit: 'px',
+                      onChanged: (val) => setState(() => _config = _config.copyWith(bottomMargin: val)),
+                    ),
+
+                    _buildSliderRow(
                       label: 'Container Height',
                       value: _config.height,
                       min: 50.0,
@@ -313,8 +539,8 @@ NavBarConfig(
                       label: 'Container Width',
                       value: _config.barWidth,
                       min: 260.0,
-                      max: 390.0,
-                      divisions: 130,
+                      max: 400.0,
+                      divisions: 140,
                       unit: 'px',
                       onChanged: (val) => setState(() => _config = _config.copyWith(barWidth: val)),
                     ),
@@ -369,34 +595,45 @@ NavBarConfig(
                       onChanged: (val) => setState(() => _config = _config.copyWith(collapsedWidth: val)),
                     ),
 
-                    _buildSliderRow(
-                      label: 'Bottom Elevation Margin',
-                      value: _config.bottomMargin,
-                      min: 0.0,
-                      max: 50.0,
-                      divisions: 50,
-                      unit: 'px',
-                      onChanged: (val) => setState(() => _config = _config.copyWith(bottomMargin: val)),
-                    ),
-
                     const SizedBox(height: 20),
                   ],
                 ),
               ),
 
-              // Live Interactive Nav Bar Preview pinned at bottom
+              // Bottom Preview Dock Area with High-Contrast Backdrop
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: FloatingBottomNavBar(
-                  activeIndex: _previewIndex,
-                  customConfig: _config,
-                  onTap: (index) {
-                    setState(() {
-                      _previewIndex = index;
-                    });
-                  },
+                height: 150,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Dynamic backdrop behind the floating nav bar
+                    _buildPreviewBackdrop(),
+
+                    // Subtle top border dividing controls from preview dock
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 1,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+
+                    // Live Interactive Nav Bar Preview
+                    FloatingBottomNavBar(
+                      activeIndex: _previewIndex,
+                      customConfig: _config,
+                      onTap: (index) {
+                        setState(() {
+                          _previewIndex = index;
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -405,4 +642,70 @@ NavBarConfig(
       ),
     );
   }
+
+  Widget _buildBgOptionButton({
+    required String label,
+    required IconData icon,
+    required PreviewBgMode mode,
+  }) {
+    final isSelected = _bgMode == mode;
+    return GestureDetector(
+      onTap: () => setState(() => _bgMode = mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? VizareColors.champagneGold.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? VizareColors.champagneGold
+                : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? VizareColors.champagneGold : Colors.white60,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? VizareColors.champagneGold : Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..strokeWidth = 1;
+
+    const step = 20.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
