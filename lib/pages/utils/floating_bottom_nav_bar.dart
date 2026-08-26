@@ -139,8 +139,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
     final double barWidth = maxBarWidth - 32;
-    const double containerPaddingH = 10.0;
-    final double innerWidth = barWidth - (2 * containerPaddingH);
+    const double pillInset = 6.0;
+    final double innerWidth = barWidth - (2 * pillInset);
 
     // Dynamic space allocation:
     // When a tab is active (closeness = 1.0), it expands to its target active width.
@@ -158,7 +158,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     final double totalTabWidths = tabWidths.reduce((a, b) => a + b);
     final double availableSpace = innerWidth - totalTabWidths;
-    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 50.0);
+    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 60.0);
 
     // Compute continuous left coordinates for each item
     final List<double> tabLefts = [];
@@ -294,18 +294,15 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(32),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
-              height: 68,
-              padding: const EdgeInsets.symmetric(
-                horizontal: containerPaddingH,
-                vertical: 6,
-              ),
+              height: 64,
+              padding: const EdgeInsets.all(pillInset),
               decoration: BoxDecoration(
                 color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(36),
+                borderRadius: BorderRadius.circular(32),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
@@ -338,13 +335,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                   // 1. Fluidly morphing VisionOS Champagne Gold pill
                   Positioned(
                     left: activePillLeft,
-                    top: 6,
-                    bottom: 6,
+                    top: 0,
+                    bottom: 0,
                     width: activePillWidth,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(26),
                         boxShadow: [
                           BoxShadow(
                             color: VizareColors.champagneGold.withValues(alpha: 0.35),
