@@ -21,6 +21,7 @@ import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/google_auth_service.dart';
 import 'package:untitled/welcome_page.dart';
 import 'utils/abstract_background.dart';
+import 'utils/top_bar_gradient_blur.dart';
 
 class SettingsPage extends StatefulWidget {
   final bool isEmbedded;
@@ -241,6 +242,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
+
+        // Smooth Gradient Blur behind top header
+        const TopBarGradientBlur(height: 90.0),
 
         // VisionOS Top Header Capsule
         // Top Header Texts

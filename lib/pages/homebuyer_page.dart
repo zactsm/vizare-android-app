@@ -14,6 +14,7 @@ import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
+import 'utils/top_bar_gradient_blur.dart';
 import 'favorites_page.dart';
 import 'settings_page.dart';
 
@@ -73,6 +74,7 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
               children: [
                 PageView(
                   controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: (index) {
                     setState(() {
                       _currentIndex = NavPageIndex.values[index];
@@ -227,7 +229,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   children: [
-                    const SizedBox(height: 130),
+                    const SizedBox(height: 68),
                     const VizareCardSkeleton(height: 260),
                     const VizareCardSkeleton(height: 200),
                   ],
@@ -242,7 +244,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 130), // Spacer for top floating bar
+                    const SizedBox(height: 68), // Spacer for top floating bar
 
                     // Luxury Expressive Header
                     Padding(
@@ -344,6 +346,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                 ),
               ),
             ),
+
+        // Smooth Gradient Blur behind top bar
+        const TopBarGradientBlur(height: 75.0),
 
         // Floating VisionOS Top Search Capsule
         _buildTopSearchCapsule(context),
@@ -835,9 +840,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
   }
 
   Widget _buildTopSearchCapsule(BuildContext context) {
-    final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
-      top: topInset + 8.0,
+      top: 10.0,
       left: 20.0,
       right: 20.0,
       child: Row(

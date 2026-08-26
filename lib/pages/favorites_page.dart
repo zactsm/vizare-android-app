@@ -10,6 +10,7 @@ import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/abstract_background.dart';
+import 'utils/top_bar_gradient_blur.dart';
 
 class FavoritesPage extends StatefulWidget {
   final bool isEmbedded;
@@ -81,6 +82,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     color: VizareColors.champagneGold),
               )
             : _buildFavoritesList(),
+
+        // Smooth Gradient Blur behind top header
+        const TopBarGradientBlur(height: 90.0),
 
         // Top Header Texts
         Positioned(

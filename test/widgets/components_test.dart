@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/pages/utils/floating_bottom_nav_bar.dart';
 import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/top_bar_gradient_blur.dart';
+import 'package:untitled/pages/homebuyer_page.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -99,6 +101,48 @@ void main() {
       expect(find.text('Premium Content'), findsOneWidget);
       expect(find.byType(PremiumBackground), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
+    });
+
+    testWidgets('TopBarGradientBlur renders with backdrop filter and gradient',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Stack(
+              children: [
+                TopBarGradientBlur(height: 80),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(TopBarGradientBlur), findsOneWidget);
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(TopBarGradientBlur),
+          matching: find.byType(IgnorePointer),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('HomeBuyerPage PageView has NeverScrollableScrollPhysics (swipe disabled)',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeBuyerPage(),
+        ),
+      );
+      await tester.pump();
+
+      final pageViewFinder = find.byType(PageView);
+      expect(pageViewFinder, findsOneWidget);
+
+      final pageView = tester.widget<PageView>(pageViewFinder);
+      expect(pageView.physics, isA<NeverScrollableScrollPhysics>());
     });
   });
 }
