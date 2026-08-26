@@ -139,66 +139,57 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
     final double barWidth = maxBarWidth - 32;
-    const double containerPaddingH = 8.0;
+    const double containerPaddingH = 10.0;
     final double innerWidth = barWidth - (2 * containerPaddingH);
 
-    const double safetyMargin = 12.0;
-    final double halfWidth0 = (targetOvalWidths[0] ?? 90.0) / 2.0;
-    final double halfWidth3 = (targetOvalWidths[3] ?? 90.0) / 2.0;
+    // Dynamic space allocation:
+    // When a tab is active (closeness = 1.0), it expands to its target active width.
+    // Inactive tabs compress down to collapsedWidth (36.0), freeing up space for the active pill.
+    const double collapsedWidth = 36.0;
+    final List<double> tabCloseness = [];
+    final List<double> tabWidths = [];
 
-    final double defaultCenter0 = innerWidth * 0.125;
-    final double defaultCenter3 = innerWidth * 0.875;
+    for (int i = 0; i < 4; i++) {
+      final double c = (1.0 - (pageProgress - i).abs()).clamp(0.0, 1.0);
+      tabCloseness.add(c);
+      final double targetW = targetOvalWidths[i] ?? 88.0;
+      tabWidths.add(collapsedWidth + (targetW - collapsedWidth) * c);
+    }
 
-    final double minCenter0 = halfWidth0 + safetyMargin;
-    final double maxCenter3 = innerWidth - halfWidth3 - safetyMargin;
+    final double totalTabWidths = tabWidths.reduce((a, b) => a + b);
+    final double availableSpace = innerWidth - totalTabWidths;
+    final double dynamicGap = (availableSpace / 3.0).clamp(0.0, 50.0);
 
-    final double center0 =
-        minCenter0 > defaultCenter0 ? minCenter0 : defaultCenter0;
-    final double center3 =
-        maxCenter3 < defaultCenter3 ? maxCenter3 : defaultCenter3;
+    // Compute continuous left coordinates for each item
+    final List<double> tabLefts = [];
+    double currentX = (availableSpace - (dynamicGap * 3.0)) / 2.0;
+    if (currentX < 0) currentX = 0;
 
-    final double step = (center3 - center0) / 3.0;
-    final List<double> tabCenters = [
-      center0,
-      center0 + step,
-      center0 + 2 * step,
-      center3,
-    ];
+    for (int i = 0; i < 4; i++) {
+      tabLefts.add(currentX);
+      currentX += tabWidths[i] + dynamicGap;
+    }
 
-    final int activeIndexInt = pageProgress.round().clamp(0, 3);
-    final double closeness =
-        (1.0 - (pageProgress - activeIndexInt).abs() * 2).clamp(0.0, 1.0);
-
-    final double activeTargetWidth = targetOvalWidths[activeIndexInt] ?? 90.0;
-    const double collapsedWidth = 44.0;
-    final double activeOvalWidth =
-        collapsedWidth + (activeTargetWidth - collapsedWidth) * closeness;
-
+    // Determine the active morphing pill frame (sliding and morphing continuously)
     final int prevIndex = pageProgress.floor().clamp(0, 3);
     final int nextIndex = pageProgress.ceil().clamp(0, 3);
     final double fraction = pageProgress - prevIndex;
 
-    final double prevCenter = tabCenters[prevIndex];
-    final double nextCenter = tabCenters[nextIndex];
-    final double activeCenter =
-        prevCenter + (nextCenter - prevCenter) * fraction;
+    final double activePillLeft =
+        tabLefts[prevIndex] + (tabLefts[nextIndex] - tabLefts[prevIndex]) * fraction;
+    final double activePillWidth =
+        tabWidths[prevIndex] + (tabWidths[nextIndex] - tabWidths[prevIndex]) * fraction;
 
-    final double ovalLeftRaw = activeCenter - (activeOvalWidth / 2);
-    final double ovalLeft =
-        ovalLeftRaw.clamp(0.0, innerWidth - activeOvalWidth);
-    final double itemTouchWidth = innerWidth / 4.0;
-
-    Widget buildNavItem(int index, String inactiveIcon) {
-      final double closenessAtTab =
-          (1.0 - (pageProgress - index).abs()).clamp(0.0, 1.0);
-      final double opacity = (1.0 - closenessAtTab).clamp(0.0, 1.0);
-      final double centerPos = tabCenters[index];
+    Widget buildNavItem(int index) {
+      final double closeness = tabCloseness[index];
+      final double width = tabWidths[index];
+      final double left = tabLefts[index];
 
       return Positioned(
-        left: centerPos - (itemTouchWidth / 2.0),
+        left: left,
         top: 0,
         bottom: 0,
-        width: itemTouchWidth,
+        width: width,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
@@ -232,14 +223,62 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
             }
           },
           child: Center(
-            child: Opacity(
-              opacity: opacity,
-              child: Image.asset(
-                inactiveIcon,
-                width: 20,
-                height: 20,
-                color: VizareColors.textSecondary,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Opacity(
+                        opacity: (1.0 - closeness).clamp(0.0, 1.0),
+                        child: Image.asset(
+                          inactiveIcons[index],
+                          width: 20,
+                          height: 20,
+                          color: VizareColors.textSecondary,
+                        ),
+                      ),
+                      Opacity(
+                        opacity: closeness,
+                        child: Image.asset(
+                          activeIcons[index],
+                          width: iconWidth,
+                          height: iconWidth,
+                          color: VizareColors.obsidianBlack,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ClipRect(
+                  child: Opacity(
+                    opacity: closeness,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: gapWidth * closeness,
+                      ),
+                      child: SizedBox(
+                        height: 16,
+                        width: (textWidths[index] ?? 50.0) * closeness,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            labels[index],
+                            maxLines: 1,
+                            softWrap: false,
+                            style: labelStyle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -296,12 +335,12 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
               ),
               child: Stack(
                 children: [
-                  // Sliding and morphing VisionOS Champagne Gold & Neon pill
+                  // 1. Fluidly morphing VisionOS Champagne Gold pill
                   Positioned(
-                    left: ovalLeft,
+                    left: activePillLeft,
                     top: 6,
                     bottom: 6,
-                    width: activeOvalWidth,
+                    width: activePillWidth,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
@@ -314,52 +353,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              activeIcons[activeIndexInt],
-                              width: iconWidth,
-                              height: iconWidth,
-                              color: VizareColors.obsidianBlack,
-                            ),
-                            ClipRect(
-                              child: Opacity(
-                                opacity: closeness,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: gapWidth * closeness,
-                                  ),
-                                  child: SizedBox(
-                                    height: 16,
-                                    width: (textWidths[activeIndexInt] ?? 50.0) *
-                                        closeness,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        labels[activeIndexInt],
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        style: labelStyle,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
-                  // Inactive items positioned centered on each tab center
-                  buildNavItem(0, inactiveIcons[0]),
-                  buildNavItem(1, inactiveIcons[1]),
-                  buildNavItem(2, inactiveIcons[2]),
-                  buildNavItem(3, inactiveIcons[3]),
+                  // 2. Interactive Navigation Items positioned dynamically
+                  buildNavItem(0),
+                  buildNavItem(1),
+                  buildNavItem(2),
+                  buildNavItem(3),
                 ],
               ),
             ),
