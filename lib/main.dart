@@ -19,6 +19,7 @@ import 'pages/homeowner_page.dart';
 import 'pages/admin_page.dart';
 import 'pages/settings/tos_page.dart';
 import 'pages/settings/privacy_policy_page.dart';
+import 'pages/utils/app_theme.dart';
 import 'pages/utils/role_guard.dart';
 
 void main() async {
@@ -254,20 +255,74 @@ class MyApp extends StatelessWidget {
         ),
       ),
       builder: (context, child) {
+        if (!kIsWeb) {
+          return child ?? const SizedBox.shrink();
+        }
+
         return Scaffold(
           backgroundColor: const Color(0xFF050608),
           body: Center(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final isWideScreen = constraints.maxWidth > 500;
-                final containerWidth = isWideScreen ? 460.0 : constraints.maxWidth;
+                final isMobileBrowser = constraints.maxWidth <= 500;
 
-                return SizedBox(
-                  width: containerWidth,
-                  height: constraints.maxHeight,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(isWideScreen ? 24 : 0),
-                    child: child ?? const SizedBox.shrink(),
+                if (isMobileBrowser) {
+                  return child ?? const SizedBox.shrink();
+                }
+
+                // iPhone 16 / 17 Display Specs (393 x 852 logical points, 19.5:9 ratio)
+                const double targetWidth = 393.0;
+                const double targetHeight = 852.0;
+                const double topSafeArea = 54.0; // Dynamic Island / Status Bar
+                const double bottomSafeArea = 34.0; // Home indicator
+
+                return FittedBox(
+                  fit: BoxFit.contain,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 24.0, horizontal: 24.0),
+                    width: targetWidth,
+                    height: targetHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF050608),
+                      borderRadius: BorderRadius.circular(52.0),
+                      border: Border.all(
+                        color: VizareColors.champagneGold.withValues(alpha: 0.35),
+                        width: 2.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          blurRadius: 36,
+                          spreadRadius: 8,
+                          offset: const Offset(0, 14),
+                        ),
+                        BoxShadow(
+                          color: VizareColors.champagneGold.withValues(alpha: 0.12),
+                          blurRadius: 24,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(49.0),
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          size: const Size(targetWidth, targetHeight),
+                          padding: const EdgeInsets.only(
+                            top: topSafeArea,
+                            bottom: bottomSafeArea,
+                          ),
+                          viewPadding: const EdgeInsets.only(
+                            top: topSafeArea,
+                            bottom: bottomSafeArea,
+                          ),
+                          textScaler: const TextScaler.linear(1.0),
+                          devicePixelRatio: 3.0,
+                        ),
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 );
               },
