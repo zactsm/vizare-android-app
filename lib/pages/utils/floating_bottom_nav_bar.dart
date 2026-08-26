@@ -26,9 +26,9 @@ class NavBarConfig {
     this.barWidth = 348.0,
     this.pillInsetH = 4.0,
     this.pillInsetV = 6.0,
-    this.ovalPaddingH = 10.0,
+    this.ovalPaddingH = 24.0,
     this.gapWidth = 5.0,
-    this.collapsedWidth = 32.0,
+    this.collapsedWidth = 56.0,
     this.bottomMargin = 24.0,
   });
 
@@ -40,9 +40,9 @@ class NavBarConfig {
         barWidth: 400.0,
         pillInsetV: 6.0,
         pillInsetH: 5.0,
-        ovalPaddingH: 18.0,
-        gapWidth: 9.0,
-        collapsedWidth: 36.0,
+        ovalPaddingH: 24.0,
+        gapWidth: 6.5,
+        collapsedWidth: 56.0,
         bottomMargin: 24.0,
       );
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -51,9 +51,9 @@ class NavBarConfig {
         barWidth: 348.0,
         pillInsetV: 6.0,
         pillInsetH: 4.0,
-        ovalPaddingH: 10.0,
+        ovalPaddingH: 24.0,
         gapWidth: 5.0,
-        collapsedWidth: 32.0,
+        collapsedWidth: 56.0,
         bottomMargin: 24.0,
       );
     } else {
@@ -63,9 +63,9 @@ class NavBarConfig {
         barWidth: 348.0,
         pillInsetV: 6.0,
         pillInsetH: 4.0,
-        ovalPaddingH: 10.0,
+        ovalPaddingH: 24.0,
         gapWidth: 5.0,
-        collapsedWidth: 32.0,
+        collapsedWidth: 56.0,
         bottomMargin: 24.0,
       );
     }
