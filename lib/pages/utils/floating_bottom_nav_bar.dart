@@ -198,7 +198,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     // For the inner pill to be concentric with zero clipping at the ends:
     final double safeInset = config.pillInsetV.clamp(0.0, containerRadius - 4.0);
     final double minLeft = safeInset;
-    final double maxRight = barWidth - safeInset;
+    // Add extra right-side buffer so Settings has balanced visual breathing room matching Explore
+    final double maxRight = barWidth - safeInset - 3.0;
 
     // Calculate active tab centers
     final double center0 = minLeft + ((targetOvalWidths[0] ?? 92.0) / 2.0);
