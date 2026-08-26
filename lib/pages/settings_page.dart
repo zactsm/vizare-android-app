@@ -88,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
         // 1. Scrollable List grouped into VisionOS glass containers
         ListView(
           padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 130, bottom: 120),
+              const EdgeInsets.only(left: 16, right: 16, top: 100, bottom: 120),
           children: [
             _buildSectionHeader('Account Preferences'),
             _buildSettingsGroup([
@@ -227,42 +227,32 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
 
         // VisionOS Top Header Capsule
+        // Top Header Texts
         Positioned(
-          top: 20,
-          left: 16,
-          right: 16,
-          child: VisionGlassContainer(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            borderRadius: 24,
-            backgroundColor:
-                VizareColors.obsidianSurface.withValues(alpha: 0.85),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
-              width: 1.2,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Settings',
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -0.6,
-                  ),
+          top: 16,
+          left: 20,
+          right: 20,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -0.6,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Manage your account, notifications, and security.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    color: VizareColors.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Manage your account, notifications, and security.',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: VizareColors.textSecondary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 

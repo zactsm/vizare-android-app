@@ -245,20 +245,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: IconButton(
-                onPressed: _logout,
-                tooltip: 'Log out',
-                icon: const Icon(
-                  Icons.logout_rounded,
-                  color: VizareColors.crimsonRed,
-                  size: 22,
-                ),
-              ),
-            ),
-          ],
+          actions: null,
           title: Text(
             'Member Identity',
             style: GoogleFonts.poppins(

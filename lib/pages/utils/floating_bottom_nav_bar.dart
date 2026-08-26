@@ -97,9 +97,9 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
         : _animController.value;
 
     final labelStyle = GoogleFonts.poppins(
-      fontSize: 11.0,
+      fontSize: 10.5,
       fontWeight: FontWeight.w800,
-      letterSpacing: 0.5,
+      letterSpacing: 0.4,
       color: VizareColors.obsidianBlack,
     );
 
@@ -132,17 +132,17 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     final Map<int, double> targetOvalWidths = {};
 
     for (int i = 0; i < labels.length; i++) {
-      final double tw = _getTextWidth(labels[i], labelStyle);
+      final double tw = _getTextWidth(labels[i], labelStyle) + 2.0;
       textWidths[i] = tw;
       targetOvalWidths[i] = iconWidth + gapWidth + tw + (2 * ovalPaddingH);
     }
 
     final double maxBarWidth = screenWidth > 480 ? 480 : screenWidth;
     final double barWidth = maxBarWidth - 32;
-    const double containerPaddingH = 6.0;
+    const double containerPaddingH = 8.0;
     final double innerWidth = barWidth - (2 * containerPaddingH);
 
-    const double safetyMargin = 4.0;
+    const double safetyMargin = 12.0;
     final double halfWidth0 = (targetOvalWidths[0] ?? 90.0) / 2.0;
     final double halfWidth3 = (targetOvalWidths[3] ?? 90.0) / 2.0;
 
@@ -255,18 +255,18 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
           bottom: 24,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(36),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
             child: Container(
-              height: 74,
+              height: 68,
               padding: const EdgeInsets.symmetric(
                 horizontal: containerPaddingH,
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface.withValues(alpha: 0.68),
-                borderRadius: BorderRadius.circular(40),
+                color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(36),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.18),
                   width: 1.2,
@@ -277,7 +277,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                   colors: [
                     Colors.white.withValues(alpha: 0.12),
                     Colors.white.withValues(alpha: 0.03),
-                    VizareColors.obsidianSurface.withValues(alpha: 0.68),
+                    VizareColors.obsidianSurface.withValues(alpha: 0.72),
                   ],
                   stops: const [0.0, 0.35, 1.0],
                 ),
@@ -299,13 +299,13 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                   // Sliding and morphing VisionOS Champagne Gold & Neon pill
                   Positioned(
                     left: ovalLeft,
-                    top: 4,
-                    bottom: 4,
+                    top: 6,
+                    bottom: 6,
                     width: activeOvalWidth,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: VizareColors.goldGradient,
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
                             color: VizareColors.champagneGold.withValues(alpha: 0.35),
@@ -333,14 +333,18 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                                     left: gapWidth * closeness,
                                   ),
                                   child: SizedBox(
-                                    height: 18,
+                                    height: 16,
                                     width: (textWidths[activeIndexInt] ?? 50.0) *
                                         closeness,
-                                    child: Text(
-                                      labels[activeIndexInt],
-                                      maxLines: 1,
-                                      overflow: TextOverflow.clip,
-                                      style: labelStyle,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        labels[activeIndexInt],
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        style: labelStyle,
+                                      ),
                                     ),
                                   ),
                                 ),

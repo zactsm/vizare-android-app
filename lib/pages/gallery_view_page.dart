@@ -29,6 +29,12 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
     _pageController = PageController(initialPage: _currentIndex);
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void onPageChanged(int index) {
     setState(() {
       _currentIndex = index;
@@ -37,6 +43,8 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool canCycle = widget.imagePaths.length > 1;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -88,6 +96,63 @@ class _GalleryViewPageState extends State<GalleryViewPage> {
               ),
             ),
           ),
+
+          // Left Chevron Navigation Button
+          if (canCycle)
+            Positioned(
+              left: 16,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: VisionGlassPill(
+                  padding: const EdgeInsets.all(10),
+                  onTap: () {
+                    final target = _currentIndex > 0
+                        ? _currentIndex - 1
+                        : widget.imagePaths.length - 1;
+                    _pageController.animateToPage(
+                      target,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
+                    );
+                  },
+                  child: const Icon(
+                    Icons.chevron_left_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+
+          // Right Chevron Navigation Button
+          if (canCycle)
+            Positioned(
+              right: 16,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: VisionGlassPill(
+                  padding: const EdgeInsets.all(10),
+                  onTap: () {
+                    final target = _currentIndex < widget.imagePaths.length - 1
+                        ? _currentIndex + 1
+                        : 0;
+                    _pageController.animateToPage(
+                      target,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
+                    );
+                  },
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+
           Positioned(
             bottom: 28,
             right: 24,

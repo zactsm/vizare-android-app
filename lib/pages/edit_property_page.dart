@@ -38,7 +38,9 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.property.name);
-    _priceController = TextEditingController(text: widget.property.price);
+    _priceController = TextEditingController(
+      text: widget.property.price.replaceFirst(RegExp(r'^RM\s*'), ''),
+    );
     _descriptionController =
         TextEditingController(text: widget.property.description);
     _locationController =
@@ -108,6 +110,13 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User not logged in");
 
+      final rawPrice = _priceController.text.trim();
+      final formattedPrice = rawPrice.startsWith('RM ')
+          ? rawPrice
+          : (rawPrice.startsWith('RM')
+              ? 'RM ${rawPrice.substring(2).trim()}'
+              : 'RM $rawPrice');
+
       final response = await ApiService.post(
         'edit_property.php',
         body: {
@@ -115,7 +124,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           'property_id': widget.property.id.toString(),
           'name': _titleController.text.trim(),
           'location': _locationController.text.trim(),
-          'price': _priceController.text.trim(),
+          'price': formattedPrice,
           'description': _descriptionController.text.trim(),
           'image_path': finalImageUrl,
         },
@@ -162,15 +171,13 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: VisionGlassPill(
-              padding: const EdgeInsets.all(8),
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 16,
+          leading: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: VisionGlassCircleButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                size: 38,
+                onTap: () => Navigator.pop(context),
               ),
             ),
           ),
@@ -225,8 +232,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
                       _buildLabel('Listing Price'),
                       _buildInput(
                         controller: _priceController,
-                        hintText: 'e.g. RM 4,850,000',
+                        hintText: '4,850,000',
                         icon: Icons.payments_rounded,
+                        prefixText: 'RM ',
+                        keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 18),
                       _buildLabel('Location / Vicinity'),
@@ -307,6 +316,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     required String hintText,
     required IconData icon,
     int maxLines = 1,
+    String? prefixText,
+    TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -320,12 +331,19 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        keyboardType: keyboardType,
         style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
             color: VizareColors.champagneGold.withValues(alpha: 0.7),
             size: 20,
+          ),
+          prefixText: prefixText,
+          prefixStyle: GoogleFonts.poppins(
+            color: VizareColors.champagneGold,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(

@@ -136,16 +136,23 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
         }
       }
 
-      final prefs = await SharedPreferences.getInstance();
+       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User session missing.");
+
+      final rawPrice = _priceController.text.trim();
+      final formattedPrice = rawPrice.startsWith('RM ')
+          ? rawPrice
+          : (rawPrice.startsWith('RM')
+              ? 'RM ${rawPrice.substring(2).trim()}'
+              : 'RM $rawPrice');
 
       final response = await ApiService.post(
         'add_property.php',
         body: {
           'email': email,
           'name': _titleController.text.trim(),
-          'price': _priceController.text.trim(),
+          'price': formattedPrice,
           'description': _descriptionController.text.trim(),
           'location': _locationController.text.trim(),
           'image_path': mainImageUrl ?? '',
@@ -197,26 +204,17 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: VisionGlassPill(
-              padding: const EdgeInsets.all(8),
-              onTap: () => Navigator.pop(context),
-              child: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Colors.white,
-                size: 16,
+          leading: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: VisionGlassCircleButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                size: 38,
+                onTap: () => Navigator.pop(context),
               ),
             ),
           ),
-          title: Text(
-            'New Estate Curation',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          title: null,
           centerTitle: true,
         ),
         body: SafeArea(
@@ -267,8 +265,10 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                       _buildLabel('Listing Price'),
                       _buildInput(
                         controller: _priceController,
-                        hintText: 'e.g. RM 4,850,000',
+                        hintText: '4,850,000',
                         icon: Icons.payments_rounded,
+                        prefixText: 'RM ',
+                        keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 18),
                       _buildLabel('Location / Vicinity'),
@@ -344,6 +344,8 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
     required String hintText,
     required IconData icon,
     int maxLines = 1,
+    String? prefixText,
+    TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -357,12 +359,19 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        keyboardType: keyboardType,
         style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
             color: VizareColors.champagneGold.withValues(alpha: 0.7),
             size: 20,
+          ),
+          prefixText: prefixText,
+          prefixStyle: GoogleFonts.poppins(
+            color: VizareColors.champagneGold,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(

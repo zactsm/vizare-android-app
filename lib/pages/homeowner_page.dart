@@ -323,11 +323,11 @@ class _HomeownerPageState extends State<HomeownerPage> {
                       : null,
                 ),
                 child: _profilePicUrl == null
-                    ? Padding(
-                        padding: const EdgeInsets.all(7.0),
-                        child: Image.asset(
-                          'assets/images/profile_icon.png',
-                          fit: BoxFit.contain,
+                    ? const Center(
+                        child: Icon(
+                          Icons.person_rounded,
+                          color: VizareColors.champagneGold,
+                          size: 20,
                         ),
                       )
                     : null,

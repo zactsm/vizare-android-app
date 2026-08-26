@@ -29,10 +29,13 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   String? _userEmail;
 
   List<String> _galleryImages = [];
+  late PageController _imageCarouselController;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _imageCarouselController = PageController(initialPage: 0);
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -43,6 +46,12 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
     _galleryImages = [widget.property.imagePath];
     _fetchGalleryImages();
     _checkIfFavorited();
+  }
+
+  @override
+  void dispose() {
+    _imageCarouselController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchGalleryImages() async {
@@ -140,8 +149,6 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasModel = widget.property.modelPath.isNotEmpty;
-
     return Scaffold(
       backgroundColor: VizareColors.obsidianBlack,
       body: AbstractBackground(
@@ -164,38 +171,27 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                         size: 18,
                       ),
                     ),
-                    Row(
-                      children: [
-                        if (hasModel)
-                          const SpatialBadge(
-                            text: '3D AR AVAILABLE',
-                            icon: Icons.view_in_ar_rounded,
-                            primaryColor: VizareColors.spatialCyan,
-                          ),
-                        const SizedBox(width: 8),
-                        VisionGlassPill(
-                          padding: const EdgeInsets.all(10),
-                          onTap: _toggleFavorite,
-                          child: _isLoadingFavorite
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: VizareColors.champagneGold,
-                                  ),
-                                )
-                              : Icon(
-                                  _isFavorited
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  color: _isFavorited
-                                      ? Colors.redAccent
-                                      : VizareColors.champagneGold,
-                                  size: 18,
-                                ),
-                        ),
-                      ],
+                    VisionGlassPill(
+                      padding: const EdgeInsets.all(10),
+                      onTap: _toggleFavorite,
+                      child: _isLoadingFavorite
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: VizareColors.champagneGold,
+                              ),
+                            )
+                          : Icon(
+                              _isFavorited
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: _isFavorited
+                                  ? Colors.redAccent
+                                  : VizareColors.champagneGold,
+                              size: 18,
+                            ),
                     ),
                   ],
                 ),
@@ -261,10 +257,8 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // VisionOS Image Gallery Layout
+                      // VisionOS Image Gallery & Carousel Layout
                       _buildImageGallery(context, _galleryImages),
-                      const SizedBox(height: 14),
-                      _buildThumbnailList(context, _galleryImages),
                       const SizedBox(height: 24),
 
                       // Architectural Specifications Bento Grid
@@ -427,109 +421,242 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
 
   Widget _buildImageGallery(
       BuildContext context, List<String> galleryImages) {
-    return Row(
+    if (galleryImages.isEmpty) return const SizedBox.shrink();
+
+    final bool canCycle = galleryImages.length > 1;
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 2,
-          child: _buildTappableImage(context, galleryImages, 0),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 1,
-          child: Column(
+        // Main Image Carousel with persistent aspect ratio and chevron controls
+        AspectRatio(
+          aspectRatio: 16 / 10,
+          child: Stack(
             children: [
-              _buildTappableImage(context, galleryImages, 1, height: 118),
-              const SizedBox(height: 10),
-              _buildTappableImage(context, galleryImages, 2, height: 118),
+              // PageView Carousel
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24.0),
+                child: PageView.builder(
+                  controller: _imageCarouselController,
+                  itemCount: galleryImages.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentImageIndex = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    final imagePath = galleryImages[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GalleryViewPage(
+                              imagePaths: galleryImages,
+                              initialIndex: index,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Hero(
+                        tag: '$imagePath-$index',
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24.0),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(23.0),
+                            child: Image.network(
+                              imagePath,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, e, s) => Container(
+                                color: VizareColors.obsidianSurface,
+                                child: const Center(
+                                  child: Icon(Icons.broken_image_rounded,
+                                      color: Colors.white24, size: 40),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Left Chevron Arrow Button
+              if (canCycle)
+                Positioned(
+                  left: 10,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: VisionGlassPill(
+                      padding: const EdgeInsets.all(8),
+                      onTap: () {
+                        final target = _currentImageIndex > 0
+                            ? _currentImageIndex - 1
+                            : galleryImages.length - 1;
+                        _imageCarouselController.animateToPage(
+                          target,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOutCubic,
+                        );
+                      },
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Right Chevron Arrow Button
+              if (canCycle)
+                Positioned(
+                  right: 10,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: VisionGlassPill(
+                      padding: const EdgeInsets.all(8),
+                      onTap: () {
+                        final target = _currentImageIndex < galleryImages.length - 1
+                            ? _currentImageIndex + 1
+                            : 0;
+                        _imageCarouselController.animateToPage(
+                          target,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOutCubic,
+                        );
+                      },
+                      child: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Page Count Indicator Pill
+              if (canCycle)
+                Positioned(
+                  bottom: 12,
+                  right: 12,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.20),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Text(
+                      '${_currentImageIndex + 1} / ${galleryImages.length}',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
+
+        const SizedBox(height: 14),
+
+        // Persistent Aspect Ratio Thumbnail Strip
+        _buildThumbnailList(context, galleryImages),
       ],
     );
   }
 
   Widget _buildThumbnailList(BuildContext context, List<String> images) {
-    if (images.length <= 3) return const SizedBox.shrink();
+    if (images.length <= 1) return const SizedBox.shrink();
 
     return SizedBox(
-      height: 64,
+      height: 68,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: images.length - 3,
+        itemCount: images.length,
         itemBuilder: (context, index) {
-          final realIndex = index + 3;
+          final imagePath = images[index];
+          final bool isSelected = index == _currentImageIndex;
+
           return Padding(
             padding: const EdgeInsets.only(right: 10.0),
-            child: _buildTappableImage(context, images, realIndex,
-                width: 64, height: 64),
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _currentImageIndex = index);
+                _imageCarouselController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOutCubic,
+                );
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected
+                        ? VizareColors.champagneGold
+                        : Colors.white.withValues(alpha: 0.15),
+                    width: isSelected ? 2.0 : 1.0,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: VizareColors.champagneGold.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(isSelected ? 14.0 : 15.0),
+                  child: Image.network(
+                    imagePath,
+                    width: 68,
+                    height: 68,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, e, s) => Container(
+                      width: 68,
+                      height: 68,
+                      color: Colors.white10,
+                      child: const Icon(Icons.broken_image,
+                          color: Colors.white24, size: 20),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildTappableImage(
-      BuildContext context, List<String> images, int index,
-      {double? width, double height = 246}) {
-    if (index >= images.length) {
-      return Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(20),
-        ),
-      );
-    }
-
-    final imagePath = images[index];
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => GalleryViewPage(
-              imagePaths: images,
-              initialIndex: index,
-            ),
-          ),
-        );
-      },
-      child: Hero(
-        tag: '$imagePath-$index',
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
-              width: 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(19.0),
-            child: Image.network(
-              imagePath,
-              width: width,
-              height: height,
-              fit: BoxFit.cover,
-              errorBuilder: (context, e, s) => Container(
-                width: width,
-                height: height,
-                color: Colors.white10,
-                child: const Icon(Icons.broken_image, color: Colors.white24),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
