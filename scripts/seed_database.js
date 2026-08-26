@@ -141,7 +141,7 @@ const listings = [
     price: '$4,850,000',
     description: 'An architectural masterpiece perched in the hills, featuring panoramic floor-to-ceiling glass walls, an infinity edge pool, open-concept living pavilion, and custom Italian designer finishes. Includes interactive 3D model view.',
     image_path: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/LittlestTokyo.glb',
+    model_path: 'assets/models/low_poly_home_2.glb',
     is_featured: true,
     status: 'approved',
     images: [
@@ -158,7 +158,7 @@ const listings = [
     price: '$3,200,000',
     description: 'Spectacular multi-level urban penthouse overlooking the neon skyline. Features automated smart home climate systems, private sky deck, bespoke woodwork, and fully furnished spatial layout.',
     image_path: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/residential-family-house-b36b822986f44ca99e6cfec20386a955',
+    model_path: 'assets/models/low_poly_wooden_cabine.glb',
     is_featured: true,
     status: 'approved',
     images: [
@@ -174,7 +174,7 @@ const listings = [
     price: '$2,450,000',
     description: 'Modern Scandinavian architectural retreat crafted with sustainable Douglas fir beams, polished concrete radiant floors, and floor-to-ceiling forest views. Includes bespoke timber exterior model.',
     image_path: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/AVIFTest/forest_house.glb',
+    model_path: 'assets/models/low_poly_home_1.glb',
     is_featured: true,
     status: 'approved',
     images: [
@@ -190,7 +190,7 @@ const listings = [
     price: '$6,900,000',
     description: 'Prime waterfront estate with private deep-water yacht dock, expansive outdoor entertaining terrace, resort-style heated pool, and lush tropical landscape architecture.',
     image_path: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-1-72b37584f1a74e66914d4c57ea7f70d8',
+    model_path: 'assets/models/low_poly_house_1.glb',
     is_featured: true,
     status: 'approved',
     images: [
@@ -206,7 +206,7 @@ const listings = [
     price: '$1,875,000',
     description: 'Dramatic steel and cedar cantilever residence nestled into the hillside. Boasts energy-positive solar arrays, smart automated illumination, and custom industrial fixture fittings.',
     image_path: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-5-d39346d08e494adfb4d1c70db350f2ce',
+    model_path: 'assets/models/residential_family_house.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -222,7 +222,7 @@ const listings = [
     price: '$5,400,000',
     description: 'High-floor Tribeca loft penthouse with 14-foot ceilings, direct key-elevator access, private wrap-around terrace, custom marble fireplace lounge, and breathtaking river vistas.',
     image_path: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-4-7b9d7d2a530648fe8ab096c9fba23be9',
+    model_path: 'assets/models/low_poly_house_5.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -238,7 +238,7 @@ const listings = [
     price: '$1,650,000',
     description: 'Elegantly restored 1920s Craftsman residence featuring handcrafted mahogany joinery, original river rock fireplace, stone masonry accents, and detached guest carriage house.',
     image_path: 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/villagePack/cottage/cottage.glb',
+    model_path: 'assets/models/residential_complex_modern_apartment_building.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -254,7 +254,7 @@ const listings = [
     price: '$1,290,000',
     description: 'Top-floor modern gallery loft in downtown Seattle featuring exposed industrial trusses, polished epoxy floors, museum lighting grid, and avant-garde architectural sculptures.',
     image_path: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-3-d7d42b52319d44cf89d6d6404970cd46',
+    model_path: 'assets/models/low_poly_house_2.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -270,7 +270,7 @@ const listings = [
     price: '$2,950,000',
     description: 'Newly constructed desert modern estate featuring rammed-earth accent walls, zero-edge reflection pool, indoor-outdoor glass pocket doors, and iridescent ambient illumination.',
     image_path: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/house_scene.glb',
+    model_path: 'assets/models/low_poly_medieval_house_5.glb',
     is_featured: false,
     status: 'pending',
     images: [
@@ -286,7 +286,7 @@ const listings = [
     price: '$3,750,000',
     description: 'Custom timber and stone alpine retreat with private ski trail access, heated driveway, wellness sauna pavilion, and state-of-the-art acoustic listening lounge.',
     image_path: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/villagePack/inn/inn.glb',
+    model_path: 'assets/models/building_7.glb',
     is_featured: false,
     status: 'draft',
     images: [
@@ -302,7 +302,7 @@ const listings = [
     price: '$4,100,000',
     description: 'Exclusive SoMa tech penthouse with high-security biometric entry, private roof garden, and panoramic city views across the futuristic downtown skyline.',
     image_path: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/VirtualCity/glTF-Binary/VirtualCity.glb',
+    model_path: 'assets/models/low_poly_medieval_house_2.glb',
     is_featured: false,
     status: 'sold',
     images: [
@@ -318,7 +318,7 @@ const listings = [
     price: '$1,450,000',
     description: 'Pastoral country estate with 10 rolling acres, equestrian stables, heritage millhouse lodge architecture, and natural creek frontage.',
     image_path: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/villagePack/sawMill/sawMill.glb',
+    model_path: 'assets/models/low_poly_house_3.glb',
     is_featured: false,
     status: 'rejected',
     images: [
@@ -334,7 +334,7 @@ const listings = [
     price: '$8,250,000',
     description: 'Gated oceanfront compound with dual Mediterranean guest villas, private bluff staircase to beach, infinity jacuzzi, and expansive terracotta loggias overlooking the Pacific.',
     image_path: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-2-470dd32acf1847c29acaf0fc898e414b',
+    model_path: 'assets/models/low_poly_medieval_house_3.glb',
     is_featured: true,
     status: 'approved',
     images: [
@@ -350,7 +350,7 @@ const listings = [
     price: '$5,600,000',
     description: 'Expansive alpine valley estate surrounded by pristine aspen groves. Includes main chalet, secondary guest lodge, private trout stream, and heated outdoor stone terrace.',
     image_path: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-house-3-d2722c2e056a48ca8c922298b7a9e88b',
+    model_path: 'assets/models/low_poly_stylized_home.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -366,7 +366,7 @@ const listings = [
     price: '$2,150,000',
     description: 'Historic antebellum brick manor with wrought-iron balconies, private courtyard gardens, restored heart-pine flooring, and 12-foot double-hung sash windows.',
     image_path: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-home-2-f5e7be986a524c3c976c726a9f2b2061',
+    model_path: 'assets/models/low_poly_house_3-2.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -382,7 +382,7 @@ const listings = [
     price: '$3,890,000',
     description: 'Stately Garden District mansion featuring gothic architecture, soaring turrets, original gas-flame lanterns, ornate plaster molding, and secluded magnolia grounds.',
     image_path: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/haunted_house.glb',
+    model_path: 'assets/models/building_no_19_form_tokyo_otemachi_building_pack.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -398,7 +398,7 @@ const listings = [
     price: '$3,450,000',
     description: 'Cast-iron building corner loft with barrel-vaulted brick ceilings, oversized Corinthian columns, polished concrete floors, and custom minimalist steel architectural framing.',
     image_path: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-stylized-home-ca64053dca474ff2825eedaaf8eb98d1',
+    model_path: 'assets/models/low_poly_medieval_house_1.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -414,7 +414,7 @@ const listings = [
     price: '$2,780,000',
     description: 'Luxury two-story duplex penthouse overlooking Lake Michigan. Features custom floating glass staircase, 800 sq ft private terrace with outdoor fireplace, and smart Lutron automation.',
     image_path: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-medieval-house-1-81b8d567c94945059918e0bf303c8310',
+    model_path: 'assets/models/low_poly_medieval_house_4.glb',
     is_featured: false,
     status: 'approved',
     images: [
@@ -430,7 +430,7 @@ const listings = [
     price: '$3,120,000',
     description: 'Mid-century modern desert oasis with iconic structural archway, sunken fire pit lounge, saltwater lap pool, and panoramic views of the San Jacinto mountain range.',
     image_path: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/Buildings/road gap.glb',
+    model_path: 'assets/models/low_poly_house_4.glb',
     is_featured: false,
     status: 'pending',
     images: [
@@ -446,7 +446,7 @@ const listings = [
     price: '$1,980,000',
     description: 'LEED Platinum certified hillside residence featuring green roof garden, geo-thermal heating, triple-pane floor-to-ceiling glass, and sustainable western red cedar siding.',
     image_path: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80',
-    model_path: 'https://sketchfab.com/3d-models/low-poly-wooden-cabine-5cb73d080fcb4968b50c6d4b040a04e6',
+    model_path: 'assets/models/building_no_6_form_tokyo_otemachi_building_pack.glb',
     is_featured: false,
     status: 'approved',
     images: [

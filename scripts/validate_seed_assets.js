@@ -57,6 +57,61 @@ function validateImageUrl(url) {
  */
 function validateGlbModel(url) {
   return new Promise((resolve) => {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      const localPath = path.isAbsolute(url) ? url : path.join(__dirname, '..', url);
+      if (!fs.existsSync(localPath)) {
+        return resolve({ url, valid: false, error: `Local model not found: ${localPath}` });
+      }
+      try {
+        const stats = fs.statSync(localPath);
+        const fd = fs.openSync(localPath, 'r');
+        const buf = Buffer.alloc(Math.min(stats.size, 131072));
+        fs.readSync(fd, buf, 0, buf.length, 0);
+        fs.closeSync(fd);
+
+        if (buf.length < 20) {
+          return resolve({ url, valid: false, error: 'File too small for valid GLB header' });
+        }
+
+        const magic = buf.slice(0, 4).toString('ascii');
+        const version = buf.readUInt32LE(4);
+        const totalLength = buf.readUInt32LE(8);
+        const chunk0Length = buf.readUInt32LE(12);
+        const chunk0Type = buf.slice(16, 20).toString('ascii');
+
+        const isMagicValid = magic === 'glTF';
+        const isVersionValid = version === 2 || version === 1;
+        const isChunkTypeValid = chunk0Type === 'JSON';
+
+        let parsedJson = null;
+        if (isChunkTypeValid && buf.length >= 20 + Math.min(chunk0Length, 4096)) {
+          try {
+            const jsonSlice = buf.slice(20, 20 + chunk0Length).toString('utf8');
+            parsedJson = JSON.parse(jsonSlice);
+          } catch (_) {}
+        }
+
+        const valid = isMagicValid && isVersionValid && isChunkTypeValid;
+
+        return resolve({
+          url,
+          valid,
+          magic,
+          version,
+          totalLength: stats.size,
+          contentLengthHeader: stats.size,
+          chunk0Type,
+          assetInfo: parsedJson?.asset || null,
+          nodeCount: parsedJson?.nodes?.length || 0,
+          meshCount: parsedJson?.meshes?.length || 0,
+          materialCount: parsedJson?.materials?.length || 0,
+          error: valid ? null : `Malformed GLB: magic=${magic}, version=${version}, chunkType=${chunk0Type}`
+        });
+      } catch (err) {
+        return resolve({ url, valid: false, error: err.message });
+      }
+    }
+
     if (url.includes('sketchfab.com')) {
       const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
         res.on('data', () => {});
