@@ -8,8 +8,10 @@ import GoogleMaps
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Provide Google Maps API key for iOS SDK
-    if let mapsKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String, !mapsKey.isEmpty { GMSServices.provideAPIKey(mapsKey) }
+    // Provide Google Maps API key for iOS SDK from Info.plist / xcconfig
+    if let mapsKey = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String, !mapsKey.isEmpty {
+      GMSServices.provideAPIKey(mapsKey)
+    }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -18,3 +20,4 @@ import GoogleMaps
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 }
+

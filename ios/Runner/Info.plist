@@ -70,5 +70,7 @@
 	<string>Your location is used to show nearby luxury properties and set preferred locations.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Your location is used to show nearby luxury properties and set preferred locations.</string>
+	<key>GMSApiKey</key>
+	<string>$(MAPS_API_KEY)</string>
 </dict>
 </plist>
