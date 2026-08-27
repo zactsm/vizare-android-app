@@ -282,7 +282,11 @@ async function dispatch(name, request, admin, publicClient) {
       if (result.error.status === 429 || result.error.message?.toLowerCase().includes('rate limit')) {
         return [429, { message: 'Rate limit reached. Please wait a few minutes before trying again.' }];
       }
-      return [result.error.status || 400, { message: result.error.message }];
+      let errorMsg = result.error.message;
+      if (!errorMsg || errorMsg === '{}' || errorMsg.trim() === '') {
+        errorMsg = 'Failed to send confirmation email. Please check your network connection and try again.';
+      }
+      return [result.error.status || 400, { message: errorMsg }];
     }
 
     if (!result.data.user || result.data.user.identities?.length === 0) {

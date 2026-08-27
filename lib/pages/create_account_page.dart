@@ -267,7 +267,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         var message = 'Failed to create account. Please try again.';
         try {
           final responseData = jsonDecode(response.body);
-          message = responseData['message'] as String? ?? message;
+          final rawMsg = responseData['message'] as String?;
+          if (rawMsg != null && rawMsg.trim().isNotEmpty && rawMsg.trim() != '{}') {
+            message = rawMsg;
+          }
         } catch (_) {
           if (response.statusCode == 503) {
             message =
