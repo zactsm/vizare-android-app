@@ -110,9 +110,9 @@ void main() {
           home: Scaffold(
             body: Stack(
               children: [
-                TopBarGradientBlur(height: 56),
+                TopBarGradientBlur(),
                 TopBarGradientBlur(
-                  height: 56,
+                  height: 125,
                   enableBackdropBlur: true,
                   blurSigma: 10,
                 ),

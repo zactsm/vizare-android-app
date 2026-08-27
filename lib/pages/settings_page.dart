@@ -244,7 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
 
         // Smooth Gradient Blur behind top header
-        const TopBarGradientBlur(height: 90.0),
+        const TopBarGradientBlur(height: 125.0),
 
         // VisionOS Top Header Capsule
         // Top Header Texts

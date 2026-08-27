@@ -13,7 +13,7 @@ class TopBarGradientBlur extends StatelessWidget {
 
   const TopBarGradientBlur({
     super.key,
-    this.height = 56.0,
+    this.height = 90.0,
     this.gradientColors,
     this.gradientStops,
     this.blurSigma = 0.0,

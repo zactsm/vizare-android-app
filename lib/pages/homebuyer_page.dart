@@ -348,7 +348,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
             ),
 
         // Smooth Gradient Blur behind top bar
-        const TopBarGradientBlur(height: 56.0),
+        const TopBarGradientBlur(height: 90.0),
 
         // Floating VisionOS Top Search Capsule
         _buildTopSearchCapsule(context),

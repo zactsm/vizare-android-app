@@ -95,7 +95,7 @@ class _SearchPageState extends State<SearchPage> {
         _buildResults(),
 
         // Smooth Gradient Blur behind top search bar
-        const TopBarGradientBlur(height: 85.0),
+        const TopBarGradientBlur(height: 120.0),
 
         // VisionOS Floating Search Bar Capsule
         Positioned(

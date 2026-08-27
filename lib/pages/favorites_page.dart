@@ -84,7 +84,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             : _buildFavoritesList(),
 
         // Smooth Gradient Blur behind top header
-        const TopBarGradientBlur(height: 90.0),
+        const TopBarGradientBlur(height: 125.0),
 
         // Top Header Texts
         Positioned(
