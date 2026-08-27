@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
 
+import 'pages/utils/api_service.dart';
+
 Future<void> loadGoogleMapsApi({String? fallbackApiKey}) async {
   if (html.document.querySelector('script[data-vizare-google-maps]') != null) {
     return;
@@ -10,8 +12,12 @@ Future<void> loadGoogleMapsApi({String? fallbackApiKey}) async {
 
   var apiKey = fallbackApiKey?.trim() ?? '';
   if (apiKey.isEmpty) {
+    final base = ApiService.baseUrl;
+    final configUrl = base.endsWith('/')
+        ? '${base}client_config.php'
+        : '$base/client_config.php';
     final response = await html.HttpRequest.request(
-      '/api/client_config.php',
+      configUrl,
       method: 'GET',
     );
     if (response.status != 200) {

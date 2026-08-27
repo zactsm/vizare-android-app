@@ -72,5 +72,19 @@ SUPABASE_PUBLISHABLE_KEY=mock-anon-key-12345
       expect(uri.host, 'localhost');
       expect(uri.path, '/test_route.php');
     });
+
+    test('getUri correctly preserves base url with path prefix', () {
+      dotenv.env['API_BASE_URL'] = 'https://vizare-app.vercel.app/api';
+      final uri = ApiService.getUri('login.php');
+      expect(uri.toString(), 'https://vizare-app.vercel.app/api/login.php');
+      expect(uri.scheme, 'https');
+      expect(uri.host, 'vizare-app.vercel.app');
+      expect(uri.path, '/api/login.php');
+    });
+
+    test('baseUrl returns defaultApiBaseUrl when API_BASE_URL is not set', () {
+      dotenv.env.remove('API_BASE_URL');
+      expect(ApiService.baseUrl, ApiService.defaultApiBaseUrl);
+    });
   });
 }

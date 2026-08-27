@@ -8,29 +8,30 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static final Logger _logger = Logger();
+  static const String defaultApiBaseUrl = 'https://vizare-app.vercel.app/api';
   static const String avatarsBucket = 'avatars';
   static const String propertyAssetsBucket = 'property-assets';
   static const String supportAttachmentsBucket = 'support-attachments';
 
   static String get baseUrl {
-    final envBase = dotenv.env['API_BASE_URL']?.trim();
+    final envBase =
+        (dotenv.isInitialized ? dotenv.env['API_BASE_URL'] : null)?.trim();
     if (envBase != null && envBase.isNotEmpty) {
       return envBase.endsWith('/')
           ? envBase.substring(0, envBase.length - 1)
           : envBase;
     }
 
-    if (kIsWeb) {
-      return '/api';
-    }
-
-    return 'https://vizare-app.vercel.app/api';
+    return defaultApiBaseUrl;
   }
 
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String get supabaseUrl =>
+      (dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null) ?? '';
   static String get supabasePublishableKey =>
-      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ??
-      dotenv.env['SUPABASE_ANON_KEY'] ??
+      (dotenv.isInitialized
+          ? (dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ??
+              dotenv.env['SUPABASE_ANON_KEY'])
+          : null) ??
       '';
 
   static Future<String?> uploadAvatar(PlatformFile file) =>
@@ -156,17 +157,19 @@ class ApiService {
 
   static Uri getUri(String path, [Map<String, dynamic>? queryParameters]) {
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    final base = baseUrl.replaceFirst(RegExp(r'https?://'), '');
-    final isHttps = baseUrl.startsWith('https');
-    final query = (queryParameters != null && queryParameters.isNotEmpty)
-        ? queryParameters
-        : null;
-
-    if (isHttps) {
-      return Uri.https(base, cleanPath, query);
-    } else {
-      return Uri.http(base, cleanPath, query);
+    final base = baseUrl;
+    final fullUrl = base.endsWith('/') ? '$base$cleanPath' : '$base/$cleanPath';
+    final parsed = Uri.parse(fullUrl);
+    if (queryParameters != null && queryParameters.isNotEmpty) {
+      return parsed.replace(
+        queryParameters: {
+          ...parsed.queryParameters,
+          ...queryParameters
+              .map((key, value) => MapEntry(key, value.toString())),
+        },
+      );
     }
+    return parsed;
   }
 
   static Map<String, String> _authenticatedHeaders(
@@ -204,7 +207,8 @@ class ApiService {
       {Map<String, String>? body, Map<String, String>? headers}) async {
     final base = baseUrl;
     final cleanScript = script.startsWith('/') ? script.substring(1) : script;
-    final url = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
+    final url = Uri.parse(
+        base.endsWith('/') ? '$base$cleanScript' : '$base/$cleanScript');
 
     if (kDebugMode) {
       final sanitized = Map<String, String>.from(body ?? {});
@@ -243,7 +247,8 @@ class ApiService {
       [Map<String, dynamic>? queryParameters]) async {
     final base = baseUrl;
     final cleanScript = script.startsWith('/') ? script.substring(1) : script;
-    final baseUri = Uri.parse(base.isEmpty ? '/api/$cleanScript' : '$base/$cleanScript');
+    final baseUri = Uri.parse(
+        base.endsWith('/') ? '$base$cleanScript' : '$base/$cleanScript');
 
     final url = baseUri.replace(queryParameters: {
       ...baseUri.queryParameters,

@@ -35,25 +35,27 @@ void main() async {
     debugPrint('Note: .env asset not bundled locally: $error');
   }
 
+  // Ensure dotenv is initialized even if .env file is missing from bundle
+  if (!dotenv.isInitialized) {
+    await dotenv.load(mergeWith: {'API_BASE_URL': ApiService.defaultApiBaseUrl});
+  }
+
   // 2. Extract configuration or fetch dynamically from Vercel API Gateway
-  final isDotEnvReady = dotenv.isInitialized;
-  String? supabaseUrl = isDotEnvReady ? dotenv.env['SUPABASE_URL'] : null;
-  String? supabaseAnonKey = isDotEnvReady
-      ? (dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'])
-      : null;
-  String? googleMapsKey = isDotEnvReady ? dotenv.env['GOOGLE_MAPS_API_KEY'] : null;
-  String? googleOAuthId = isDotEnvReady
-      ? (dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'])
-      : null;
+  String? supabaseUrl = dotenv.env['SUPABASE_URL'];
+  String? supabaseAnonKey =
+      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
+  String? googleMapsKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
+  String? googleOAuthId =
+      dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
 
   if (supabaseUrl == null || supabaseAnonKey == null) {
     try {
       final base = ApiService.baseUrl;
       final configUri = Uri.parse(
-          base.isEmpty ? '/api/client_config.php' : '$base/client_config.php');
+          base.endsWith('/') ? '${base}client_config.php' : '$base/client_config.php');
       final response = await http
           .get(configUri)
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         supabaseUrl ??= data['supabase_url']?.toString();
