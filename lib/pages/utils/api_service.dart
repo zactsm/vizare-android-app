@@ -117,6 +117,17 @@ class ApiService {
     final objectPath = _extractObjectPath(url, bucket);
     if (objectPath == null) return;
 
+    // Ensure users can only delete their own uploaded files under their userId folder
+    String? currentUserId;
+    try {
+      currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    } catch (_) {}
+
+    if (currentUserId != null && !objectPath.startsWith('$currentUserId/')) {
+      _logger.w("Denied attempt to delete unauthorized storage object: $objectPath");
+      return;
+    }
+
     try {
       await Supabase.instance.client.storage.from(bucket).remove([objectPath]);
     } catch (e) {
@@ -267,11 +278,11 @@ class ApiService {
   }
 
   static void _logResponse(http.Response response) {
+    if (!kDebugMode) return;
     if (response.statusCode == 200) {
       _logger.i('Response 200 from ${response.request?.url}');
     } else {
-      _logger.w(
-          'Response ${response.statusCode} from ${response.request?.url}: ${response.body}');
+      _logger.w('Response ${response.statusCode} from ${response.request?.url}');
     }
   }
 }

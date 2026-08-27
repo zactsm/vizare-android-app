@@ -117,10 +117,17 @@ class _HomeownerPageState extends State<HomeownerPage> {
 
     if (confirm != true) return;
 
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('user_email');
+    if (email == null) return;
+
     try {
       final response = await ApiService.post(
         'delete_property.php',
-        body: {'property_id': propertyId.toString()},
+        body: {
+          'property_id': propertyId.toString(),
+          'email': email,
+        },
       );
 
       if (response.statusCode == 200) {

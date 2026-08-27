@@ -41,7 +41,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // Configure signing config via CI/CD or key.properties for production release
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

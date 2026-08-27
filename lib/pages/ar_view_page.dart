@@ -24,9 +24,17 @@ class _ArViewPageState extends State<ArViewPage> {
   int _lightingIndex = 0; // 0 = Golden Hour, 1 = Studio Daylight, 2 = Cyber Twilight
   WebViewController? _webViewController;
 
-  bool get _isSketchfab => widget.modelUrl.toLowerCase().contains('sketchfab.com');
+  bool get _isSketchfab {
+    final uri = Uri.tryParse(widget.modelUrl);
+    if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
+      return false;
+    }
+    final host = uri.host.toLowerCase();
+    return host == 'sketchfab.com' || host.endsWith('.sketchfab.com');
+  }
 
   String? get _sketchfabEmbedUrl {
+    if (!_isSketchfab) return null;
     final match = RegExp(r'([a-f0-9]{32})', caseSensitive: false).firstMatch(widget.modelUrl);
     if (match != null) {
       final id = match.group(1);
@@ -43,8 +51,8 @@ class _ArViewPageState extends State<ArViewPage> {
       statusBarColor: Colors.transparent,
     ));
 
-    if (_isSketchfab) {
-      final embedUrl = _sketchfabEmbedUrl ?? widget.modelUrl;
+    final embedUrl = _sketchfabEmbedUrl;
+    if (_isSketchfab && embedUrl != null) {
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setBackgroundColor(Colors.black)

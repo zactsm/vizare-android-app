@@ -151,7 +151,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       setState(() => _isLoading = false);
 
       if (response.statusCode == 200) {
-        _logger.i('Account created: ${response.body}');
+        _logger.i('Account created successfully');
 
         final responseData = jsonDecode(response.body);
         if (responseData['requires_email_confirmation'] == true) {

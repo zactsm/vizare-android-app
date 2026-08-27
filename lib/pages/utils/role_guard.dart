@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/premium_background.dart';
 import 'package:untitled/pages/login_page.dart';
@@ -40,7 +41,25 @@ class _RoleGuardState extends State<RoleGuard> {
     final email = prefs.getString('user_email');
     final role = prefs.getString('user_type')?.toLowerCase() ?? '';
 
-    if (email == null || email.isEmpty) {
+    // Cryptographically verify session state when Supabase auth is active
+    bool isSessionValid = true;
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        if (session.isExpired) {
+          isSessionValid = false;
+        } else {
+          final sessionEmail = Supabase.instance.client.auth.currentUser?.email;
+          if (sessionEmail != null && email != null && sessionEmail.toLowerCase() != email.toLowerCase()) {
+            isSessionValid = false;
+          }
+        }
+      }
+    } catch (_) {
+      // Supabase uninitialized or offline
+    }
+
+    if (!isSessionValid || email == null || email.isEmpty) {
       if (mounted) {
         setState(() {
           _guardState = GuardState.unauthenticated;
