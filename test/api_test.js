@@ -105,7 +105,7 @@ describe('Supabase Router API Tests', () => {
 
   test('returns 503 SERVER_CONFIGURATION_ERROR when Supabase env vars are missing', async () => {
     delete process.env.SUPABASE_URL;
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    delete process.env.SUPABASE_PUBLISHABLE_KEY;
     delete process.env.SUPABASE_ANON_KEY;
 
     const req = createMockRequest({ method: 'GET', url: '/api/get_all_listings.php' });
@@ -120,7 +120,6 @@ describe('Supabase Router API Tests', () => {
   test('resend_verification.php requires email and returns 400 when missing', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
     process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
 
     const req = createMockRequest({
       method: 'POST',
@@ -138,7 +137,6 @@ describe('Supabase Router API Tests', () => {
   test('forgot_password.php validates email and returns 400 when missing or invalid', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
     process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
 
     const req1 = createMockRequest({
       method: 'POST',
@@ -164,7 +162,6 @@ describe('Supabase Router API Tests', () => {
   test('create_account.php enforces strong password rules and required fields', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
     process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
 
     const req = createMockRequest({
       method: 'POST',

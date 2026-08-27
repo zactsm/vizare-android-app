@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -538,9 +539,13 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     ImageProvider imageProvider;
     if (_newSelectedImages.isNotEmpty) {
       final selected = _newSelectedImages.first;
-      imageProvider = selected.bytes != null
-          ? MemoryImage(selected.bytes!)
-          : FileImage(File(selected.path!));
+      if (selected.bytes != null) {
+        imageProvider = MemoryImage(selected.bytes!);
+      } else if (!kIsWeb && selected.path != null && selected.path!.isNotEmpty) {
+        imageProvider = FileImage(File(selected.path!));
+      } else {
+        imageProvider = NetworkImage(widget.property.imagePath);
+      }
     } else {
       imageProvider = NetworkImage(widget.property.imagePath);
     }

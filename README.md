@@ -66,10 +66,9 @@ VIZARE is a cutting-edge real estate platform built with Flutter that integrates
 4.  **Supabase and Vercel Setup**:
     -   Run `supabase/schema.sql` in the Supabase SQL editor.
     -   Enable Email and Google providers under Supabase Authentication.
-    -   Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
-        `SUPABASE_SERVICE_ROLE_KEY`, and `GOOGLE_OAUTH_CLIENT_ID` to the
+    -   Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `GOOGLE_OAUTH_CLIENT_ID` to the
         Vercel project environment.
-    -   Never place `SUPABASE_SERVICE_ROLE_KEY` in Flutter's `.env`.
+    -   Only public publishable keys are used by the application client and API router.
 
 5.  **Firebase Setup**:
     -   Place your `google-services.json` in `android/app/`.

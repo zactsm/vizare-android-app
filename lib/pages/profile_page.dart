@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -224,9 +225,12 @@ class _ProfilePageState extends State<ProfilePage> {
   ImageProvider? _getImageProvider() {
     if (_selectedImage != null) {
       final selected = _selectedImage!;
-      return selected.bytes != null
-          ? MemoryImage(selected.bytes!)
-          : FileImage(File(selected.path!));
+      if (selected.bytes != null) {
+        return MemoryImage(selected.bytes!);
+      }
+      if (!kIsWeb && selected.path != null && selected.path!.isNotEmpty) {
+        return FileImage(File(selected.path!));
+      }
     } else if (!_avatarMarkedForRemoval &&
         _networkImage != null &&
         _networkImage!.isNotEmpty) {

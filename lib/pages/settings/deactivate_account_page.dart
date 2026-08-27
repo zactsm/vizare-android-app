@@ -21,6 +21,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
   final _otherReasonController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _hasPassword = true;
   bool _isPasswordStep = false;
   String? _selectedReason;
   bool _isPasswordVisible = false;
@@ -34,6 +35,21 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     'I\'m concerned about privacy': false,
     'Other': false,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPreferences();
+  }
+
+  Future<void> _loadUserPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _hasPassword = prefs.getBool('has_password') ?? true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -61,14 +77,18 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       );
       return;
     }
-    setState(() {
-      _isPasswordStep = true;
-    });
+    if (_hasPassword) {
+      setState(() {
+        _isPasswordStep = true;
+      });
+    } else {
+      _handleFinalDeactivation();
+    }
   }
 
   Future<void> _handleFinalDeactivation() async {
     final password = _passwordController.text;
-    if (password.isEmpty) {
+    if (_hasPassword && password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please enter your password to confirm.',
@@ -100,7 +120,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       final endpoint = _isPermanentDeletion ? 'delete_account.php' : 'deactivate_account.php';
       final response = await ApiService.post(
         endpoint,
-        body: {'email': email, 'password': password},
+        body: {'email': email, if (_hasPassword) 'password': password},
       );
 
       if (!mounted) return;

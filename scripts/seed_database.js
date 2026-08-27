@@ -24,19 +24,17 @@ if (fs.existsSync(envPath)) {
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('\x1b[31m[Error] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env\x1b[0m');
-  console.log('To seed your live remote database directly from the CLI:');
-  console.log('1. Copy .env.example to .env');
-  console.log('2. Add your SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
-  console.log('3. Run: node scripts/seed_database.js\n');
-  console.log('Alternatively, you can copy the contents of supabase/seed.sql and paste them into your Supabase Dashboard SQL Editor.');
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('\x1b[31m[Error] Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY in .env\x1b[0m');
+  console.log('To seed your database:');
+  console.log('1. Copy the contents of supabase/seed.sql and paste them into your Supabase Dashboard SQL Editor.');
+  console.log('2. Or run: node scripts/seed_database.js with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env\n');
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 

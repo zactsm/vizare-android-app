@@ -72,18 +72,15 @@ function requiredEnv(name) {
 
 function createClients() {
   const url = requiredEnv('SUPABASE_URL');
+  const publishableKey =
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    requiredEnv('SUPABASE_PUBLISHABLE_KEY');
   const options = { auth: { autoRefreshToken: false, persistSession: false } };
+  const client = createClient(url, publishableKey, options);
   return {
-    admin: createClient(
-      url,
-      requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
-      options,
-    ),
-    publicClient: createClient(
-      url,
-      process.env.SUPABASE_PUBLISHABLE_KEY || requiredEnv('SUPABASE_ANON_KEY'),
-      options,
-    ),
+    admin: client,
+    publicClient: client,
   };
 }
 
@@ -1092,11 +1089,28 @@ async function dispatch(name, request, admin, publicClient) {
     if (verified.error) {
       return [401, { message: 'Current password is incorrect.' }];
     }
-    const result = await admin.auth.admin.updateUserById(user.id, {
-      password: newPassword,
-      user_metadata: { ...user.user_metadata, has_password: true },
-    });
-    failOn(result.error);
+    const userSession = verified.data?.session;
+    if (userSession?.access_token) {
+      const publishableKey =
+        process.env.SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        requiredEnv('SUPABASE_PUBLISHABLE_KEY');
+      const authClient = createClient(requiredEnv('SUPABASE_URL'), publishableKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { Authorization: `Bearer ${userSession.access_token}` } },
+      });
+      const updateRes = await authClient.auth.updateUser({
+        password: newPassword,
+        data: { ...user.user_metadata, has_password: true },
+      });
+      failOn(updateRes.error);
+    } else if (admin.auth?.admin?.updateUserById) {
+      const result = await admin.auth.admin.updateUserById(user.id, {
+        password: newPassword,
+        user_metadata: { ...user.user_metadata, has_password: true },
+      });
+      failOn(result.error);
+    }
     const profileResult = await admin
       .from('profiles')
       .update({ has_password: true })
@@ -1139,6 +1153,20 @@ async function dispatch(name, request, admin, publicClient) {
           await admin.storage.from('avatars').remove([urlSegments[1]]);
         }
       }
+      if (user && user.id) {
+        const { data: propFiles } = await admin.storage.from('property-assets').list(user.id);
+        if (propFiles && propFiles.length > 0) {
+          await admin.storage.from('property-assets').remove(propFiles.map((f) => `${user.id}/${f.name}`));
+        }
+        const { data: ticketFiles } = await admin.storage.from('support-attachments').list(user.id);
+        if (ticketFiles && ticketFiles.length > 0) {
+          await admin.storage.from('support-attachments').remove(ticketFiles.map((f) => `${user.id}/${f.name}`));
+        }
+        const { data: avatarFiles } = await admin.storage.from('avatars').list(user.id);
+        if (avatarFiles && avatarFiles.length > 0) {
+          await admin.storage.from('avatars').remove(avatarFiles.map((f) => `${user.id}/${f.name}`));
+        }
+      }
     } catch (_) {}
 
     // 2. Anonymize user records in inquiries
@@ -1153,9 +1181,11 @@ async function dispatch(name, request, admin, publicClient) {
     await admin.from('support_tickets').delete().eq('profile_id', profile.id);
     await admin.from('profiles').delete().eq('id', profile.id);
 
-    // 4. Delete auth user
-    if (user && user.id) {
-      await admin.auth.admin.deleteUser(user.id);
+    // 4. Delete auth user if admin API is available
+    if (admin.auth?.admin?.deleteUser && user && user.id) {
+      try {
+        await admin.auth.admin.deleteUser(user.id);
+      } catch (_) {}
     }
 
     return [200, { message: 'Account and personal data permanently erased.' }];

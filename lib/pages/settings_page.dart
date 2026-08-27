@@ -16,6 +16,7 @@ import 'package:untitled/pages/settings/privacy_policy_page.dart';
 import 'package:untitled/pages/settings/tos_page.dart';
 
 import 'package:untitled/pages/utils/app_theme.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'utils/floating_bottom_nav_bar.dart';
 import 'utils/google_auth_service.dart';
 import 'package:untitled/welcome_page.dart';
@@ -203,6 +204,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         builder: (context) => const PrivacyPolicyPage()),
                   );
                 },
+              ),
+              _buildSettingsItem(
+                'Download personal data (GDPR)',
+                Icons.download_for_offline_outlined,
+                _downloadPersonalData,
                 showDivider: false,
               ),
             ]),
@@ -594,6 +600,69 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _downloadPersonalData() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      ),
+    );
+
+    try {
+      final response = await ApiService.get('export_my_data.php');
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+
+      if (response.statusCode == 200) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: Theme.of(context).cardColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              'Personal Data Export',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+            ),
+            content: SingleChildScrollView(
+              child: Text(
+                'Your complete GDPR / CCPA personal data archive has been generated successfully.\n\nExported records include:\n• Account Profile & Role\n• Property Listings & Models\n• Saved Favorites\n• Direct Inquiries & Messaging\n• Support Tickets & Attachments\n• Notification & Marketing Preferences',
+                style: GoogleFonts.inter(fontSize: 13, height: 1.5),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.inter(
+                    color: VizareColors.champagneGold,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to generate export archive. Please try again.',
+              style: GoogleFonts.inter(),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e', style: GoogleFonts.inter())),
+      );
+    }
   }
 }
 

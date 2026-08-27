@@ -261,7 +261,11 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
         top: config.pillInsetV,
         bottom: config.pillInsetV,
         width: itemWidth,
-        child: GestureDetector(
+        child: Semantics(
+          label: labels[index],
+          selected: widget.activeIndex.index == index,
+          button: true,
+          child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
             if (widget.onTap != null) {
@@ -355,7 +359,7 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
             ),
           ),
         ),
-      );
+      ));
     }
 
     final navBgColor = isDark

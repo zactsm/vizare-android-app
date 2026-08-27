@@ -19,11 +19,14 @@ import 'pages/homeowner_page.dart';
 import 'pages/admin_page.dart';
 import 'pages/settings/tos_page.dart';
 import 'pages/settings/privacy_policy_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'pages/utils/app_theme.dart';
 import 'pages/utils/role_guard.dart';
+import 'pages/utils/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // 1. Load local .env asset if bundled
   try {
@@ -32,7 +35,7 @@ void main() async {
     debugPrint('Note: .env asset not bundled locally: $error');
   }
 
-  // 2. Extract configuration or fetch dynamically on Web
+  // 2. Extract configuration or fetch dynamically from Vercel API Gateway
   final isDotEnvReady = dotenv.isInitialized;
   String? supabaseUrl = isDotEnvReady ? dotenv.env['SUPABASE_URL'] : null;
   String? supabaseAnonKey = isDotEnvReady
@@ -43,11 +46,14 @@ void main() async {
       ? (dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'])
       : null;
 
-  if ((supabaseUrl == null || supabaseAnonKey == null) && kIsWeb) {
+  if (supabaseUrl == null || supabaseAnonKey == null) {
     try {
+      final base = ApiService.baseUrl;
+      final configUri = Uri.parse(
+          base.isEmpty ? '/api/client_config.php' : '$base/client_config.php');
       final response = await http
-          .get(Uri.parse('/api/client_config.php'))
-          .timeout(const Duration(seconds: 4));
+          .get(configUri)
+          .timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         supabaseUrl ??= data['supabase_url']?.toString();
@@ -235,7 +241,7 @@ class MyApp extends StatelessWidget {
                                   top: topSafeArea,
                                   bottom: bottomSafeArea,
                                 ),
-                                textScaler: const TextScaler.linear(1.0),
+                                textScaler: MediaQuery.of(context).textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 2.0),
                                 devicePixelRatio: 3.0,
                               ),
                               child: child ?? const SizedBox.shrink(),

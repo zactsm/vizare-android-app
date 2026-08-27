@@ -24,7 +24,7 @@ class ApiService {
       return '/api';
     }
 
-    return '';
+    return 'https://vizare-app.vercel.app/api';
   }
 
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';

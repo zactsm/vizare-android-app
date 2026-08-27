@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -643,12 +644,14 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
                             height: 120,
                             fit: BoxFit.cover,
                           )
-                        : Image.file(
-                            File(file.path!),
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.cover,
-                          ),
+                        : (!kIsWeb && file.path != null
+                            ? Image.file(
+                                File(file.path!),
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                              )
+                            : const SizedBox(width: 120, height: 120)),
                   ),
                   Positioned(
                     top: 6,

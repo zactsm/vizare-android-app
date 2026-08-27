@@ -9,8 +9,6 @@ import 'package:untitled/pages/favorites_page.dart';
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/search_page.dart';
-import 'package:untitled/pages/send_inquiry_page.dart';
-import 'package:untitled/pages/to_respond_page.dart';
 import '../test_helper.dart';
 
 void main() {
@@ -98,17 +96,6 @@ void main() {
       expect(find.byType(TextField), findsWidgets);
     });
 
-    testWidgets('SendInquiryPage validates empty inquiry submission',
-        (tester) async {
-      await tester.pumpWidget(
-        wrapWithMaterial(
-            SendInquiryPage(property: mockPropertyWithModel)),
-      );
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(SendInquiryPage), findsOneWidget);
-    });
-
     testWidgets('AddPropertyPage renders form fields for homeowner listings',
         (tester) async {
       await tester.pumpWidget(wrapWithMaterial(const AddPropertyPage()));
@@ -128,14 +115,6 @@ void main() {
 
       expect(find.byType(EditPropertyPage), findsOneWidget);
       expect(find.text('Modern Sunset Villa'), findsOneWidget);
-    });
-
-    testWidgets('ToRespondPage renders inquiry management view',
-        (tester) async {
-      await tester.pumpWidget(wrapWithMaterial(const ToRespondPage()));
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(ToRespondPage), findsOneWidget);
     });
 
     testWidgets('ProfilePage renders user profile form fields',

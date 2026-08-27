@@ -19,9 +19,16 @@ class VizareColors {
 
   // Luxury Champagne Gold Palette
   static const Color champagneGold = Color(0xFFD4AF37);
+  static const Color champagneGoldAccessible = Color(0xFF8A6500); // 4.58:1 contrast on white (WCAG AA)
   static const Color goldLight = Color(0xFFF6E7B0);
   static const Color goldDark = Color(0xFFAA7C11);
   static const Color goldOchre = Color(0xFFE5C07B);
+
+  static Color adaptiveGold(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? champagneGold
+        : champagneGoldAccessible;
+  }
 
   // Neon & Spatial Accents
   static const Color neonPurple = Color(0xFFDF00FF);
