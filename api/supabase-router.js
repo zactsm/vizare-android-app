@@ -492,6 +492,173 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, result.data];
   }
 
+  // Real-Time 2-Way Chat & Viewing Appointment Endpoints
+  if (name === 'get_or_create_conversation.php') {
+    const propertyId = Number(input.property_id);
+    if (!propertyId) {
+      return [400, { message: 'property_id is required.' }];
+    }
+    const propRes = await admin.from('properties').select('*').eq('id', propertyId).maybeSingle();
+    failOn(propRes.error);
+    if (!propRes.data) {
+      return [404, { message: 'Property not found.' }];
+    }
+    const property = propRes.data;
+    const buyerId = profile.id;
+    const homeownerId = property.homeowner_id;
+
+    // Check if conversation exists
+    let convRes = await admin
+      .from('conversations')
+      .select('*')
+      .eq('property_id', propertyId)
+      .eq('buyer_id', buyerId)
+      .maybeSingle();
+    failOn(convRes.error);
+
+    let conversation = convRes.data;
+    if (!conversation) {
+      const createRes = await admin
+        .from('conversations')
+        .insert({
+          property_id: propertyId,
+          buyer_id: buyerId,
+          homeowner_id: homeownerId,
+          last_message: 'Conversation started',
+          last_message_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single();
+      failOn(createRes.error);
+      conversation = createRes.data;
+    }
+
+    // Fetch other user profile
+    const otherUserId = buyerId === profile.id ? homeownerId : buyerId;
+    const otherProfileRes = await admin.from('profiles').select('id, full_name, email, role, profile_pic').eq('id', otherUserId).maybeSingle();
+
+    return [200, {
+      ...conversation,
+      property: propertyJson(property),
+      other_user: otherProfileRes.data || { id: otherUserId, full_name: 'Estate Agent', email: '' },
+    }];
+  }
+
+  if (name === 'get_conversations.php') {
+    // Fetch conversations for the current profile
+    const convsRes = await admin
+      .from('conversations')
+      .select('*, properties(*), buyer:profiles!buyer_id(id, full_name, email, role, profile_pic), homeowner:profiles!homeowner_id(id, full_name, email, role, profile_pic)')
+      .or(`buyer_id.eq.${profile.id},homeowner_id.eq.${profile.id}`)
+      .order('last_message_at', { ascending: false });
+    failOn(convsRes.error);
+
+    // Calculate unread count for each conversation
+    const conversations = await Promise.all((convsRes.data || []).map(async (c) => {
+      const otherUser = c.buyer_id === profile.id ? c.homeowner : c.buyer;
+      const unreadRes = await admin
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('conversation_id', c.id)
+        .neq('sender_id', profile.id)
+        .eq('is_read', false);
+      return {
+        id: c.id,
+        property_id: c.property_id,
+        buyer_id: c.buyer_id,
+        homeowner_id: c.homeowner_id,
+        last_message: c.last_message,
+        last_message_at: c.last_message_at,
+        created_at: c.created_at,
+        property: c.properties ? propertyJson(c.properties) : null,
+        other_user: otherUser || { id: 0, full_name: 'Estate Agent', email: '' },
+        unread_count: unreadRes.count || 0,
+      };
+    }));
+
+    return [200, conversations];
+  }
+
+  if (name === 'get_messages.php') {
+    const conversationId = Number(input.conversation_id || input.id);
+    if (!conversationId) {
+      return [400, { message: 'conversation_id is required.' }];
+    }
+
+    // Mark incoming messages as read
+    await admin
+      .from('messages')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .neq('sender_id', profile.id);
+
+    const msgsRes = await admin
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+    failOn(msgsRes.error);
+    return [200, msgsRes.data || []];
+  }
+
+  if (name === 'send_message.php') {
+    const conversationId = Number(input.conversation_id);
+    const messageText = String(input.message_text || input.message || '').trim().slice(0, 5000);
+    const messageType = String(input.message_type || 'text').trim();
+    const viewingDate = input.viewing_date ? String(input.viewing_date).trim() : null;
+    const viewingTime = input.viewing_time ? String(input.viewing_time).trim() : null;
+    const viewingMode = input.viewing_mode ? String(input.viewing_mode).trim() : null;
+
+    if (!conversationId || (!messageText && messageType === 'text')) {
+      return [400, { message: 'conversation_id and message content are required.' }];
+    }
+
+    const newMsg = {
+      conversation_id: conversationId,
+      sender_id: profile.id,
+      message_text: messageText || (messageType === 'viewing_request' ? `Requested viewing on ${viewingDate} (${viewingTime})` : ''),
+      message_type: messageType,
+      viewing_date: viewingDate,
+      viewing_time: viewingTime,
+      viewing_mode: viewingMode,
+      viewing_status: messageType === 'viewing_request' ? 'pending' : null,
+      is_read: false,
+    };
+
+    const msgRes = await admin.from('messages').insert(newMsg).select('*').single();
+    failOn(msgRes.error);
+
+    // Update conversation last_message
+    const previewText = messageType === 'viewing_request' ? `📅 Viewing Request: ${viewingDate}` : messageText;
+    await admin
+      .from('conversations')
+      .update({
+        last_message: previewText,
+        last_message_at: new Date().toISOString(),
+      })
+      .eq('id', conversationId);
+
+    return [200, msgRes.data];
+  }
+
+  if (name === 'update_viewing_status.php') {
+    const messageId = Number(input.message_id);
+    const newStatus = String(input.status || input.viewing_status || '').trim(); // 'confirmed', 'rescheduled', 'declined'
+    if (!messageId || !['confirmed', 'rescheduled', 'declined'].includes(newStatus)) {
+      return [400, { message: 'Valid message_id and status are required.' }];
+    }
+
+    const updateRes = await admin
+      .from('messages')
+      .update({ viewing_status: newStatus })
+      .eq('id', messageId)
+      .select('*')
+      .single();
+    failOn(updateRes.error);
+
+    return [200, { message: 'Viewing status updated successfully.', message_data: updateRes.data }];
+  }
+
   if (name === 'create_support_ticket.php') {
     const subject = String(input.subject || '').trim().slice(0, 200);
     const description = String(input.description || '').trim().slice(0, 5000);
@@ -893,6 +1060,9 @@ const MUTATING_ROUTES = new Set([
   'change_password.php',
   'deactivate_account.php',
   'delete_account.php',
+  'get_or_create_conversation.php',
+  'send_message.php',
+  'update_viewing_status.php',
 ]);
 
 module.exports = async function handler(request, response) {

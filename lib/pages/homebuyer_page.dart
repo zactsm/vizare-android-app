@@ -17,6 +17,7 @@ import 'utils/abstract_background.dart';
 import 'utils/top_bar_gradient_blur.dart';
 import 'favorites_page.dart';
 import 'settings_page.dart';
+import 'chat/conversations_inbox_page.dart';
 
 class HomeBuyerPage extends StatefulWidget {
   const HomeBuyerPage({super.key});
@@ -889,7 +890,46 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 6),
+              // Messages Action Button
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ConversationsInboxPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: VizareColors.champagneGold.withValues(alpha: 0.8),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      color: VizareColors.champagneGold,
+                      size: 19,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
               GestureDetector(
                 onTap: () {
                   Navigator.push(

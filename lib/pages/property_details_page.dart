@@ -6,13 +6,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
+import 'package:untitled/models/chat_models.dart';
 import 'package:untitled/pages/gallery_view_page.dart';
+import 'package:untitled/pages/chat/chat_page.dart';
+import 'package:untitled/pages/chat/schedule_viewing_dialog.dart';
+import 'package:untitled/pages/utils/chat_service.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/send_inquiry_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/pages/utils/property_details_skeleton.dart';
+import 'package:intl/intl.dart';
 
 class PropertyDetailsPage extends StatefulWidget {
   final Property property;
@@ -682,6 +687,71 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
     );
   }
 
+  Future<void> _openChat() async {
+    final conv = await ChatService.getOrCreateConversation(widget.property.id);
+    if (!mounted) return;
+    if (conv != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage(conversation: conv)),
+      );
+    } else {
+      final fallbackConv = Conversation(
+        id: 0,
+        propertyId: widget.property.id,
+        buyerId: 0,
+        homeownerId: widget.property.homeownerId,
+        lastMessage: '',
+        lastMessageAt: DateTime.now(),
+        createdAt: DateTime.now(),
+        property: widget.property,
+        otherUser: const ConversationParticipant(
+          id: 0,
+          fullName: 'Estate Agent / Homeowner',
+          email: '',
+          role: 'homeowner',
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ChatPage(conversation: fallbackConv)),
+      );
+    }
+  }
+
+  void _openScheduleViewing() {
+    ScheduleViewingDialog.show(
+      context: context,
+      property: widget.property,
+      onSchedule: (date, timeSlot, tourMode, note) async {
+        final formattedDate = DateFormat('EEE, MMM d, yyyy').format(date);
+        final modeLabel = tourMode == 'virtual_ar'
+            ? 'Virtual 3D AR Walkthrough'
+            : 'In-Person On-Site Tour';
+        final messageContent = note.isNotEmpty
+            ? 'Viewing Request: $modeLabel on $formattedDate at $timeSlot.\nNote: "$note"'
+            : 'Viewing Request: $modeLabel on $formattedDate at $timeSlot.';
+
+        final conv = await ChatService.getOrCreateConversation(widget.property.id);
+        if (conv != null && mounted) {
+          await ChatService.sendMessage(
+            conversationId: conv.id,
+            messageText: messageContent,
+            messageType: 'viewing_request',
+            viewingDate: formattedDate,
+            viewingTime: timeSlot,
+            viewingMode: tourMode,
+          );
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ChatPage(conversation: conv)),
+          );
+        }
+      },
+    );
+  }
+
   Widget _buildBottomBar(BuildContext context) {
     final bool hasModel = widget.property.modelPath.isNotEmpty;
 
@@ -690,9 +760,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 22),
           decoration: BoxDecoration(
-            color: VizareColors.obsidianSurface.withValues(alpha: 0.90),
+            color: VizareColors.obsidianSurface.withValues(alpha: 0.92),
             borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(
@@ -732,32 +802,39 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       : null,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
 
-              // Contact Homeowner / Inquire Pill
+              // Schedule Viewing Button
               VisionGlassPill(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(13),
                 color: VizareColors.obsidianElevated,
                 borderColor:
-                    VizareColors.champagneGold.withValues(alpha: 0.4),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          SendInquiryPage(property: widget.property),
-                    ),
-                  );
-                },
+                    VizareColors.champagneGold.withValues(alpha: 0.5),
+                onTap: _openScheduleViewing,
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: VizareColors.champagneGold,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 10),
+
+              // 2-Way Direct Chat Pill
+              VisionGlassPill(
+                padding: const EdgeInsets.all(13),
+                color: VizareColors.obsidianElevated,
+                borderColor:
+                    VizareColors.champagneGold.withValues(alpha: 0.7),
+                onTap: _openChat,
                 child: Image.asset(
                   'assets/images/white_chat_icon.png',
-                  width: 22,
-                  height: 22,
+                  width: 21,
+                  height: 21,
                   color: VizareColors.champagneGold,
                   errorBuilder: (c, e, s) => const Icon(
                     Icons.chat_bubble_outline_rounded,
                     color: VizareColors.champagneGold,
-                    size: 22,
+                    size: 21,
                   ),
                 ),
               ),

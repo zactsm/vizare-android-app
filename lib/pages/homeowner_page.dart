@@ -14,6 +14,7 @@ import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/add_property_page.dart';
 import 'package:untitled/pages/edit_property_page.dart';
 import 'package:untitled/pages/to_respond_page.dart';
+import 'package:untitled/pages/chat/conversations_inbox_page.dart';
 
 class HomeownerPage extends StatefulWidget {
   const HomeownerPage({super.key});
@@ -482,7 +483,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ToRespondPage()),
+                MaterialPageRoute(builder: (context) => const ConversationsInboxPage()),
               );
             },
             child: Container(
