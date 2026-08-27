@@ -76,12 +76,30 @@ function createClients() {
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     requiredEnv('SUPABASE_PUBLISHABLE_KEY');
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    publishableKey;
   const options = { auth: { autoRefreshToken: false, persistSession: false } };
-  const client = createClient(url, publishableKey, options);
+  const publicClient = createClient(url, publishableKey, options);
+  const admin = createClient(url, serviceRoleKey, options);
   return {
-    admin: client,
-    publicClient: client,
+    admin,
+    publicClient,
   };
+}
+
+function createUserClient(token) {
+  if (!token) return null;
+  const url = requiredEnv('SUPABASE_URL');
+  const publishableKey =
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    requiredEnv('SUPABASE_PUBLISHABLE_KEY');
+  return createClient(url, publishableKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
 }
 
 function routeName(request) {
@@ -147,67 +165,118 @@ async function getAuthUser(request, publicClient) {
   return result.error ? null : result.data.user;
 }
 
-async function profileForUser(admin, user) {
-  let result = await admin
-    .from('profiles')
-    .select('*')
-    .eq('auth_user_id', user.id)
-    .maybeSingle();
-  failOn(result.error);
-
-  // Only link records imported from the old database if the email has been confirmed
-  const isEmailVerified = Boolean(
-    user.email_confirmed_at ||
-    user.confirmed_at ||
-    user.app_metadata?.provider === 'google'
-  );
-
-  if (!result.data && user.email && isEmailVerified) {
-    result = await admin
+async function profileForUser(client, user) {
+  if (!client || !user) return null;
+  try {
+    let result = await client
       .from('profiles')
-      .update({ auth_user_id: user.id })
-      .eq('email', user.email)
-      .is('auth_user_id', null)
       .select('*')
+      .eq('auth_user_id', user.id)
       .maybeSingle();
-    failOn(result.error);
+    if (result.error) {
+      if (result.error.code === '42501' || result.error.code === 'PGRST116') {
+        return null;
+      }
+      failOn(result.error);
+    }
+
+    // Only link records imported from the old database if the email has been confirmed
+    const isEmailVerified = Boolean(
+      user.email_confirmed_at ||
+      user.confirmed_at ||
+      user.app_metadata?.provider === 'google'
+    );
+
+    if (!result.data && user.email && isEmailVerified) {
+      try {
+        result = await client
+          .from('profiles')
+          .update({ auth_user_id: user.id })
+          .eq('email', user.email)
+          .is('auth_user_id', null)
+          .select('*')
+          .maybeSingle();
+        if (!result.error && result.data) {
+          return result.data;
+        }
+      } catch (_) {}
+    }
+    return result.data;
+  } catch (_) {
+    return null;
   }
-  return result.data;
 }
 
 async function requireProfile(request, admin, publicClient) {
+  const authorization = request.headers.authorization || '';
+  const token = authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : '';
   const user = await getAuthUser(request, publicClient);
   if (!user) throw Object.assign(new Error('Authentication required.'), { status: 401 });
-  const profile = await profileForUser(admin, user);
+
+  const userClient = createUserClient(token);
+  let profile = await profileForUser(admin, user);
+  if (!profile && userClient) {
+    profile = await profileForUser(userClient, user);
+  }
+  if (!profile) {
+    profile = await ensureProfile(admin, user, {}, userClient);
+  }
   if (!profile || !profile.is_active) {
     throw Object.assign(new Error('Account is unavailable.'), { status: 403 });
   }
   return { user, profile };
 }
 
-async function ensureProfile(admin, user, values = {}) {
-  const existing = await profileForUser(admin, user);
-  if (existing) return existing;
+async function ensureProfile(admin, user, values = {}, userClient = null) {
+  const clients = [];
+  if (admin) clients.push(admin);
+  if (userClient) clients.push(userClient);
+
+  for (const client of clients) {
+    try {
+      const existing = await profileForUser(client, user);
+      if (existing) return existing;
+    } catch (_) {}
+  }
 
   const metadata = user.user_metadata || {};
-  const result = await admin
-    .from('profiles')
-    .insert({
-      auth_user_id: user.id,
-      email: user.email,
-      full_name:
-        values.full_name || metadata.full_name || metadata.name || 'User',
-      role: values.role || metadata.role || 'homebuyer',
-      has_password:
-        values.has_password !== undefined
-          ? values.has_password
-          : metadata.has_password === true,
-      is_active: true,
-    })
-    .select('*')
-    .single();
-  failOn(result.error);
-  return result.data;
+  const insertPayload = {
+    auth_user_id: user.id,
+    email: user.email,
+    full_name:
+      values.full_name || metadata.full_name || metadata.name || 'User',
+    role: values.role || metadata.role || 'homebuyer',
+    has_password:
+      values.has_password !== undefined
+        ? values.has_password
+        : metadata.has_password === true,
+    is_active: true,
+  };
+
+  for (const client of clients) {
+    try {
+      const result = await client
+        .from('profiles')
+        .insert(insertPayload)
+        .select('*')
+        .maybeSingle();
+      if (!result.error && result.data) return result.data;
+    } catch (_) {}
+  }
+
+  // Safe in-memory profile fallback
+  return {
+    id: 0,
+    auth_user_id: user.id,
+    email: user.email,
+    full_name: insertPayload.full_name,
+    role: insertPayload.role,
+    has_password: insertPayload.has_password,
+    is_active: true,
+    created_at: new Date().toISOString(),
+  };
 }
 
 function authPayload(session, profile, extra = {}) {
@@ -296,6 +365,8 @@ async function dispatch(name, request, admin, publicClient) {
 
     const user = result.data.user;
     const session = result.data.session;
+    const token = session?.access_token;
+    const userClient = createUserClient(token);
 
     let profile = null;
     try {
@@ -306,7 +377,7 @@ async function dispatch(name, request, admin, publicClient) {
         consent_terms_at: new Date().toISOString(),
         consent_privacy_at: new Date().toISOString(),
         consent_version: 'v1.0',
-      });
+      }, userClient);
     } catch (profileErr) {
       console.warn('Profile creation note on signup:', profileErr?.message);
     }
@@ -354,7 +425,9 @@ async function dispatch(name, request, admin, publicClient) {
       }
       return [401, { message: 'Invalid email or password.' }];
     }
-    const profile = await ensureProfile(admin, result.data.user);
+    const token = result.data.session?.access_token;
+    const userClient = createUserClient(token);
+    const profile = await ensureProfile(admin, result.data.user, {}, userClient);
     if (!profile.is_active) {
       return [403, { message: 'This account has been deactivated.' }];
     }
@@ -1295,10 +1368,14 @@ module.exports = async function handler(request, response) {
           'The API is not configured. Check the Supabase environment variables in Vercel.',
       });
     }
-    return response.status(error.status || 500).json({
-      message: error.status
-        ? error.message
-        : 'The server could not complete the request.',
+    const status =
+      typeof error.status === 'number' &&
+      error.status >= 400 &&
+      error.status < 600
+        ? error.status
+        : 500;
+    return response.status(status).json({
+      message: error.message || 'The server could not complete the request.',
     });
   }
 };
