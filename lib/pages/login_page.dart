@@ -82,6 +82,66 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _showUnverifiedEmailDialog(String email) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => VizareDialog(
+        title: "Email Not Verified",
+        message:
+            "Your email address ($email) has not been verified yet.\n\nPlease check your inbox (and spam folder) for the verification link, or tap 'Resend Email' to receive a new link.",
+        confirmText: "Resend Email",
+        cancelText: "Cancel",
+        onCancel: () => Navigator.pop(dialogCtx),
+        onConfirm: () {
+          Navigator.pop(dialogCtx);
+          _resendVerificationEmail(email);
+        },
+      ),
+    );
+  }
+
+  Future<void> _resendVerificationEmail(String email) async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await ApiService.post(
+        'resend_verification.php',
+        body: {'email': email},
+      );
+      if (!mounted) return;
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ??
+                'Verification email resent! Please check your inbox.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        _showErrorDialog(
+          "Resend Failed",
+          responseData['message'] ??
+              'Could not resend verification email. Please try again.',
+        );
+      }
+    } on TimeoutException {
+      if (mounted) {
+        _showErrorDialog("Connection Timeout",
+            "The server took too long to respond. Please check your connection.");
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog("Connection Error",
+            "Could not reach the server. Please verify your connection.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> login(String email, String password) async {
     if (email.trim().isEmpty || password.trim().isEmpty) {
       _showErrorDialog("Required Fields", "Please enter your email and password.");
@@ -129,8 +189,18 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         final responseData = jsonDecode(response.body);
-        final errorMessage = responseData['message'] ?? 'Invalid email or password.';
-        _showErrorDialog("Login Failed", errorMessage);
+        final bool isUnverified =
+            responseData['requires_email_confirmation'] == true ||
+            (response.statusCode == 403 &&
+                (responseData['message']?.toString().toLowerCase().contains('verif') == true ||
+                 responseData['message']?.toString().toLowerCase().contains('confirm') == true));
+
+        if (isUnverified) {
+          _showUnverifiedEmailDialog(email.trim());
+        } else {
+          final errorMessage = responseData['message'] ?? 'Invalid email or password.';
+          _showErrorDialog("Login Failed", errorMessage);
+        }
       }
     } on TimeoutException {
       _logger.e("🚨 Login request timed out");

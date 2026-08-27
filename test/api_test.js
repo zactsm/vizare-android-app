@@ -117,6 +117,42 @@ describe('Supabase Router API Tests', () => {
     assert.match(res.body.message, /The API is not configured/);
   });
 
+  test('resend_verification.php requires email and returns 400 when missing', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
+
+    const req = createMockRequest({
+      method: 'POST',
+      url: '/api/resend_verification.php',
+      body: {},
+    });
+    const res = createMockResponse();
+
+    await router(req, res);
+
+    assert.strictEqual(res.statusCode, 400);
+    assert.deepStrictEqual(res.body, { message: 'Email is required.' });
+  });
+
+  test('create_account.php enforces strong password rules and required fields', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
+
+    const req = createMockRequest({
+      method: 'POST',
+      url: '/api/create_account.php',
+      body: { name: 'Test', email: 'test@example.com', password: 'weak' },
+    });
+    const res = createMockResponse();
+
+    await router(req, res);
+
+    assert.strictEqual(res.statusCode, 400);
+    assert.match(res.body.message, /Password must be at least 8 characters long/);
+  });
+
   test('Database seed.sql contains 20 complete listings with unique 3D house models', () => {
     const fs = require('fs');
     const path = require('path');

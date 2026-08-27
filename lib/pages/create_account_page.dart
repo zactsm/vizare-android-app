@@ -53,6 +53,91 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
+  void _showVerificationSentDialog(String email) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: VizareColors.obsidianElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.mark_email_read_rounded,
+              color: VizareColors.champagneGold,
+              size: 26,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Verify Your Email",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "We've sent a verification link to:",
+              style: GoogleFonts.inter(
+                color: VizareColors.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              email,
+              style: GoogleFonts.inter(
+                color: VizareColors.champagneGold,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Please check your inbox (and spam folder) and click the link to verify your email before logging in.",
+              style: GoogleFonts.inter(
+                color: VizareColors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (Route<dynamic> route) => false,
+              );
+            },
+            child: Text(
+              "Back to Welcome",
+              style: GoogleFonts.poppins(
+                color: VizareColors.champagneGold,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showErrorDialog(String title, String message) {
     if (!mounted) return;
     showDialog(
@@ -154,14 +239,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         _logger.i('Account created successfully');
 
         final responseData = jsonDecode(response.body);
-        if (responseData['requires_email_confirmation'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(responseData['message']),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pushReplacementNamed(context, '/login');
+        if (responseData['requires_email_confirmation'] == true ||
+            responseData['access_token'] == null) {
+          _showVerificationSentDialog(email);
           return;
         }
         await ApiService.restoreSession(

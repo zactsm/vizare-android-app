@@ -258,67 +258,66 @@ async function dispatch(name, request, admin, publicClient) {
       return [400, { message: passwordError }];
     }
 
-    let user = null;
-    let session = null;
-    try {
-      const adminCreate = await admin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName, role, has_password: true },
-      });
+    const result = await publicClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role,
+          has_password: true,
+        },
+      },
+    });
 
-      if (adminCreate.error) {
-        if (
-          adminCreate.error.message?.toLowerCase().includes('already exists') ||
-          adminCreate.error.status === 422 ||
-          adminCreate.error.status === 409
-        ) {
-          return [409, { message: 'An account with this email already exists. Please log in.' }];
-        }
-        throw adminCreate.error;
-      }
-      user = adminCreate.data.user;
-
-      const signInResult = await publicClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-      session = signInResult.data?.session || null;
-    } catch (adminErr) {
-      console.warn('Admin user creation notice, falling back to public signUp:', adminErr?.message);
-      const result = await publicClient.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName, role, has_password: true } },
-      });
-      if (result.error) {
-        return [result.error.status || 400, { message: result.error.message }];
-      }
-      if (!result.data.user || result.data.user.identities?.length === 0) {
+    if (result.error) {
+      if (
+        result.error.message?.toLowerCase().includes('already exists') ||
+        result.error.message?.toLowerCase().includes('already registered') ||
+        result.error.status === 422 ||
+        result.error.status === 409
+      ) {
         return [409, { message: 'An account with this email already exists. Please log in.' }];
       }
-      user = result.data.user;
-      session = result.data.session;
+      if (result.error.status === 429 || result.error.message?.toLowerCase().includes('rate limit')) {
+        return [429, { message: 'Rate limit reached. Please wait a few minutes before trying again.' }];
+      }
+      return [result.error.status || 400, { message: result.error.message }];
     }
 
-    const profile = await ensureProfile(admin, user, {
-      full_name: fullName,
-      role,
-      has_password: true,
-      consent_terms_at: new Date().toISOString(),
-      consent_privacy_at: new Date().toISOString(),
-      consent_version: 'v1.0',
-    });
+    if (!result.data.user || result.data.user.identities?.length === 0) {
+      return [409, { message: 'An account with this email already exists. Please log in.' }];
+    }
+
+    const user = result.data.user;
+    const session = result.data.session;
+
+    let profile = null;
+    try {
+      profile = await ensureProfile(admin, user, {
+        full_name: fullName,
+        role,
+        has_password: true,
+        consent_terms_at: new Date().toISOString(),
+        consent_privacy_at: new Date().toISOString(),
+        consent_version: 'v1.0',
+      });
+    } catch (profileErr) {
+      console.warn('Profile creation note on signup:', profileErr?.message);
+    }
 
     return [
       200,
-      authPayload(session, profile, {
+      {
         message: session
           ? 'Account created successfully.'
-          : 'Account created. Check your email to confirm your account.',
+          : 'Account created successfully! Please check your email to verify your account before logging in.',
         requires_email_confirmation: !session,
-      }),
+        user_type: profile?.role || role,
+        has_password: true,
+        access_token: session?.access_token || null,
+        refresh_token: session?.refresh_token || null,
+      },
     ];
   }
 
@@ -331,12 +330,51 @@ async function dispatch(name, request, admin, publicClient) {
       email,
       password: String(input.password || ''),
     });
-    if (result.error) return [401, { message: 'Invalid email or password.' }];
+    if (result.error) {
+      const errMsg = (result.error.message || '').toLowerCase();
+      const errCode = (result.error.code || '').toLowerCase();
+      if (
+        errMsg.includes('email not confirmed') ||
+        errMsg.includes('email address not verified') ||
+        errCode === 'email_not_confirmed'
+      ) {
+        return [
+          403,
+          {
+            message: 'Your email address has not been verified yet. Please check your inbox or resend the verification email.',
+            requires_email_confirmation: true,
+            email,
+          },
+        ];
+      }
+      return [401, { message: 'Invalid email or password.' }];
+    }
     const profile = await ensureProfile(admin, result.data.user);
     if (!profile.is_active) {
       return [403, { message: 'This account has been deactivated.' }];
     }
     return [200, authPayload(result.data.session, profile)];
+  }
+
+  if (name === 'resend_verification.php') {
+    const email = String(input.email || '').trim().toLowerCase();
+    if (!email) {
+      return [400, { message: 'Email is required.' }];
+    }
+    if (!checkRateLimit(`resend_${clientIp}_${email}`, 3, 300000)) {
+      return [429, { message: 'Too many resend attempts. Please wait a few minutes before trying again.' }];
+    }
+    const res = await publicClient.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (res.error) {
+      if (res.error.status === 429 || res.error.message?.toLowerCase().includes('rate limit')) {
+        return [429, { message: 'Rate limit reached. Please wait a few minutes before requesting another email.' }];
+      }
+      return [res.error.status || 400, { message: res.error.message }];
+    }
+    return [200, { message: 'Verification email sent. Please check your inbox or spam folder.' }];
   }
 
   if (name === 'get_all_listings.php') {
@@ -1063,6 +1101,7 @@ const MUTATING_ROUTES = new Set([
   'get_or_create_conversation.php',
   'send_message.php',
   'update_viewing_status.php',
+  'resend_verification.php',
 ]);
 
 module.exports = async function handler(request, response) {
