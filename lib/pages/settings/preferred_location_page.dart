@@ -303,9 +303,10 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                     ),
                   ),
 
-                  // Search Bar with Homebuyer SearchPage Glass Aesthetic
+                  // Search Bar matching Homebuyer SearchPage Capsule Style & Properties
                   VisionGlassContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                     borderRadius: 28.0,
                     backgroundColor: isDark
                         ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
@@ -319,6 +320,8 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
+                      onSubmitted: (query) => _onSearchChanged(query),
+                      cursorColor: VizareColors.champagneGold,
                       style: GoogleFonts.inter(
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                         fontWeight: FontWeight.w500,
@@ -336,6 +339,8 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 14.0, horizontal: 8.0),
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                         prefixIcon: const Icon(
                           Icons.search_rounded,
                           color: VizareColors.champagneGold,
