@@ -55,6 +55,12 @@ class _ProfilePageState extends State<ProfilePage> {
     String? userEmail = prefs.getString('user_email');
     final userType = prefs.getString('user_type');
 
+    if (userType != null && mounted) {
+      final roleLower = userType.toLowerCase();
+      _isHomeowner = roleLower == 'homeowner';
+      _isHomebuyer = roleLower == 'homebuyer';
+    }
+
     if (userEmail == null || userEmail.isEmpty) {
       try {
         userEmail = Supabase.instance.client.auth.currentUser?.email;
@@ -269,32 +275,36 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Profile & Identity',
-                              style: GoogleFonts.poppins(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.6,
+                      if (!_isHomeowner) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Profile & Identity',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.6,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Manage your verified architectural credentials and contact settings.',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: VizareColors.textSecondary,
+                              const SizedBox(height: 4),
+                              Text(
+                                'Manage your verified architectural credentials and contact settings.',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: VizareColors.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 28),
+                        const SizedBox(height: 28),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                      ],
                       // Profile Avatar with Luxury Specular Ring
                       Stack(
                         alignment: Alignment.bottomRight,

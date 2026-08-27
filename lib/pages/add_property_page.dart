@@ -140,19 +140,15 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User session missing.");
 
-      final rawPrice = _priceController.text.trim();
-      final formattedPrice = rawPrice.startsWith('RM ')
-          ? rawPrice
-          : (rawPrice.startsWith('RM')
-              ? 'RM ${rawPrice.substring(2).trim()}'
-              : 'RM $rawPrice');
+      final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
+      final cleanPrice = (double.tryParse(rawPrice) ?? 0.0).toString();
 
       final response = await ApiService.post(
         'add_property.php',
         body: {
           'email': email,
           'name': _titleController.text.trim(),
-          'price': formattedPrice,
+          'price': cleanPrice,
           'description': _descriptionController.text.trim(),
           'location': _locationController.text.trim(),
           'image_path': mainImageUrl ?? '',

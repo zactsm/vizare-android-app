@@ -1,6 +1,6 @@
-# ARRealEstateApp-Muazz - AR Real Estate Application
+# VIZARE - AR Real Estate Application
 
-ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter that integrates Augmented Reality (AR) to provide an immersive property viewing experience. The application supports multiple user roles (Homebuyer, Homeowner, Admin) and features a robust backend architecture.
+VIZARE is a cutting-edge real estate platform built with Flutter that integrates Augmented Reality (AR) to provide an immersive property viewing experience. The application supports multiple user roles (Homebuyer, Homeowner, Admin) and features a robust backend architecture.
 
 ## 🚀 Features
 
@@ -92,6 +92,3 @@ ARRealEstateApp-Muazz is a cutting-edge real estate platform built with Flutter 
 Only public client keys belong in Flutter's `.env`. The Supabase service-role key
 must remain in Vercel's server-side environment. Google App Engine is not required
 after the Supabase schema and Vercel environment variables are deployed.
-
----
-Developed by Muazz for the VIZARE Real Estate Platform.

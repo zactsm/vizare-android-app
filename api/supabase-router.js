@@ -527,12 +527,12 @@ async function dispatch(name, request, admin, publicClient) {
     }
     const nameStr = String(input.name || '').trim().slice(0, 150);
     const locStr = String(input.location || '').trim().slice(0, 200);
-    const priceStr = String(input.price || '').trim().slice(0, 50);
+    const priceNum = parseFloat(String(input.price || '').replace(/[^0-9.]/g, '')) || 0;
     const descStr = String(input.description || '').trim().slice(0, 5000);
     const imagePathStr = String(input.image_path || '').trim().slice(0, 500);
     const modelPathStr = String(input.model_path || '').trim().slice(0, 500);
 
-    if (!nameStr || !locStr || !priceStr || !imagePathStr) {
+    if (!nameStr || !locStr || !priceNum || !imagePathStr) {
       return [400, { message: 'Title, location, price, and primary image are required.' }];
     }
 
@@ -542,7 +542,7 @@ async function dispatch(name, request, admin, publicClient) {
         homeowner_id: profile.id,
         name: nameStr,
         location: locStr,
-        price: priceStr,
+        price: priceNum,
         description: descStr,
         image_path: imagePathStr,
         model_path: modelPathStr,
@@ -573,7 +573,7 @@ async function dispatch(name, request, admin, publicClient) {
     await assertPropertyOwner(admin, profile, input.property_id);
     const nameStr = String(input.name || '').trim().slice(0, 150);
     const locStr = String(input.location || '').trim().slice(0, 200);
-    const priceStr = String(input.price || '').trim().slice(0, 50);
+    const priceNum = parseFloat(String(input.price || '').replace(/[^0-9.]/g, '')) || 0;
     const descStr = String(input.description || '').trim().slice(0, 5000);
     const imagePathStr = String(input.image_path || '').trim().slice(0, 500);
     const modelPathStr = String(input.model_path || '').trim().slice(0, 500);
@@ -581,7 +581,7 @@ async function dispatch(name, request, admin, publicClient) {
     const updates = {
       name: nameStr,
       location: locStr,
-      price: priceStr,
+      price: priceNum,
       description: descStr,
       image_path: imagePathStr,
       model_path: modelPathStr,

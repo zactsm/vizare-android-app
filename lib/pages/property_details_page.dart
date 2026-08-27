@@ -12,6 +12,7 @@ import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/send_inquiry_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
+import 'package:untitled/pages/utils/property_details_skeleton.dart';
 
 class PropertyDetailsPage extends StatefulWidget {
   final Property property;
@@ -26,6 +27,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   bool _isFavorited = false;
   bool _isLoadingFavorite = true;
   bool _isUpdatingFavorite = false;
+  bool _isLoadingGallery = true;
   String? _userEmail;
 
   List<String> _galleryImages = [];
@@ -57,7 +59,8 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   Future<void> _fetchGalleryImages() async {
     try {
       final response = await ApiService.get(
-          'get_property_images.php', {'property_id': widget.property.id});
+          'get_property_images.php', {'property_id': widget.property.id})
+          .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final body = response.body.trim();
@@ -80,6 +83,12 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
       }
     } catch (e) {
       _logger.e("Error fetching gallery images", error: e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingGallery = false;
+        });
+      }
     }
   }
 
@@ -153,170 +162,182 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
       backgroundColor: VizareColors.obsidianBlack,
       body: AbstractBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              // VisionOS Top Navigation Bar
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    VisionGlassPill(
-                      padding: const EdgeInsets.all(10),
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                    VisionGlassPill(
-                      padding: const EdgeInsets.all(10),
-                      onTap: _toggleFavorite,
-                      child: _isLoadingFavorite
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: VizareColors.champagneGold,
-                              ),
-                            )
-                          : Icon(
-                              _isFavorited
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              color: _isFavorited
-                                  ? Colors.redAccent
-                                  : VizareColors.champagneGold,
-                              size: 18,
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-
-                      // Price & Category Tag
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            widget.property.price,
-                            style: GoogleFonts.poppins(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              color: VizareColors.champagneGold,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Property Title
-                      Text(
-                        widget.property.name,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Location Pin
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_rounded,
-                            color: VizareColors.champagneGold,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              widget.property.location,
-                              style: GoogleFonts.inter(
-                                color: VizareColors.textSecondary,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // VisionOS Image Gallery & Carousel Layout
-                      _buildImageGallery(context, _galleryImages),
-                      const SizedBox(height: 24),
-
-                      // Architectural Specifications Bento Grid
-                      Text(
-                        'ARCHITECTURAL SPECIFICATIONS',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: VizareColors.champagneGold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSpecsBentoGrid(),
-                      const SizedBox(height: 24),
-
-                      // Property Description Card
-                      Text(
-                        'ABOUT THE ESTATE',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: VizareColors.champagneGold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      VisionGlassContainer(
-                        padding: const EdgeInsets.all(18.0),
-                        borderRadius: 20,
-                        backgroundColor:
-                            VizareColors.obsidianSurface.withValues(alpha: 0.8),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          width: 1.0,
-                        ),
-                        child: Text(
-                          widget.property.description,
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            fontSize: 14,
-                            height: 1.65,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ),
-
-              // VisionOS Frosted Glass Bottom Action Bar
-              _buildBottomBar(context),
-            ],
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: _isLoadingGallery
+                ? const PropertyDetailsSkeleton(key: ValueKey('skeleton'))
+                : _buildLoadedContent(context),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLoadedContent(BuildContext context) {
+    return Column(
+      key: const ValueKey('loaded_content'),
+      children: [
+        // VisionOS Top Navigation Bar
+        Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              VisionGlassPill(
+                padding: const EdgeInsets.all(10),
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              VisionGlassPill(
+                padding: const EdgeInsets.all(10),
+                onTap: _toggleFavorite,
+                child: _isLoadingFavorite
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: VizareColors.champagneGold,
+                        ),
+                      )
+                    : Icon(
+                        _isFavorited
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        color: _isFavorited
+                            ? Colors.redAccent
+                            : VizareColors.champagneGold,
+                        size: 18,
+                      ),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+
+                // Price & Category Tag
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.property.price,
+                      style: GoogleFonts.poppins(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: VizareColors.champagneGold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // Property Title
+                Text(
+                  widget.property.name,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // Location Pin
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_rounded,
+                      color: VizareColors.champagneGold,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.property.location,
+                        style: GoogleFonts.inter(
+                          color: VizareColors.textSecondary,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // VisionOS Image Gallery & Carousel Layout
+                _buildImageGallery(context, _galleryImages),
+                const SizedBox(height: 24),
+
+                // Architectural Specifications Bento Grid
+                Text(
+                  'ARCHITECTURAL SPECIFICATIONS',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: VizareColors.champagneGold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildSpecsBentoGrid(),
+                const SizedBox(height: 24),
+
+                // Property Description Card
+                Text(
+                  'ABOUT THE ESTATE',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: VizareColors.champagneGold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(18.0),
+                  borderRadius: 20,
+                  backgroundColor:
+                      VizareColors.obsidianSurface.withValues(alpha: 0.8),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 1.0,
+                  ),
+                  child: Text(
+                    widget.property.description,
+                    style: GoogleFonts.inter(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontSize: 14,
+                      height: 1.65,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+
+        // VisionOS Frosted Glass Bottom Action Bar
+        _buildBottomBar(context),
+      ],
     );
   }
 

@@ -3,13 +3,13 @@ import 'package:untitled/models/property_model.dart';
 
 void main() {
   group('Property Model Tests', () {
-    test('parses complete valid json correctly', () {
+    test('parses complete valid json correctly with float price and formats RM', () {
       final json = {
         'id': 42,
         'homeowner_id': 101,
         'name': 'Luxury Modern Villa',
         'location': 'Beverly Hills, CA',
-        'price': '\$3,500,000',
+        'price': 3500000.0,
         'description': 'Stunning 4 bedroom villa with pool and AR tour.',
         'image_path': 'https://example.com/villa.jpg',
         'model_path': 'https://example.com/villa.glb',
@@ -24,7 +24,8 @@ void main() {
       expect(property.homeownerId, 101);
       expect(property.name, 'Luxury Modern Villa');
       expect(property.location, 'Beverly Hills, CA');
-      expect(property.price, '\$3,500,000');
+      expect(property.price, 'RM 3,500,000');
+      expect(property.numericPrice, 3500000.0);
       expect(property.description,
           'Stunning 4 bedroom villa with pool and AR tour.');
       expect(property.imagePath, 'https://example.com/villa.jpg');
@@ -34,7 +35,7 @@ void main() {
       expect(property.status, 'approved');
     });
 
-    test('handles string-based numeric ids gracefully', () {
+    test('handles legacy string-based and numeric prices gracefully', () {
       final json = {
         'id': '99',
         'homeowner_id': '888',
@@ -53,6 +54,8 @@ void main() {
 
       expect(property.id, 99);
       expect(property.homeownerId, 888);
+      expect(property.price, 'RM 5,000,000');
+      expect(property.numericPrice, 5000000.0);
       expect(property.modelPath, '');
       expect(property.isFeatured, isFalse);
       expect(property.status, 'pending');
@@ -64,13 +67,14 @@ void main() {
         'homeowner_id': 1,
         'name': 'A',
         'location': 'B',
-        'price': '100',
+        'price': 100000,
         'description': 'C',
         'image_path': 'D',
         'is_featured': 1,
         'created_at': '2026-01-01',
       };
       expect(Property.fromJson(jsonIntTrue).isFeatured, isTrue);
+      expect(Property.fromJson(jsonIntTrue).price, 'RM 100,000');
 
       final jsonBoolTrue = {
         ...jsonIntTrue,
@@ -103,7 +107,7 @@ void main() {
         'homeowner_id': null,
         'name': 'Cozy Cottage',
         'location': 'Aspen, CO',
-        'price': '\$750,000',
+        'price': '750000',
         'description': 'Rustic wooden cottage in the mountains.',
         'image_path': 'https://example.com/cottage.jpg',
         'created_at': '2026-05-15',
@@ -113,6 +117,8 @@ void main() {
 
       expect(property.id, 0);
       expect(property.homeownerId, 0);
+      expect(property.price, 'RM 750,000');
+      expect(property.numericPrice, 750000.0);
       expect(property.modelPath, '');
       expect(property.status, 'pending');
       expect(property.isFeatured, isFalse);

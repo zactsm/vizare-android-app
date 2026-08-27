@@ -532,6 +532,113 @@ class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
+/// Animated Luxury Shimmer Sweep
+class VizareShimmer extends StatefulWidget {
+  final Widget child;
+  final Color baseColor;
+  final Color highlightColor;
+  final Duration duration;
+
+  const VizareShimmer({
+    super.key,
+    required this.child,
+    this.baseColor = const Color(0x22FFFFFF),
+    this.highlightColor = const Color(0x55E5C07B),
+    this.duration = const Duration(milliseconds: 1600),
+  });
+
+  @override
+  State<VizareShimmer> createState() => _VizareShimmerState();
+}
+
+class _VizareShimmerState extends State<VizareShimmer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final value = _controller.value;
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.baseColor,
+                widget.highlightColor,
+                widget.baseColor,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+              transform: _SlidingGradientTransform(slidePercent: value),
+            ).createShader(bounds);
+          },
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _SlidingGradientTransform extends GradientTransform {
+  final double slidePercent;
+  const _SlidingGradientTransform({required this.slidePercent});
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(
+        bounds.width * (slidePercent * 2 - 1), 0.0, 0.0);
+  }
+}
+
+/// Clean rounded skeleton placeholder block
+class VizareSkeletonBlock extends StatelessWidget {
+  final double? width;
+  final double? height;
+  final double borderRadius;
+  final EdgeInsetsGeometry? margin;
+  final Color? color;
+
+  const VizareSkeletonBlock({
+    super.key,
+    this.width,
+    this.height,
+    this.borderRadius = 12.0,
+    this.margin,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      margin: margin,
+      decoration: BoxDecoration(
+        color: color ?? VizareColors.glassFillElevated,
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+    );
+  }
+}
+
 /// Shimmer Skeleton Loading Card for Property Grid/List
 class VizareCardSkeleton extends StatelessWidget {
   final double height;
@@ -545,44 +652,47 @@ class VizareCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return VisionGlassContainer(
-      height: height,
-      width: width,
-      margin: const EdgeInsets.only(bottom: 16),
-      borderRadius: 24,
-      backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.7),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: VizareColors.glassFillElevated,
-                borderRadius: BorderRadius.circular(18),
+    return VizareShimmer(
+      child: VisionGlassContainer(
+        height: height,
+        width: width,
+        margin: const EdgeInsets.only(bottom: 16),
+        borderRadius: 24,
+        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.7),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: VizareColors.glassFillElevated,
+                  borderRadius: BorderRadius.circular(18),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: 140,
-            height: 16,
-            decoration: BoxDecoration(
-              color: VizareColors.glassFill,
-              borderRadius: BorderRadius.circular(4),
+            const SizedBox(height: 12),
+            Container(
+              width: 140,
+              height: 16,
+              decoration: BoxDecoration(
+                color: VizareColors.glassFill,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: 80,
-            height: 14,
-            decoration: BoxDecoration(
-              color: VizareColors.glassFill,
-              borderRadius: BorderRadius.circular(4),
+            const SizedBox(height: 8),
+            Container(
+              width: 80,
+              height: 14,
+              decoration: BoxDecoration(
+                color: VizareColors.glassFill,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
 

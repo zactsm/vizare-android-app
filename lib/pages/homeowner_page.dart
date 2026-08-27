@@ -8,6 +8,7 @@ import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
+import 'package:untitled/pages/utils/top_bar_gradient_blur.dart';
 
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/add_property_page.dart';
@@ -231,6 +232,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                           color: VizareColors.champagneGold),
                     )
                   : _buildBody(),
+              const TopBarGradientBlur(height: 90.0),
               _buildTopBar(context),
             ],
           ),
@@ -240,9 +242,8 @@ class _HomeownerPageState extends State<HomeownerPage> {
   }
 
   Widget _buildTopBar(BuildContext context) {
-    final topInset = MediaQuery.of(context).padding.top;
     return Positioned(
-      top: topInset + 8.0,
+      top: 10.0,
       left: 20.0,
       right: 20.0,
       child: Column(
@@ -432,7 +433,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 130),
+          const SizedBox(height: 72),
           Text(
             'Estate Manager',
             style: GoogleFonts.poppins(

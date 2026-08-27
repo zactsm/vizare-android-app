@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
+import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/floating_bottom_nav_bar.dart';
 import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/property_details_skeleton.dart';
 import 'package:untitled/pages/utils/top_bar_gradient_blur.dart';
 import 'package:untitled/pages/homebuyer_page.dart';
 
@@ -148,6 +150,21 @@ void main() {
 
       final pageView = tester.widget<PageView>(pageViewFinder);
       expect(pageView.physics, isA<NeverScrollableScrollPhysics>());
+    });
+    testWidgets('PropertyDetailsSkeleton renders full-page shimmer skeleton',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PropertyDetailsSkeleton(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(PropertyDetailsSkeleton), findsOneWidget);
+      expect(find.byType(VizareShimmer), findsWidgets);
+      expect(find.byType(VizareSkeletonBlock), findsWidgets);
     });
   });
 }

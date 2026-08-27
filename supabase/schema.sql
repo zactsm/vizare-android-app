@@ -66,7 +66,7 @@ create table if not exists public.properties (
   homeowner_id bigint not null references public.profiles(id) on delete cascade,
   name text not null,
   location text not null,
-  price text not null,
+  price double precision not null default 0.0,
   description text not null,
   image_path text not null,
   model_path text not null default '',

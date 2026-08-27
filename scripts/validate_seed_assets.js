@@ -227,7 +227,7 @@ async function runValidation() {
   const seedSql = fs.readFileSync(seedSqlPath, 'utf8');
 
   // Parse properties and images from seed.sql
-  const propertyRegex = /insert into public\.properties\s*\([^)]+\)\s*values\s*\(\s*v_[^,]+,\s*'([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']+)',\s*'([^']*)'/gi;
+  const propertyRegex = /insert into public\.properties\s*\([^)]+\)\s*values\s*\(\s*v_[^,]+,\s*'([^']+)',\s*'([^']+)',\s*'?([^',]+)'?,\s*'([^']+)',\s*'([^']+)',\s*'([^']*)'/gi;
   const listings = [];
   let match;
   let id = 1;

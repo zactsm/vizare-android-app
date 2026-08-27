@@ -38,9 +38,12 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.property.name);
-    _priceController = TextEditingController(
-      text: widget.property.price.replaceFirst(RegExp(r'^RM\s*'), ''),
-    );
+    final initialNumeric = widget.property.numericPrice > 0
+        ? (widget.property.numericPrice % 1 == 0
+            ? widget.property.numericPrice.toInt().toString()
+            : widget.property.numericPrice.toString())
+        : widget.property.price.replaceAll(RegExp(r'[^0-9.]'), '');
+    _priceController = TextEditingController(text: initialNumeric);
     _descriptionController =
         TextEditingController(text: widget.property.description);
     _locationController =
@@ -110,12 +113,8 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User not logged in");
 
-      final rawPrice = _priceController.text.trim();
-      final formattedPrice = rawPrice.startsWith('RM ')
-          ? rawPrice
-          : (rawPrice.startsWith('RM')
-              ? 'RM ${rawPrice.substring(2).trim()}'
-              : 'RM $rawPrice');
+      final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
+      final cleanPrice = (double.tryParse(rawPrice) ?? 0.0).toString();
 
       final response = await ApiService.post(
         'edit_property.php',
@@ -124,7 +123,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           'property_id': widget.property.id.toString(),
           'name': _titleController.text.trim(),
           'location': _locationController.text.trim(),
-          'price': formattedPrice,
+          'price': cleanPrice,
           'description': _descriptionController.text.trim(),
           'image_path': finalImageUrl,
         },
