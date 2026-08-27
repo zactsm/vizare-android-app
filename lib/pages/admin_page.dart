@@ -738,8 +738,10 @@ class _AdminPageState extends State<AdminPage> {
       ),
       body: AbstractBackground(
         child: SafeArea(
+          bottom: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.only(left: 20.0, right: 20.0, top: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -892,6 +894,8 @@ class _AdminPageState extends State<AdminPage> {
     }
 
     return ListView.builder(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 24),
       itemCount: _pendingProperties.length,
       itemBuilder: (context, index) {
         final property = _pendingProperties[index];
@@ -1164,6 +1168,8 @@ class _AdminPageState extends State<AdminPage> {
                   ),
                 )
               : ListView.builder(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 24),
                   itemCount: _filteredProperties.length,
                   itemBuilder: (context, index) {
                     final p = _filteredProperties[index];
@@ -1483,6 +1489,8 @@ class _AdminPageState extends State<AdminPage> {
                   ),
                 )
               : ListView.builder(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 24),
                   itemCount: _filteredUsers.length,
                   itemBuilder: (context, index) {
                     final u = _filteredUsers[index];
@@ -1671,6 +1679,8 @@ class _AdminPageState extends State<AdminPage> {
     final totalFavorites = _stats['total_favorites'] ?? 0;
 
     return SingleChildScrollView(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2056,6 +2066,8 @@ class _AdminPageState extends State<AdminPage> {
                   ),
                 )
               : ListView.builder(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 24),
                   itemCount: _propertyTypes.length,
                   itemBuilder: (context, index) {
                     final item = _propertyTypes[index];
