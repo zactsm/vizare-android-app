@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -223,6 +225,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,6 +313,11 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                             height: MediaQuery.of(context).size.height * 0.38,
                             child: GoogleMap(
                               style: kVizareDarkMapStyle,
+                              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                                Factory<OneSequenceGestureRecognizer>(
+                                  () => EagerGestureRecognizer(),
+                                ),
+                              },
                               onMapCreated: (controller) {
                                 _mapController = controller;
                                 controller.setMapStyle(kVizareDarkMapStyle);
