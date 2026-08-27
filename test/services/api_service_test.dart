@@ -19,7 +19,7 @@ void main() {
             Uint8List.fromList(utf8.encode('''
 API_BASE_URL=https://api.example.com
 SUPABASE_URL=https://xyz.supabase.co
-SUPABASE_PUBLISHABLE_KEY=mock-anon-key-12345
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
 ''')).buffer,
           );
         }
@@ -32,7 +32,7 @@ SUPABASE_PUBLISHABLE_KEY=mock-anon-key-12345
     test('baseUrl returns environment configuration correctly', () {
       expect(ApiService.baseUrl, 'https://api.example.com');
       expect(ApiService.supabaseUrl, 'https://xyz.supabase.co');
-      expect(ApiService.supabasePublishableKey, 'mock-anon-key-12345');
+      expect(ApiService.supabasePublishableKey, 'sb_publishable_mock_12345');
     });
 
     test('getUri generates correct Uri with https schema', () {

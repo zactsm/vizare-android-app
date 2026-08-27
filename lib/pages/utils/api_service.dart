@@ -29,8 +29,7 @@ class ApiService {
       (dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null) ?? '';
   static String get supabasePublishableKey =>
       (dotenv.isInitialized
-          ? (dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ??
-              dotenv.env['SUPABASE_ANON_KEY'])
+          ? dotenv.env['SUPABASE_PUBLISHABLE_KEY']
           : null) ??
       '';
 

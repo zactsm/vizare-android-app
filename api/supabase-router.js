@@ -72,17 +72,11 @@ function requiredEnv(name) {
 
 function createClients() {
   const url = requiredEnv('SUPABASE_URL');
-  const publishableKey =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    requiredEnv('SUPABASE_PUBLISHABLE_KEY');
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SECRET_KEY ||
-    publishableKey;
+  const publishableKey = requiredEnv('SUPABASE_PUBLISHABLE_KEY');
+  const secretKey = requiredEnv('SUPABASE_SECRET_KEY');
   const options = { auth: { autoRefreshToken: false, persistSession: false } };
   const publicClient = createClient(url, publishableKey, options);
-  const admin = createClient(url, serviceRoleKey, options);
+  const admin = createClient(url, secretKey, options);
   return {
     admin,
     publicClient,
@@ -92,10 +86,7 @@ function createClients() {
 function createUserClient(token) {
   if (!token) return null;
   const url = requiredEnv('SUPABASE_URL');
-  const publishableKey =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    requiredEnv('SUPABASE_PUBLISHABLE_KEY');
+  const publishableKey = requiredEnv('SUPABASE_PUBLISHABLE_KEY');
   return createClient(url, publishableKey, {
     auth: { autoRefreshToken: false, persistSession: false },
     global: { headers: { Authorization: `Bearer ${token}` } },
@@ -1342,9 +1333,7 @@ module.exports = async function handler(request, response) {
       return response.status(200).json({
         supabase_url: process.env.SUPABASE_URL || '',
         supabase_publishable_key:
-          process.env.SUPABASE_PUBLISHABLE_KEY ||
-          process.env.SUPABASE_ANON_KEY ||
-          '',
+          process.env.SUPABASE_PUBLISHABLE_KEY || '',
         google_maps_api_key: process.env.GOOGLE_MAPS_API_KEY || '',
         google_oauth_client_id:
           process.env.GOOGLE_OAUTH_CLIENT_ID ||

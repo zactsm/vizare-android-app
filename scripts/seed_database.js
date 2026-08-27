@@ -24,17 +24,17 @@ if (fs.existsSync(envPath)) {
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('\x1b[31m[Error] Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY in .env\x1b[0m');
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('\x1b[31m[Error] Missing SUPABASE_URL or SUPABASE_SECRET_KEY / SUPABASE_PUBLISHABLE_KEY in .env\x1b[0m');
   console.log('To seed your database:');
   console.log('1. Copy the contents of supabase/seed.sql and paste them into your Supabase Dashboard SQL Editor.');
-  console.log('2. Or run: node scripts/seed_database.js with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env\n');
+  console.log('2. Or run: node scripts/seed_database.js with SUPABASE_URL and SUPABASE_SECRET_KEY in .env\n');
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 

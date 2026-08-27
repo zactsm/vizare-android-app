@@ -42,13 +42,12 @@ void main() async {
 
   // 2. Extract configuration or fetch dynamically from Vercel API Gateway
   String? supabaseUrl = dotenv.env['SUPABASE_URL'];
-  String? supabaseAnonKey =
-      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? dotenv.env['SUPABASE_ANON_KEY'];
+  String? supabasePublishableKey = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
   String? googleMapsKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
   String? googleOAuthId =
       dotenv.env['GOOGLE_OAUTH_CLIENT_ID'] ?? dotenv.env['GOOGLE_CLIENT_ID'];
 
-  if (supabaseUrl == null || supabaseAnonKey == null) {
+  if (supabaseUrl == null || supabasePublishableKey == null) {
     try {
       final base = ApiService.baseUrl;
       final configUri = Uri.parse(
@@ -59,15 +58,15 @@ void main() async {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         supabaseUrl ??= data['supabase_url']?.toString();
-        supabaseAnonKey ??= data['supabase_publishable_key']?.toString();
+        supabasePublishableKey ??= data['supabase_publishable_key']?.toString();
         googleMapsKey ??= data['google_maps_api_key']?.toString();
         googleOAuthId ??= data['google_oauth_client_id']?.toString();
 
         if (supabaseUrl != null && supabaseUrl.isNotEmpty) {
           dotenv.env['SUPABASE_URL'] = supabaseUrl;
         }
-        if (supabaseAnonKey != null && supabaseAnonKey.isNotEmpty) {
-          dotenv.env['SUPABASE_PUBLISHABLE_KEY'] = supabaseAnonKey;
+        if (supabasePublishableKey != null && supabasePublishableKey.isNotEmpty) {
+          dotenv.env['SUPABASE_PUBLISHABLE_KEY'] = supabasePublishableKey;
         }
         if (googleMapsKey != null && googleMapsKey.isNotEmpty) {
           dotenv.env['GOOGLE_MAPS_API_KEY'] = googleMapsKey;
@@ -96,13 +95,13 @@ void main() async {
   bool supabaseReady = false;
   if (supabaseUrl != null &&
       supabaseUrl.isNotEmpty &&
-      supabaseAnonKey != null &&
-      supabaseAnonKey.isNotEmpty) {
+      supabasePublishableKey != null &&
+      supabasePublishableKey.isNotEmpty) {
     try {
       await Supabase.initialize(
         url: supabaseUrl,
         // ignore: deprecated_member_use
-        anonKey: supabaseAnonKey,
+        anonKey: supabasePublishableKey,
       );
       supabaseReady = true;
     } catch (e) {

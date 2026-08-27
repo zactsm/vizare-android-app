@@ -85,7 +85,8 @@ describe('Supabase Router API Tests', () => {
 
   test('client_config.php route returns configured API keys from environment', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
-    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
     process.env.GOOGLE_MAPS_API_KEY = 'mock-google-maps-key-123';
     process.env.GOOGLE_OAUTH_CLIENT_ID = 'mock-google-client-id-abc';
 
@@ -97,29 +98,45 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(res.statusCode, 200);
     assert.deepStrictEqual(res.body, {
       supabase_url: 'https://mock.supabase.co',
-      supabase_publishable_key: 'mock-anon-key-xyz',
+      supabase_publishable_key: 'mock-publishable-key-xyz',
       google_maps_api_key: 'mock-google-maps-key-123',
       google_oauth_client_id: 'mock-google-client-id-abc',
     });
   });
 
   test('returns 503 SERVER_CONFIGURATION_ERROR when Supabase env vars are missing', async () => {
+    // Missing SUPABASE_URL
     delete process.env.SUPABASE_URL;
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
+
+    const req1 = createMockRequest({ method: 'GET', url: '/api/get_all_listings.php' });
+    const res1 = createMockResponse();
+    await router(req1, res1);
+    assert.strictEqual(res1.statusCode, 503);
+    assert.match(res1.body.message, /The API is not configured/);
+
+    // Missing SUPABASE_PUBLISHABLE_KEY
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
     delete process.env.SUPABASE_PUBLISHABLE_KEY;
-    delete process.env.SUPABASE_ANON_KEY;
+    const req2 = createMockRequest({ method: 'GET', url: '/api/get_all_listings.php' });
+    const res2 = createMockResponse();
+    await router(req2, res2);
+    assert.strictEqual(res2.statusCode, 503);
 
-    const req = createMockRequest({ method: 'GET', url: '/api/get_all_listings.php' });
-    const res = createMockResponse();
-
-    await router(req, res);
-
-    assert.strictEqual(res.statusCode, 503);
-    assert.match(res.body.message, /The API is not configured/);
+    // Missing SUPABASE_SECRET_KEY
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    delete process.env.SUPABASE_SECRET_KEY;
+    const req3 = createMockRequest({ method: 'GET', url: '/api/get_all_listings.php' });
+    const res3 = createMockResponse();
+    await router(req3, res3);
+    assert.strictEqual(res3.statusCode, 503);
   });
 
   test('resend_verification.php requires email and returns 400 when missing', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
-    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
 
     const req = createMockRequest({
       method: 'POST',
@@ -136,7 +153,8 @@ describe('Supabase Router API Tests', () => {
 
   test('forgot_password.php validates email and returns 400 when missing or invalid', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
-    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
 
     const req1 = createMockRequest({
       method: 'POST',
@@ -161,7 +179,8 @@ describe('Supabase Router API Tests', () => {
 
   test('create_account.php enforces strong password rules and required fields', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
-    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
 
     const req = createMockRequest({
       method: 'POST',
