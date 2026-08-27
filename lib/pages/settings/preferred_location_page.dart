@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:logger/logger.dart';
@@ -24,11 +25,38 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
   bool _showConfirmation = true;
 
   final Set<Marker> _markers = {};
+  BitmapDescriptor _goldMarkerIcon =
+      BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow);
 
   @override
   void initState() {
     super.initState();
+    _loadCustomPin();
     _loadPreferences();
+  }
+
+  Future<void> _loadCustomPin() async {
+    try {
+      final ByteData byteData =
+          await rootBundle.load('assets/images/gold_map_pin.png');
+      final Uint8List bytes = byteData.buffer.asUint8List();
+      final icon = BitmapDescriptor.bytes(
+        bytes,
+        width: 36,
+        height: 45,
+      );
+      if (mounted) {
+        setState(() {
+          _goldMarkerIcon = icon;
+          _updateMarker();
+        });
+      }
+    } catch (e) {
+      _logger.w('Using default yellow/gold hue marker', error: e);
+      _goldMarkerIcon =
+          BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueYellow);
+      if (mounted) _updateMarker();
+    }
   }
 
   @override
@@ -96,6 +124,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
         Marker(
           markerId: const MarkerId('selectedLocation'),
           position: _selectedLocationCoords,
+          icon: _goldMarkerIcon,
           infoWindow: InfoWindow(title: _selectedLocationName),
         ),
       );
@@ -280,8 +309,10 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                           child: SizedBox(
                             height: MediaQuery.of(context).size.height * 0.38,
                             child: GoogleMap(
+                              style: kVizareDarkMapStyle,
                               onMapCreated: (controller) {
                                 _mapController = controller;
+                                controller.setMapStyle(kVizareDarkMapStyle);
                               },
                               initialCameraPosition: CameraPosition(
                                 target: _selectedLocationCoords,
