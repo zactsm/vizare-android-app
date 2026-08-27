@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -30,6 +31,21 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   List<PlatformFile> _newSelectedImages = [];
   final List<String> _tags = ['luxury', 'renovated', 'prime-location'];
 
+  late String _selectedPropertyType;
+  List<String> _availablePropertyTypes = [
+    'Apartment / Flat',
+    'Condominium',
+    'Luxury Villa',
+    'Duplex / Penthouse',
+    'Detached House / Bungalow',
+    'Terraced House / Townhouse',
+    'Serviced Residence',
+    'Loft',
+    'Studio Unit',
+    'Commercial Property',
+    'Modern Luxury',
+  ];
+
   bool _isForRent = false;
   bool _isForSale = true;
   bool _isUploading = false;
@@ -37,6 +53,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   @override
   void initState() {
     super.initState();
+    _selectedPropertyType = widget.property.propertyType.isNotEmpty
+        ? widget.property.propertyType
+        : 'Condominium';
+    _fetchPropertyTypes();
     _titleController = TextEditingController(text: widget.property.name);
     final initialNumeric = widget.property.numericPrice > 0
         ? (widget.property.numericPrice % 1 == 0
@@ -48,6 +68,26 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         TextEditingController(text: widget.property.description);
     _locationController =
         TextEditingController(text: widget.property.location);
+  }
+
+  Future<void> _fetchPropertyTypes() async {
+    try {
+      final response = await ApiService.get('get_property_types.php');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (data.isNotEmpty && mounted) {
+          setState(() {
+            _availablePropertyTypes =
+                data.map((item) => item['name'].toString()).toList();
+            if (!_availablePropertyTypes.contains(_selectedPropertyType)) {
+              _availablePropertyTypes.insert(0, _selectedPropertyType);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      _logger.w("Could not fetch remote property types, using fallback", error: e);
+    }
   }
 
   @override
@@ -122,6 +162,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           'email': email,
           'property_id': widget.property.id.toString(),
           'name': _titleController.text.trim(),
+          'property_type': _selectedPropertyType,
           'location': _locationController.text.trim(),
           'price': cleanPrice,
           'description': _descriptionController.text.trim(),
@@ -236,12 +277,15 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
                           isDark: isDark,
                         ),
                         const SizedBox(height: 18),
+                        _buildLabel('Property Type'),
+                        _buildPropertyTypeDropdown(isDark),
+                        const SizedBox(height: 18),
                         _buildLabel('Listing Price'),
                         _buildInput(
                           controller: _priceController,
                           hintText: '4,850,000',
                           icon: Icons.payments_rounded,
-                          prefixText: 'RM ',
+                          persistentPrefixText: 'RM ',
                           keyboardType: TextInputType.number,
                           isDark: isDark,
                         ),
@@ -307,6 +351,66 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     );
   }
 
+  Widget _buildPropertyTypeDropdown(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? VizareColors.obsidianSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFCBD5E1),
+          width: 1,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _availablePropertyTypes.contains(_selectedPropertyType)
+              ? _selectedPropertyType
+              : (_availablePropertyTypes.isNotEmpty
+                  ? _availablePropertyTypes.first
+                  : null),
+          isExpanded: true,
+          dropdownColor:
+              isDark ? VizareColors.obsidianElevated : Colors.white,
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: VizareColors.champagneGold,
+          ),
+          items: _availablePropertyTypes.map((type) {
+            return DropdownMenuItem<String>(
+              value: type,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.holiday_village_rounded,
+                    color: VizareColors.champagneGold,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    type,
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _selectedPropertyType = val);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 2.0),
@@ -327,10 +431,12 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     required String hintText,
     required IconData icon,
     int maxLines = 1,
-    String? prefixText,
+    String? persistentPrefixText,
     TextInputType? keyboardType,
     bool isDark = true,
   }) {
+    final bool isMultiLine = maxLines > 1;
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? VizareColors.obsidianSurface : Colors.white,
@@ -351,17 +457,49 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           fontSize: 14,
         ),
         decoration: InputDecoration(
-          prefixIcon: Icon(
-            icon,
-            color: VizareColors.champagneGold.withValues(alpha: 0.7),
-            size: 20,
-          ),
-          prefixText: prefixText,
-          prefixStyle: GoogleFonts.poppins(
-            color: VizareColors.champagneGold,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-          ),
+          prefixIcon: isMultiLine
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 10, top: 14),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    widthFactor: 1.0,
+                    heightFactor: 1.0,
+                    child: Icon(
+                      icon,
+                      color: VizareColors.champagneGold.withValues(alpha: 0.7),
+                      size: 20,
+                    ),
+                  ),
+                )
+              : (persistentPrefixText != null
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 14, right: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            icon,
+                            color: VizareColors.champagneGold
+                                .withValues(alpha: 0.7),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            persistentPrefixText,
+                            style: GoogleFonts.poppins(
+                              color: VizareColors.champagneGold,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Icon(
+                      icon,
+                      color: VizareColors.champagneGold.withValues(alpha: 0.7),
+                      size: 20,
+                    )),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
             color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),

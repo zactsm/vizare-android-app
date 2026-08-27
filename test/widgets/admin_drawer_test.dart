@@ -49,10 +49,12 @@ void main() {
       expect(find.text('admin@vizare.com'), findsOneWidget);
 
       // Verify Nav Items
+      expect(find.text('Platform Overview'), findsOneWidget);
       expect(find.text('Moderation Queue'), findsOneWidget);
       expect(find.text('Listings Management'), findsOneWidget);
       expect(find.text('User Management'), findsOneWidget);
-      expect(find.text('Platform Overview'), findsOneWidget);
+      expect(find.text('Property Types Editor'), findsOneWidget);
+      expect(find.text('Bottom Nav Bar Tuner'), findsOneWidget);
 
       // Verify Badge count
       expect(find.text('5'), findsOneWidget);
@@ -62,7 +64,7 @@ void main() {
     });
 
     testWidgets('triggers callback when navigating to different view', (tester) async {
-      AdminView selectedView = AdminView.moderation;
+      AdminView selectedView = AdminView.analytics;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -103,6 +105,9 @@ void main() {
       // Verify hamburger icon is present
       expect(find.byIcon(Icons.menu_rounded), findsOneWidget);
 
+      // Default view is Platform Overview
+      expect(find.text('Platform Overview'), findsOneWidget);
+
       // Tap hamburger button to open drawer
       await tester.tap(find.byIcon(Icons.menu_rounded));
       await tester.pumpAndSettle();
@@ -120,7 +125,7 @@ void main() {
       expect(find.text('Manage buyer, homeowner, and administrator profiles.'), findsOneWidget);
     });
 
-    testWidgets('switches to Platform Overview analytics view', (tester) async {
+    testWidgets('switches to Moderation Queue view', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: AdminPage(),
@@ -128,18 +133,19 @@ void main() {
       );
       await tester.pump();
 
+      // Default view is Platform Overview
+      expect(find.text('Platform Overview'), findsOneWidget);
+
       // Open drawer
       await tester.tap(find.byIcon(Icons.menu_rounded));
       await tester.pumpAndSettle();
 
-      // Switch to Platform Overview
-      await tester.tap(find.text('Platform Overview'));
+      // Switch to Moderation Queue
+      await tester.tap(find.text('Moderation Queue'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Platform Overview'), findsOneWidget);
-      expect(find.text('Core Metrics'), findsOneWidget);
-      expect(find.text('Total Users'), findsOneWidget);
-      expect(find.text('Total Listings'), findsOneWidget);
+      expect(find.text('Moderation Queue'), findsOneWidget);
+      expect(find.text('Review & approve submitted property listings.'), findsOneWidget);
     });
   });
 }

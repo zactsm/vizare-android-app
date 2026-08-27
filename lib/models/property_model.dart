@@ -1,10 +1,39 @@
 import 'package:intl/intl.dart';
 
+class PropertyTypeItem {
+  final int id;
+  final String name;
+  final String icon;
+
+  PropertyTypeItem({
+    required this.id,
+    required this.name,
+    required this.icon,
+  });
+
+  factory PropertyTypeItem.fromJson(Map<String, dynamic> json) {
+    return PropertyTypeItem(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      icon: json['icon']?.toString() ?? 'home_work_rounded',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'icon': icon,
+    };
+  }
+}
+
 class Property {
   final int id;
   final int homeownerId;
   final String name;
   final String location;
+  final String propertyType;
   final String price;
   final double numericPrice;
   final String description;
@@ -19,6 +48,7 @@ class Property {
     required this.homeownerId,
     required this.name,
     required this.location,
+    this.propertyType = 'Modern Luxury',
     required this.price,
     this.numericPrice = 0.0,
     required this.description,
@@ -60,11 +90,15 @@ class Property {
   // Factory constructor: Creates a Property instance from a JSON map
   factory Property.fromJson(Map<String, dynamic> json) {
     final rawPrice = json['price'];
+    final rawType = json['property_type']?.toString().trim();
+    final propType = (rawType != null && rawType.isNotEmpty) ? rawType : 'Modern Luxury';
+
     return Property(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       homeownerId: int.tryParse(json['homeowner_id']?.toString() ?? '') ?? 0,
       name: json['name']?.toString() ?? 'Unnamed Estate',
       location: json['location']?.toString() ?? 'Location unavailable',
+      propertyType: propType,
       price: formatPrice(rawPrice),
       numericPrice: parseNumericPrice(rawPrice),
       description: json['description']?.toString() ?? '',

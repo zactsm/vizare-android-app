@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/models/property_model.dart';
 import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
@@ -60,6 +61,7 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
       final response =
           await ApiService.get('search_properties.php', {'term': query});
 
@@ -70,8 +72,20 @@ class _SearchPageState extends State<SearchPage> {
         final properties =
             data.map((json) => Property.fromJson(json)).toList();
 
+        final List<Property> preferred = [];
+        final List<Property> others = [];
+        for (final p in properties) {
+          final bool isPref =
+              prefs.getBool('propertyType_${p.propertyType}') ?? true;
+          if (isPref) {
+            preferred.add(p);
+          } else {
+            others.add(p);
+          }
+        }
+
         setState(() {
-          _results = properties;
+          _results = [...preferred, ...others];
           _isLoading = false;
         });
       } else {

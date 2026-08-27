@@ -24,7 +24,7 @@ class _AdminPageState extends State<AdminPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final Logger _logger = Logger();
 
-  AdminView _currentView = AdminView.moderation;
+  AdminView _currentView = AdminView.analytics;
   String? _adminEmail;
 
   // 1. Moderation Queue state
@@ -49,6 +49,10 @@ class _AdminPageState extends State<AdminPage> {
   Map<String, dynamic> _stats = {};
   bool _isLoadingStats = false;
 
+  // 5. Property Types state
+  List<PropertyTypeItem> _propertyTypes = [];
+  bool _isLoadingPropertyTypes = false;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +64,7 @@ class _AdminPageState extends State<AdminPage> {
       ),
     );
     _loadAdminInfo();
+    _fetchStats();
     _fetchPendingProperties();
     _listingSearchController.addListener(_filterListings);
     _userSearchController.addListener(_filterUsers);
@@ -98,14 +103,16 @@ class _AdminPageState extends State<AdminPage> {
 
   void _onViewSelected(AdminView view) {
     setState(() => _currentView = view);
-    if (view == AdminView.moderation && _pendingProperties.isEmpty) {
+    if (view == AdminView.analytics && _stats.isEmpty) {
+      _fetchStats();
+    } else if (view == AdminView.moderation && _pendingProperties.isEmpty) {
       _fetchPendingProperties();
     } else if (view == AdminView.listings && _allProperties.isEmpty) {
       _fetchAllProperties();
     } else if (view == AdminView.users && _allUsers.isEmpty) {
       _fetchAllUsers();
-    } else if (view == AdminView.analytics && _stats.isEmpty) {
-      _fetchStats();
+    } else if (view == AdminView.propertyTypes && _propertyTypes.isEmpty) {
+      _fetchPropertyTypes();
     }
   }
 
@@ -202,6 +209,292 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  Future<void> _fetchPropertyTypes() async {
+    setState(() => _isLoadingPropertyTypes = true);
+    try {
+      final response = await ApiService.get('get_property_types.php');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _propertyTypes =
+                data.map((j) => PropertyTypeItem.fromJson(j)).toList();
+            _isLoadingPropertyTypes = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoadingPropertyTypes = false);
+      }
+    } catch (e) {
+      _logger.e("Error fetching property types", error: e);
+      if (mounted) setState(() => _isLoadingPropertyTypes = false);
+    }
+  }
+
+  Future<void> _showAddPropertyTypeDialog() async {
+    final nameCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? VizareColors.obsidianElevated : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Add Property Type',
+          style: GoogleFonts.poppins(
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter the architectural category name:',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? VizareColors.obsidianSurface : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : const Color(0xFFCBD5E1),
+                ),
+              ),
+              child: TextField(
+                controller: nameCtrl,
+                autofocus: true,
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Waterfront Villa, Penthouse',
+                  hintStyle: GoogleFonts.inter(
+                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    fontSize: 13,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: VizareColors.textMuted),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VizareColors.champagneGold,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+              Navigator.pop(ctx);
+              try {
+                final res = await ApiService.post(
+                  'create_property_type.php',
+                  body: {'name': name, 'icon': 'home_work_rounded'},
+                );
+                if (res.statusCode == 200) {
+                  _fetchPropertyTypes();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Category "$name" created successfully!'),
+                        backgroundColor: VizareColors.emeraldGreen,
+                      ),
+                    );
+                  }
+                } else {
+                  final err = jsonDecode(res.body)['message'] ?? 'Failed to create category';
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(err),
+                        backgroundColor: VizareColors.crimsonRed,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                _logger.e('Error creating property type', error: e);
+              }
+            },
+            child: Text(
+              'Add Category',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showEditPropertyTypeDialog(PropertyTypeItem item) async {
+    final nameCtrl = TextEditingController(text: item.name);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? VizareColors.obsidianElevated : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Edit Property Type',
+          style: GoogleFonts.poppins(
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Update name (changes will automatically sync to existing listings):',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? VizareColors.obsidianSurface : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : const Color(0xFFCBD5E1),
+                ),
+              ),
+              child: TextField(
+                controller: nameCtrl,
+                autofocus: true,
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Category Name',
+                  border: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: VizareColors.textMuted),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: VizareColors.champagneGold,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              final newName = nameCtrl.text.trim();
+              if (newName.isEmpty || newName == item.name) {
+                Navigator.pop(ctx);
+                return;
+              }
+              Navigator.pop(ctx);
+              try {
+                final res = await ApiService.post(
+                  'update_property_type.php',
+                  body: {'id': item.id.toString(), 'name': newName},
+                );
+                if (res.statusCode == 200) {
+                  _fetchPropertyTypes();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Renamed to "$newName" successfully!'),
+                        backgroundColor: VizareColors.emeraldGreen,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                _logger.e('Error updating property type', error: e);
+              }
+            },
+            child: Text(
+              'Save',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePropertyType(PropertyTypeItem item) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => VizareDialog(
+        title: 'Delete Category',
+        message:
+            'Are you sure you want to remove "${item.name}"?\n\nAny properties categorized as "${item.name}" will automatically be reassigned to "Modern Luxury".',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        confirmColor: VizareColors.crimsonRed,
+        onConfirm: () => Navigator.pop(ctx, true),
+        onCancel: () => Navigator.pop(ctx, false),
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final res = await ApiService.post(
+        'delete_property_type.php',
+        body: {'id': item.id.toString()},
+      );
+      if (res.statusCode == 200) {
+        _fetchPropertyTypes();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Category "${item.name}" deleted. Listings reassigned.'),
+              backgroundColor: VizareColors.emeraldGreen,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      _logger.e('Error deleting property type', error: e);
+    }
+  }
+
   Future<void> _updatePropertyStatus(int propertyId, String newStatus) async {
     setState(() {
       _pendingProperties.removeWhere((p) => p.id == propertyId);
@@ -213,6 +506,7 @@ class _AdminPageState extends State<AdminPage> {
           homeownerId: current.homeownerId,
           name: current.name,
           location: current.location,
+          propertyType: current.propertyType,
           price: current.price,
           description: current.description,
           imagePath: current.imagePath,
@@ -400,27 +694,31 @@ class _AdminPageState extends State<AdminPage> {
 
   String get _viewTitle {
     switch (_currentView) {
+      case AdminView.analytics:
+        return 'Platform Overview';
       case AdminView.moderation:
         return 'Moderation Queue';
       case AdminView.listings:
         return 'Listings Management';
       case AdminView.users:
         return 'User Management';
-      case AdminView.analytics:
-        return 'Platform Overview';
+      case AdminView.propertyTypes:
+        return 'Property Types';
     }
   }
 
   String get _viewSubtitle {
     switch (_currentView) {
+      case AdminView.analytics:
+        return 'High-level metrics and platform operations.';
       case AdminView.moderation:
         return 'Review & approve submitted property listings.';
       case AdminView.listings:
         return 'Manage and monitor all platform real estate listings.';
       case AdminView.users:
         return 'Manage buyer, homeowner, and administrator profiles.';
-      case AdminView.analytics:
-        return 'High-level metrics and platform operations.';
+      case AdminView.propertyTypes:
+        return 'Create, edit, and manage architectural categories.';
     }
   }
 
@@ -480,14 +778,16 @@ class _AdminPageState extends State<AdminPage> {
                     VisionGlassPill(
                       padding: const EdgeInsets.all(10),
                       onTap: () {
-                        if (_currentView == AdminView.moderation) {
+                        if (_currentView == AdminView.analytics) {
+                          _fetchStats();
+                        } else if (_currentView == AdminView.moderation) {
                           _fetchPendingProperties();
                         } else if (_currentView == AdminView.listings) {
                           _fetchAllProperties();
                         } else if (_currentView == AdminView.users) {
                           _fetchAllUsers();
-                        } else if (_currentView == AdminView.analytics) {
-                          _fetchStats();
+                        } else if (_currentView == AdminView.propertyTypes) {
+                          _fetchPropertyTypes();
                         }
                       },
                       child: const Icon(
@@ -527,14 +827,16 @@ class _AdminPageState extends State<AdminPage> {
 
   Widget _buildCurrentViewBody(bool isDark) {
     switch (_currentView) {
+      case AdminView.analytics:
+        return _buildPlatformOverviewView(isDark);
       case AdminView.moderation:
         return _buildModerationQueueView(isDark);
       case AdminView.listings:
         return _buildListingsManagementView(isDark);
       case AdminView.users:
         return _buildUserManagementView(isDark);
-      case AdminView.analytics:
-        return _buildPlatformOverviewView(isDark);
+      case AdminView.propertyTypes:
+        return _buildPropertyTypesView(isDark);
     }
   }
 
@@ -764,33 +1066,60 @@ class _AdminPageState extends State<AdminPage> {
         // Search & Filter row
         VisionGlassContainer(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          borderRadius: 18,
+          borderRadius: 28.0,
           backgroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.white,
+              ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
+              : Colors.white.withValues(alpha: 0.95),
           border: Border.all(
             color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
+                ? Colors.white.withValues(alpha: 0.15)
                 : const Color(0xFFCBD5E1),
+            width: 1.2,
           ),
           child: TextField(
             controller: _listingSearchController,
             style: GoogleFonts.inter(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
-              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              fontSize: 14.5,
             ),
             decoration: InputDecoration(
-              icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
               hintText: 'Search listings by name, city, price...',
               hintStyle: GoogleFonts.inter(
-                color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
-                fontSize: 13,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.4)
+                    : const Color(0xFF94A3B8),
+                fontSize: 13.5,
               ),
+              filled: false,
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: VizareColors.champagneGold,
+                size: 20,
+              ),
+              suffixIcon: _listingSearchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color:
+                            isDark ? Colors.white60 : const Color(0xFF64748B),
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        _listingSearchController.clear();
+                        _filterListings();
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // Status Filter Chips
         SingleChildScrollView(
@@ -1060,33 +1389,60 @@ class _AdminPageState extends State<AdminPage> {
         // User Search Bar
         VisionGlassContainer(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          borderRadius: 18,
+          borderRadius: 28.0,
           backgroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.white,
+              ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
+              : Colors.white.withValues(alpha: 0.95),
           border: Border.all(
             color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
+                ? Colors.white.withValues(alpha: 0.15)
                 : const Color(0xFFCBD5E1),
+            width: 1.2,
           ),
           child: TextField(
             controller: _userSearchController,
             style: GoogleFonts.inter(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
-              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+              fontSize: 14.5,
             ),
             decoration: InputDecoration(
-              icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
               hintText: 'Search users by name, email, role...',
               hintStyle: GoogleFonts.inter(
-                color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
-                fontSize: 13,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.4)
+                    : const Color(0xFF94A3B8),
+                fontSize: 13.5,
               ),
+              filled: false,
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
               border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: VizareColors.champagneGold,
+                size: 20,
+              ),
+              suffixIcon: _userSearchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color:
+                            isDark ? Colors.white60 : const Color(0xFF64748B),
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        _userSearchController.clear();
+                        _filterUsers();
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // Role Filter Chips
         SingleChildScrollView(
@@ -1603,6 +1959,193 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ),
       ),
+    );
+  }
+
+  // ==========================================
+  // VIEW 5: PROPERTY TYPES EDITOR
+  // ==========================================
+
+  Widget _buildPropertyTypesView(bool isDark) {
+    if (_isLoadingPropertyTypes) {
+      return const Center(
+        child: CircularProgressIndicator(color: VizareColors.champagneGold),
+      );
+    }
+
+    return Column(
+      children: [
+        // Action Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${_propertyTypes.length} CATEGORIES CONFIGURED',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: VizareColors.champagneGold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: _showAddPropertyTypeDialog,
+              icon: const Icon(Icons.add_rounded, size: 18, color: Colors.black),
+              label: Text(
+                'Add Category',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: VizareColors.champagneGold,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 2,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // Categories List
+        Expanded(
+          child: _propertyTypes.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: VizareColors.champagneGold.withValues(alpha: 0.1),
+                        ),
+                        child: const Icon(
+                          Icons.category_outlined,
+                          size: 48,
+                          color: VizareColors.champagneGold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No Property Types Configured',
+                        style: GoogleFonts.poppins(
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Tap "Add Category" above to configure your architectural taxonomy.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          color: isDark
+                              ? VizareColors.textMuted
+                              : const Color(0xFF64748B),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _propertyTypes.length,
+                  itemBuilder: (context, index) {
+                    final item = _propertyTypes[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: VisionGlassContainer(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        borderRadius: 18,
+                        backgroundColor: isDark
+                            ? VizareColors.obsidianElevated.withValues(alpha: 0.8)
+                            : Colors.white,
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : const Color(0xFFE2E8F0),
+                          width: 1.0,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: VizareColors.champagneGold
+                                    .withValues(alpha: 0.12),
+                              ),
+                              child: const Icon(
+                                Icons.holiday_village_rounded,
+                                color: VizareColors.champagneGold,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: GoogleFonts.poppins(
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Type ID: #${item.id}',
+                                    style: GoogleFonts.inter(
+                                      color: isDark
+                                          ? VizareColors.textMuted
+                                          : const Color(0xFF64748B),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.edit_rounded,
+                                size: 18,
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF64748B),
+                              ),
+                              tooltip: 'Rename Category',
+                              onPressed: () =>
+                                  _showEditPropertyTypeDialog(item),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: VizareColors.crimsonRed,
+                              ),
+                              tooltip: 'Delete Category',
+                              onPressed: () => _deletePropertyType(item),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

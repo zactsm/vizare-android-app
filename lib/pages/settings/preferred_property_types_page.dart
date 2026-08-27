@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
 
@@ -17,17 +19,17 @@ class _PreferredPropertyTypesPageState
   final Map<String, bool> propertyTypes = {
     'Apartment / Flat': true,
     'Condominium': true,
-    'Terraced House / Townhouse': true,
-    'Semi-Detached House': true,
-    'Detached House / Bungalow': true,
-    'Studio Unit': true,
-    'Loft': true,
-    'Serviced Residence': true,
+    'Luxury Villa': true,
     'Duplex / Penthouse': true,
-    'Room Rental / Shared Unit': true,
+    'Detached House / Bungalow': true,
+    'Terraced House / Townhouse': true,
+    'Serviced Residence': true,
+    'Loft': true,
+    'Studio Unit': true,
     'Commercial Property': true,
-    'Land / Lot for Development': true,
+    'Modern Luxury': true,
   };
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -38,13 +40,41 @@ class _PreferredPropertyTypesPageState
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
-    for (var key in propertyTypes.keys) {
+    try {
+      final response = await ApiService.get('get_property_types.php');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (data.isNotEmpty) {
+          final Map<String, bool> fetched = {};
+          for (var item in data) {
+            final name = item['name']?.toString() ?? '';
+            if (name.isNotEmpty) {
+              final isEnabled = prefs.containsKey('propertyType_$name')
+                  ? prefs.getBool('propertyType_$name')!
+                  : true;
+              fetched[name] = isEnabled;
+            }
+          }
+          if (mounted) {
+            setState(() {
+              propertyTypes.clear();
+              propertyTypes.addAll(fetched);
+              _isLoading = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Fallback if network fails
+    for (var key in propertyTypes.keys.toList()) {
       if (prefs.containsKey('propertyType_$key')) {
         propertyTypes[key] = prefs.getBool('propertyType_$key')!;
       }
     }
 
-    if (mounted) setState(() {});
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _savePreference(String key, bool value) async {
@@ -86,8 +116,14 @@ class _PreferredPropertyTypesPageState
                   Expanded(
                     child: VisionGlassContainer(
                       padding: const EdgeInsets.all(12),
-                      child: ListView(
-                        children: propertyTypes.keys.map((type) {
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: VizareColors.champagneGold,
+                              ),
+                            )
+                          : ListView(
+                              children: propertyTypes.keys.map((type) {
                           final isSelected = propertyTypes[type] ?? false;
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 4.0),

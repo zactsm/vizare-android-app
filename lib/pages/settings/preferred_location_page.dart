@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,29 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
   String _selectedLocationName = 'Shah Alam, Selangor';
   LatLng _selectedLocationCoords = const LatLng(3.0689, 101.5183);
   bool _showConfirmation = true;
+
+  Timer? _debounce;
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+
+  final List<Map<String, dynamic>> _popularLocations = [
+    {'name': 'Mont Kiara, Kuala Lumpur', 'lat': 3.1678, 'lng': 101.6548, 'state': 'Kuala Lumpur'},
+    {'name': 'KLCC / City Centre, Kuala Lumpur', 'lat': 3.1578, 'lng': 101.7123, 'state': 'Kuala Lumpur'},
+    {'name': 'Bangsar / Bangsar South, Kuala Lumpur', 'lat': 3.1292, 'lng': 101.6710, 'state': 'Kuala Lumpur'},
+    {'name': 'Damansara Heights, Kuala Lumpur', 'lat': 3.1510, 'lng': 101.6600, 'state': 'Kuala Lumpur'},
+    {'name': 'Bukit Tunku (Kenny Hills), Kuala Lumpur', 'lat': 3.1700, 'lng': 101.6833, 'state': 'Kuala Lumpur'},
+    {'name': 'Desa ParkCity, Kuala Lumpur', 'lat': 3.1873, 'lng': 101.6322, 'state': 'Kuala Lumpur'},
+    {'name': 'Ampang Hilir / Embassy Row, Kuala Lumpur', 'lat': 3.1583, 'lng': 101.7333, 'state': 'Kuala Lumpur'},
+    {'name': 'Petaling Jaya, Selangor', 'lat': 3.1073, 'lng': 101.6067, 'state': 'Selangor'},
+    {'name': 'Shah Alam, Selangor', 'lat': 3.0689, 'lng': 101.5183, 'state': 'Selangor'},
+    {'name': 'Subang Jaya, Selangor', 'lat': 3.0565, 'lng': 101.5851, 'state': 'Selangor'},
+    {'name': 'Cyberjaya / Putrajaya, Selangor', 'lat': 2.9213, 'lng': 101.6559, 'state': 'Selangor'},
+    {'name': 'George Town, Penang', 'lat': 5.4141, 'lng': 100.3288, 'state': 'Penang'},
+    {'name': 'Tanjung Tokong, Penang', 'lat': 5.4578, 'lng': 100.3060, 'state': 'Penang'},
+    {'name': 'Johor Bahru / Iskandar Puteri, Johor', 'lat': 1.4927, 'lng': 103.7414, 'state': 'Johor'},
+    {'name': 'Kota Kinabalu, Sabah', 'lat': 5.9804, 'lng': 116.0735, 'state': 'Sabah'},
+    {'name': 'Kuching, Sarawak', 'lat': 1.5535, 'lng': 110.3592, 'state': 'Sarawak'},
+  ];
 
   final Set<Marker> _markers = {};
   BitmapDescriptor _goldMarkerIcon =
@@ -63,8 +87,88 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
+      final List<Map<String, dynamic>> results = [];
+
+      // 1. Instant matching from popular luxury Malaysian hubs
+      final matchedLocal = _popularLocations.where((loc) {
+        final name = loc['name'].toString().toLowerCase();
+        final state = loc['state'].toString().toLowerCase();
+        final q = cleanQuery.toLowerCase();
+        return name.contains(q) || state.contains(q);
+      }).toList();
+
+      results.addAll(matchedLocal);
+
+      // 2. Geocoder query if no or few results
+      try {
+        final target = await geocodeAddress(cleanQuery);
+        if (target['latitude'] != null && target['longitude'] != null) {
+          final double lat = (target['latitude'] as num).toDouble();
+          final double lng = (target['longitude'] as num).toDouble();
+          final String name = (target['name'] as String?) ?? cleanQuery;
+
+          // Only add if not duplicate
+          final bool exists = results.any(
+              (r) => (r['lat'] - lat).abs() < 0.001 && (r['lng'] - lng).abs() < 0.001);
+          if (!exists) {
+            results.insert(0, {
+              'name': name,
+              'lat': lat,
+              'lng': lng,
+              'state': 'Custom Geocoded Match',
+            });
+          }
+        }
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
+    });
+  }
+
+  void _selectSearchResult(Map<String, dynamic> location) {
+    final double lat = (location['lat'] as num).toDouble();
+    final double lng = (location['lng'] as num).toDouble();
+    final String name = location['name'] as String;
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _selectedLocationCoords = LatLng(lat, lng);
+      _selectedLocationName = name;
+      _searchController.text = name;
+      _searchResults = [];
+      _showConfirmation = true;
+      _updateMarker();
+    });
+
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(_selectedLocationCoords, 14.0),
+    );
   }
 
   Future<void> _loadPreferences() async {
@@ -136,6 +240,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
   Future<void> _onMapTapped(LatLng position) async {
     setState(() {
       _selectedLocationCoords = position;
+      _searchResults = [];
       _updateMarker();
     });
 
@@ -150,6 +255,7 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
           _selectedLocationName = name.isNotEmpty
               ? name
               : 'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+          _searchController.text = _selectedLocationName;
           _showConfirmation = true;
         });
       }
@@ -161,56 +267,6 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
               'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
           _showConfirmation = true;
         });
-      }
-    }
-  }
-
-  Future<void> _searchLocation() async {
-    final query = _searchController.text.trim();
-    if (query.isEmpty) return;
-
-    FocusScope.of(context).unfocus();
-
-    try {
-      final target = await geocodeAddress(query);
-
-      if (target['latitude'] != null && target['longitude'] != null) {
-        final double lat = (target['latitude'] as num).toDouble();
-        final double lng = (target['longitude'] as num).toDouble();
-        final String name = (target['name'] as String?) ?? query;
-
-        if (mounted) {
-          setState(() {
-            _selectedLocationCoords = LatLng(lat, lng);
-            _selectedLocationName = name;
-            _showConfirmation = true;
-            _updateMarker();
-          });
-        }
-
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_selectedLocationCoords, 14.0),
-        );
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Location not found. Please try another query.",
-                  style: GoogleFonts.inter()),
-              backgroundColor: VizareColors.crimsonRed,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      _logger.e("Error searching location", error: e);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error locating address: $e", style: GoogleFonts.inter()),
-            backgroundColor: VizareColors.crimsonRed,
-          ),
-        );
       }
     }
   }
@@ -229,13 +285,12 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
                     child: Text(
                       'Search a city or tap anywhere on the map to center your curated recommendations.',
                       style: GoogleFonts.inter(
@@ -247,50 +302,152 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
                       ),
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? VizareColors.obsidianSurface : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : const Color(0xFFCBD5E1),
-                        width: 1,
-                      ),
+
+                  // Search Bar with Homebuyer SearchPage Glass Aesthetic
+                  VisionGlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    borderRadius: 28.0,
+                    backgroundColor: isDark
+                        ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
+                        : Colors.white.withValues(alpha: 0.95),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : const Color(0xFFCBD5E1),
+                      width: 1.2,
                     ),
                     child: TextField(
                       controller: _searchController,
-                      onSubmitted: (_) => _searchLocation(),
+                      onChanged: _onSearchChanged,
                       style: GoogleFonts.inter(
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14.5,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Search city, state, or region...',
+                        hintText: 'Search city, state, or neighborhood...',
                         hintStyle: GoogleFonts.inter(
-                          color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
-                          fontSize: 13,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.4)
+                              : const Color(0xFF94A3B8),
+                          fontSize: 13.5,
                         ),
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14.0, horizontal: 8.0),
+                        border: InputBorder.none,
                         prefixIcon: const Icon(
                           Icons.search_rounded,
                           color: VizareColors.champagneGold,
                           size: 20,
                         ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: VizareColors.champagneGold,
-                            size: 18,
-                          ),
-                          onPressed: _searchLocation,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 14.0, horizontal: 16.0),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  color: isDark
+                                      ? Colors.white60
+                                      : const Color(0xFF64748B),
+                                  size: 18,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged('');
+                                },
+                              )
+                            : (_isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: VizareColors.champagneGold,
+                                      ),
+                                    ),
+                                  )
+                                : null),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+
+                  // Autocomplete Live Results Dropdown
+                  if (_searchResults.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    VisionGlassContainer(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      borderRadius: 18.0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: _searchResults.map((result) {
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _selectSearchResult(result),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 10.0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: VizareColors.champagneGold
+                                            .withValues(alpha: 0.12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_on_rounded,
+                                        color: VizareColors.champagneGold,
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            result['name'] ?? '',
+                                            style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13.5,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          if (result['state'] != null)
+                                            Text(
+                                              result['state'] ?? '',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 11,
+                                                color: isDark
+                                                    ? VizareColors.textMuted
+                                                    : const Color(0xFF64748B),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.north_west_rounded,
+                                      size: 16,
+                                      color: VizareColors.champagneGold,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
                   if (_showConfirmation) ...[
                     VisionGlassContainer(
                       padding: const EdgeInsets.all(16),

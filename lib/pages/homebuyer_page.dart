@@ -177,9 +177,27 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
   String? _errorMessage;
 
+  List<Property> _sortWithPreferences(
+      List<Property> list, SharedPreferences prefs) {
+    final List<Property> preferred = [];
+    final List<Property> others = [];
+
+    for (final p in list) {
+      final bool isPref =
+          prefs.getBool('propertyType_${p.propertyType}') ?? true;
+      if (isPref) {
+        preferred.add(p);
+      } else {
+        others.add(p);
+      }
+    }
+    return [...preferred, ...others];
+  }
+
   Future<void> _fetchProperties() async {
     setState(() => _errorMessage = null);
     try {
+      final prefs = await SharedPreferences.getInstance();
       final response = await ApiService.get('get_all_listings.php');
 
       if (!mounted) return;
@@ -199,12 +217,17 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
           }
         }
 
+        final sortedFeatured = _sortWithPreferences(
+            properties.where((p) => p.isFeatured).toList(), prefs);
+        final sortedNearby = _sortWithPreferences(
+            properties.where((p) => !p.isFeatured).toList(), prefs);
+        final sortedPopular = _sortWithPreferences(
+            List.from(properties)..shuffle(), prefs);
+
         setState(() {
-          _featuredProperties =
-              properties.where((p) => p.isFeatured).toList();
-          _nearbyProperties =
-              properties.where((p) => !p.isFeatured).toList();
-          _popularProperties = List.from(properties)..shuffle();
+          _featuredProperties = sortedFeatured;
+          _nearbyProperties = sortedNearby;
+          _popularProperties = sortedPopular;
           _isLoading = false;
           _errorMessage = null;
         });
@@ -212,7 +235,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
         _logger.w('Failed to load properties: ${response.statusCode}');
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Unable to load real estate catalog (HTTP ${response.statusCode}).';
+          _errorMessage =
+              'Unable to load real estate catalog (HTTP ${response.statusCode}).';
         });
       }
     } catch (e) {
@@ -220,7 +244,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Network connection interrupted. Please verify connection and retry.';
+          _errorMessage =
+              'Network connection interrupted. Please verify connection and retry.';
         });
       }
     }

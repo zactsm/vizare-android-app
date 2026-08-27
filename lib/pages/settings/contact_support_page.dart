@@ -352,6 +352,8 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
     int maxLines = 1,
     bool isDark = true,
   }) {
+    final bool isMultiLine = maxLines > 1;
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? VizareColors.obsidianSurface : Colors.white,
@@ -371,11 +373,25 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
         ),
         maxLines: maxLines,
         decoration: InputDecoration(
-          prefixIcon: Icon(
-            icon,
-            color: VizareColors.champagneGold.withValues(alpha: 0.7),
-            size: 20,
-          ),
+          prefixIcon: isMultiLine
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 10, top: 14),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    widthFactor: 1.0,
+                    heightFactor: 1.0,
+                    child: Icon(
+                      icon,
+                      color: VizareColors.champagneGold.withValues(alpha: 0.7),
+                      size: 20,
+                    ),
+                  ),
+                )
+              : Icon(
+                  icon,
+                  color: VizareColors.champagneGold.withValues(alpha: 0.7),
+                  size: 20,
+                ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
             color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),

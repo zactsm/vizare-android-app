@@ -236,32 +236,57 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               children: [
                 const SizedBox(height: 8),
 
-                // Price & Category Tag
+                // Property Title (First, in Yellow / Champagne Gold bold)
+                Text(
+                  widget.property.name,
+                  style: GoogleFonts.poppins(
+                    color: VizareColors.champagneGold,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // Price (Below title, in white/dark text)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       widget.property.price,
                       style: GoogleFonts.poppins(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                        color: VizareColors.champagneGold,
-                        letterSpacing: -0.5,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        letterSpacing: -0.3,
                       ),
                     ),
+                    if (widget.property.propertyType.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: VizareColors.champagneGold
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: VizareColors.champagneGold
+                                .withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          widget.property.propertyType,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: VizareColors.champagneGold,
+                          ),
+                        ),
+                      ),
                   ],
-                ),
-                const SizedBox(height: 4),
-
-                // Property Title
-                Text(
-                  widget.property.name,
-                  style: GoogleFonts.poppins(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    height: 1.2,
-                  ),
                 ),
                 const SizedBox(height: 6),
 

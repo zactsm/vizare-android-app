@@ -129,7 +129,11 @@ function parseBody(raw, contentType = '') {
 }
 
 function propertyJson(property) {
-  return { ...property, is_featured: property.is_featured ? 1 : 0 };
+  return {
+    ...property,
+    is_featured: property.is_featured ? 1 : 0,
+    property_type: property.property_type || 'Modern Luxury',
+  };
 }
 
 function failOn(error) {
@@ -413,6 +417,15 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, result.data.map(propertyJson)];
   }
 
+  if (name === 'get_property_types.php') {
+    const result = await admin
+      .from('property_types')
+      .select('*')
+      .order('name', { ascending: true });
+    failOn(result.error);
+    return [200, result.data || []];
+  }
+
   if (name === 'search_properties.php') {
     const rawTerm = String(input.term || '').trim().slice(0, 100);
     const term = rawTerm.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, ' ');
@@ -423,7 +436,7 @@ async function dispatch(name, request, admin, publicClient) {
       .order('created_at', { ascending: false });
     if (term) {
       builder = builder.or(
-        `name.ilike.%${term}%,location.ilike.%${term}%,description.ilike.%${term}%`,
+        `name.ilike.%${term}%,location.ilike.%${term}%,property_type.ilike.%${term}%,description.ilike.%${term}%`,
       );
     }
     const result = await builder;
@@ -763,6 +776,8 @@ async function dispatch(name, request, admin, publicClient) {
     const imagePathStr = String(input.image_path || '').trim().slice(0, 500);
     const modelPathStr = String(input.model_path || '').trim().slice(0, 500);
 
+    const propertyTypeStr = String(input.property_type || 'Modern Luxury').trim().slice(0, 100);
+
     if (!nameStr || !locStr || !priceNum || !imagePathStr) {
       return [400, { message: 'Title, location, price, and primary image are required.' }];
     }
@@ -773,6 +788,7 @@ async function dispatch(name, request, admin, publicClient) {
         homeowner_id: profile.id,
         name: nameStr,
         location: locStr,
+        property_type: propertyTypeStr,
         price: priceNum,
         description: descStr,
         image_path: imagePathStr,
@@ -817,6 +833,9 @@ async function dispatch(name, request, admin, publicClient) {
       image_path: imagePathStr,
       model_path: modelPathStr,
     };
+    if (input.property_type) {
+      updates.property_type = String(input.property_type).trim().slice(0, 100);
+    }
     if (profile.role !== 'admin') updates.status = 'pending';
     const result = await admin
       .from('properties')
@@ -864,10 +883,81 @@ async function dispatch(name, request, admin, publicClient) {
     }
     const result = await admin
       .from('profiles')
-      .select('id, full_name, email, role, phone_number, profile_pic, created_at')
+      .select('id, full_name, email, role, phone, profile_pic, created_at')
       .order('created_at', { ascending: false });
     failOn(result.error);
-    return [200, result.data];
+    const mappedUsers = (result.data || []).map((u) => ({
+      id: u.id,
+      full_name: u.full_name,
+      email: u.email,
+      role: u.role,
+      phone_number: u.phone || '',
+      profile_pic: u.profile_pic,
+      created_at: u.created_at,
+    }));
+    return [200, mappedUsers];
+  }
+
+  if (name === 'create_property_type.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const nameStr = String(input.name || '').trim().slice(0, 100);
+    const iconStr = String(input.icon || 'home_work_rounded').trim().slice(0, 50);
+    if (!nameStr) {
+      return [400, { message: 'Property type name is required.' }];
+    }
+    const result = await admin
+      .from('property_types')
+      .insert({ name: nameStr, icon: iconStr })
+      .select()
+      .single();
+    failOn(result.error);
+    return [200, { message: 'Property type created.', data: result.data }];
+  }
+
+  if (name === 'update_property_type.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const id = input.id;
+    const nameStr = String(input.name || '').trim().slice(0, 100);
+    const iconStr = String(input.icon || '').trim().slice(0, 50);
+    if (!id || !nameStr) {
+      return [400, { message: 'ID and name are required.' }];
+    }
+    const current = await admin.from('property_types').select('name').eq('id', id).single();
+    failOn(current.error);
+    const oldName = current.data?.name;
+
+    const updates = { name: nameStr };
+    if (iconStr) updates.icon = iconStr;
+    const result = await admin.from('property_types').update(updates).eq('id', id).select().single();
+    failOn(result.error);
+
+    if (oldName && oldName !== nameStr) {
+      await admin.from('properties').update({ property_type: nameStr }).eq('property_type', oldName);
+    }
+    return [200, { message: 'Property type updated.', data: result.data }];
+  }
+
+  if (name === 'delete_property_type.php') {
+    if (profile.role !== 'admin') {
+      return [403, { message: 'Admin access required.' }];
+    }
+    const id = input.id;
+    if (!id) return [400, { message: 'Property type ID is required.' }];
+
+    const current = await admin.from('property_types').select('name').eq('id', id).single();
+    if (current.data) {
+      const typeName = current.data.name;
+      // Reassign all listings of this type to default 'Modern Luxury'
+      await admin.from('properties').update({ property_type: 'Modern Luxury' }).eq('property_type', typeName);
+    }
+
+    const result = await admin.from('property_types').delete().eq('id', id);
+    failOn(result.error);
+    return [200, { message: 'Property type deleted and associated properties reassigned.' }];
   }
 
   if (name === 'update_user_role.php') {
