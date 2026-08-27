@@ -4,7 +4,8 @@
     "test:flutter": "flutter test",
     "test:all": "node --test test/api_test.js && flutter test",
     "validate:seed": "node scripts/validate_seed_assets.js",
-    "seed:remote": "node scripts/seed_database.js"
+    "seed:remote": "node scripts/seed_database.js",
+    "db:migration": "node scripts/create_migration.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

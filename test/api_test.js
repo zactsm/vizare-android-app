@@ -205,4 +205,23 @@ describe('Supabase Router API Tests', () => {
     assert.match(sql, /insert into public\.inquiries/i);
     assert.match(sql, /insert into public\.support_tickets/i);
   });
+
+  test('Supabase baseline migration and GitHub Actions CI workflow exist and are configured', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const configPath = path.join(__dirname, '..', 'supabase', 'config.toml');
+    assert.strictEqual(fs.existsSync(configPath), true, 'config.toml must exist');
+    const configContent = fs.readFileSync(configPath, 'utf8');
+    assert.match(configContent, /project_id\s*=\s*"ttuxazxgkgrpakdedngw"/);
+
+    const initialMigrationPath = path.join(__dirname, '..', 'supabase', 'migrations', '20260827000000_initial_schema.sql');
+    assert.strictEqual(fs.existsSync(initialMigrationPath), true, '20260827000000_initial_schema.sql must exist');
+
+    const workflowPath = path.join(__dirname, '..', '.github', 'workflows', 'supabase-migrations.yml');
+    assert.strictEqual(fs.existsSync(workflowPath), true, 'supabase-migrations.yml workflow must exist');
+    const workflowContent = fs.readFileSync(workflowPath, 'utf8');
+    assert.match(workflowContent, /supabase\/setup-cli/);
+    assert.match(workflowContent, /supabase db push/);
+  });
 });
