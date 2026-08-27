@@ -224,167 +224,153 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Scaffold(
-      backgroundColor:
-          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
-      body: AbstractBackground(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
+    return Theme(
+      data: VizareTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: VizareColors.obsidianBlack,
+        body: AbstractBackground(
+          child: Scaffold(
             backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                size: 20,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
             ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 52,
-                      height: 52,
-                      color: isDark ? null : const Color(0xFF0F172A),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        width: 52,
+                        height: 52,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    "Forgot Password",
-                    style: GoogleFonts.poppins(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      letterSpacing: -0.5,
+                    const SizedBox(height: 24),
+                    Text(
+                      "Forgot Password",
+                      style: GoogleFonts.poppins(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Enter the email associated with your account and we will send you a link to reset your password.",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: isDark
-                          ? VizareColors.textSecondary
-                          : const Color(0xFF64748B),
-                      height: 1.45,
+                    const SizedBox(height: 8),
+                    Text(
+                      "Enter the email associated with your account and we will send you a link to reset your password.",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: VizareColors.textSecondary,
+                        height: 1.45,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  VisionGlassContainer(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    borderRadius: 28,
-                    backgroundColor: isDark
-                        ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
-                        : Colors.white,
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : const Color(0xFFE2E8F0),
-                      width: 1.0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'EMAIL ADDRESS',
-                          style: GoogleFonts.inter(
-                            color: VizareColors.champagneGold,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
+                    const SizedBox(height: 24),
+                    VisionGlassContainer(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
+                      borderRadius: 28,
+                      backgroundColor:
+                          VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        width: 1.0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'EMAIL ADDRESS',
+                            style: GoogleFonts.inter(
+                              color: VizareColors.champagneGold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: GoogleFonts.inter(
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            fontSize: 14.5,
-                          ),
-                          cursorColor: VizareColors.champagneGold,
-                          decoration: InputDecoration(
-                            hintText: 'yourname@luxury.com',
-                            hintStyle: GoogleFonts.inter(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.4)
-                                  : const Color(0xFF94A3B8),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
                               fontSize: 14.5,
                             ),
-                            filled: true,
-                            fillColor: isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : const Color(0xFFF8FAFC),
-                            prefixIcon: const Icon(
-                              Icons.email_outlined,
-                              color: VizareColors.champagneGold,
-                              size: 18,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.12)
-                                    : const Color(0xFFCBD5E1),
+                            cursorColor: VizareColors.champagneGold,
+                            decoration: InputDecoration(
+                              hintText: 'yourname@luxury.com',
+                              hintStyle: GoogleFonts.inter(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                fontSize: 14.5,
                               ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.12)
-                                    : const Color(0xFFCBD5E1),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                              prefixIcon: const Icon(
+                                Icons.email_outlined,
                                 color: VizareColors.champagneGold,
-                                width: 1.5,
+                                size: 18,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(
+                                  color: VizareColors.champagneGold,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  LuxuryGradientButton(
-                    text: "Send Reset Link",
-                    icon: Icons.send_rounded,
-                    isLoading: _isLoading,
-                    onPressed: _sendResetLink,
-                  ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        "Remember your password? Sign In",
-                        style: GoogleFonts.inter(
-                          color: isDark
-                              ? VizareColors.textSecondary
-                              : const Color(0xFF64748B),
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
+                    const SizedBox(height: 32),
+                    LuxuryGradientButton(
+                      text: "Send Reset Link",
+                      icon: Icons.send_rounded,
+                      isLoading: _isLoading,
+                      onPressed: _sendResetLink,
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          "Remember your password? Sign In",
+                          style: GoogleFonts.inter(
+                            color: VizareColors.textSecondary,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
           ),

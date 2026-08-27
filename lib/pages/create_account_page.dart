@@ -254,6 +254,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             'user_type', isHomeBuyer ? 'homebuyer' : 'homeowner');
         await prefs.setBool('has_password', true);
 
+        // Load authenticated theme preference
+        await AppThemeController.instance.loadThemeMode(isAuthenticated: true);
+
         if (!mounted) return;
 
         if (isHomeBuyer) {
@@ -294,15 +297,19 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
+    return Theme(
+      data: VizareTheme.darkTheme,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: SafeArea(
+        backgroundColor: VizareColors.obsidianBlack,
+        body: PremiumBackground(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+            ),
+            body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
@@ -809,6 +816,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

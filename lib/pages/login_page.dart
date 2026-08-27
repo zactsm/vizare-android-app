@@ -233,15 +233,19 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
+    return Theme(
+      data: VizareTheme.darkTheme,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: SafeArea(
+        backgroundColor: VizareColors.obsidianBlack,
+        body: PremiumBackground(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+            ),
+            body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
@@ -529,6 +533,8 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
