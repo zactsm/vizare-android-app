@@ -88,14 +88,16 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final innerContent = Stack(
       fit: StackFit.expand,
       children: [
-        // Scrollable Results List
+        // 1. Search Results List / Empty State / Loading
         _buildResults(),
 
         // Smooth Gradient Blur behind top search bar
-        const TopBarGradientBlur(height: 120.0),
+        const TopBarGradientBlur(height: 110.0),
 
         // VisionOS Floating Search Bar Capsule
         Positioned(
@@ -105,24 +107,29 @@ class _SearchPageState extends State<SearchPage> {
           child: VisionGlassContainer(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             borderRadius: 28.0,
-            backgroundColor:
-                VizareColors.obsidianSurface.withValues(alpha: 0.88),
+            backgroundColor: isDark
+                ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
+                : Colors.white.withValues(alpha: 0.95),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : const Color(0xFFCBD5E1),
               width: 1.2,
             ),
             child: TextField(
               controller: _searchController,
               autofocus: !widget.isEmbedded,
               style: GoogleFonts.inter(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontWeight: FontWeight.w500,
                 fontSize: 14.5,
               ),
               decoration: InputDecoration(
                 hintText: 'Search by estate, city, or architect...',
                 hintStyle: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.4)
+                      : const Color(0xFF94A3B8),
                   fontSize: 13.5,
                 ),
                 filled: false,
@@ -138,8 +145,9 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            color: Colors.white60, size: 18),
+                        icon: Icon(Icons.close_rounded,
+                            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                            size: 18),
                         onPressed: () {
                           _searchController.clear();
                           _searchProperties('');
@@ -164,7 +172,8 @@ class _SearchPageState extends State<SearchPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: VizareColors.obsidianBlack,
+        backgroundColor:
+            isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
         body: AbstractBackground(
           child: SafeArea(
             child: innerContent,
@@ -175,6 +184,8 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildResults() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: VizareColors.champagneGold),
@@ -202,7 +213,7 @@ class _SearchPageState extends State<SearchPage> {
             Text(
               'Explore the Luxury Catalog',
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
               ),
@@ -211,7 +222,7 @@ class _SearchPageState extends State<SearchPage> {
             Text(
               'Search by property name, location, or architectural features.',
               style: GoogleFonts.inter(
-                color: VizareColors.textMuted,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                 fontSize: 13,
               ),
             ),
@@ -225,7 +236,7 @@ class _SearchPageState extends State<SearchPage> {
         child: Text(
           'No luxury properties match your query.',
           style: GoogleFonts.inter(
-            color: VizareColors.textSecondary,
+            color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -255,10 +266,13 @@ class _SearchPageState extends State<SearchPage> {
             child: VisionGlassContainer(
               padding: const EdgeInsets.all(12),
               borderRadius: 22,
-              backgroundColor:
-                  VizareColors.obsidianSurface.withValues(alpha: 0.85),
+              backgroundColor: isDark
+                  ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.95),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : const Color(0xFFE2E8F0),
                 width: 1.0,
               ),
               child: Row(
@@ -283,7 +297,7 @@ class _SearchPageState extends State<SearchPage> {
                         Text(
                           property.name,
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
                           ),
@@ -294,7 +308,9 @@ class _SearchPageState extends State<SearchPage> {
                         Text(
                           property.location,
                           style: GoogleFonts.inter(
-                            color: VizareColors.textSecondary,
+                            color: isDark
+                                ? VizareColors.textSecondary
+                                : const Color(0xFF64748B),
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
                           ),

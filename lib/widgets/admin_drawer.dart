@@ -28,6 +28,9 @@ class AdminDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dividerColor = isDark ? VizareColors.obsidianBorder : const Color(0xFFE2E8F0);
+
     return Drawer(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -41,10 +44,14 @@ class AdminDrawer extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Container(
             decoration: BoxDecoration(
-              color: VizareColors.obsidianBlack.withValues(alpha: 0.88),
+              color: isDark
+                  ? VizareColors.obsidianBlack.withValues(alpha: 0.88)
+                  : Colors.white.withValues(alpha: 0.95),
               border: Border(
                 right: BorderSide(
-                  color: VizareColors.champagneGold.withValues(alpha: 0.25),
+                  color: isDark
+                      ? VizareColors.champagneGold.withValues(alpha: 0.25)
+                      : const Color(0xFFCBD5E1),
                   width: 1.2,
                 ),
               ),
@@ -89,7 +96,7 @@ class AdminDrawer extends StatelessWidget {
                                   Text(
                                     'VIZARE CONSOLE',
                                     style: GoogleFonts.poppins(
-                                      color: Colors.white,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                                       fontSize: 15,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 0.8,
@@ -126,7 +133,7 @@ class AdminDrawer extends StatelessWidget {
                           Text(
                             adminEmail!,
                             style: GoogleFonts.inter(
-                              color: VizareColors.textMuted,
+                              color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -138,7 +145,7 @@ class AdminDrawer extends StatelessWidget {
                     ),
                   ),
 
-                  const Divider(color: VizareColors.obsidianBorder, height: 1),
+                  Divider(color: dividerColor, height: 1),
                   const SizedBox(height: 12),
 
                   // 2. Navigation Items
@@ -153,6 +160,7 @@ class AdminDrawer extends StatelessWidget {
                           subtitle: 'Review & approve listings',
                           icon: Icons.verified_user_rounded,
                           badgeCount: pendingCount,
+                          isDark: isDark,
                         ),
                         const SizedBox(height: 6),
                         _buildNavItem(
@@ -161,6 +169,7 @@ class AdminDrawer extends StatelessWidget {
                           title: 'Listings Management',
                           subtitle: 'All estate properties',
                           icon: Icons.home_work_rounded,
+                          isDark: isDark,
                         ),
                         const SizedBox(height: 6),
                         _buildNavItem(
@@ -169,6 +178,7 @@ class AdminDrawer extends StatelessWidget {
                           title: 'User Management',
                           subtitle: 'Accounts & permission roles',
                           icon: Icons.people_alt_rounded,
+                          isDark: isDark,
                         ),
                         const SizedBox(height: 6),
                         _buildNavItem(
@@ -177,13 +187,14 @@ class AdminDrawer extends StatelessWidget {
                           title: 'Platform Overview',
                           subtitle: 'Metrics & activity summary',
                           icon: Icons.insights_rounded,
+                          isDark: isDark,
                         ),
                       ],
                     ),
                   ),
 
                   // 3. Footer / Logout
-                  const Divider(color: VizareColors.obsidianBorder, height: 1),
+                  Divider(color: dividerColor, height: 1),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: VisionGlassContainer(
@@ -206,7 +217,7 @@ class AdminDrawer extends StatelessWidget {
                           Text(
                             'Sign Out',
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: VizareColors.crimsonRed,
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -231,6 +242,7 @@ class AdminDrawer extends StatelessWidget {
     required String subtitle,
     required IconData icon,
     int? badgeCount,
+    bool isDark = true,
   }) {
     final bool isSelected = currentView == view;
 
@@ -239,11 +251,11 @@ class AdminDrawer extends StatelessWidget {
       borderRadius: 16,
       backgroundColor: isSelected
           ? VizareColors.champagneGold.withValues(alpha: 0.18)
-          : Colors.white.withValues(alpha: 0.03),
+          : (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF8FAFC)),
       border: Border.all(
         color: isSelected
             ? VizareColors.champagneGold.withValues(alpha: 0.6)
-            : Colors.white.withValues(alpha: 0.06),
+            : (isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0)),
         width: isSelected ? 1.4 : 1.0,
       ),
       onTap: () {
@@ -258,12 +270,14 @@ class AdminDrawer extends StatelessWidget {
               shape: BoxShape.circle,
               color: isSelected
                   ? VizareColors.champagneGold.withValues(alpha: 0.25)
-                  : Colors.white.withValues(alpha: 0.06),
+                  : (isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0)),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: isSelected ? VizareColors.champagneGold : VizareColors.textSecondary,
+              color: isSelected
+                  ? VizareColors.champagneGold
+                  : (isDark ? VizareColors.textSecondary : const Color(0xFF64748B)),
             ),
           ),
           const SizedBox(width: 12),
@@ -274,7 +288,9 @@ class AdminDrawer extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    color: isSelected ? Colors.white : VizareColors.textPrimary,
+                    color: isSelected
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark ? VizareColors.textPrimary : const Color(0xFF334155)),
                     fontSize: 13.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
@@ -282,7 +298,7 @@ class AdminDrawer extends StatelessWidget {
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
-                    color: VizareColors.textMuted,
+                    color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                     fontSize: 11,
                   ),
                 ),

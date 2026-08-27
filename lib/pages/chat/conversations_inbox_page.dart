@@ -5,7 +5,7 @@ import 'package:untitled/models/chat_models.dart';
 import 'package:untitled/pages/chat/chat_page.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/chat_service.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 
 class ConversationsInboxPage extends StatefulWidget {
   const ConversationsInboxPage({super.key});
@@ -79,123 +79,136 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: VisionGlassCircleButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                size: 38,
-                onTap: () => Navigator.pop(context),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: VisionGlassCircleButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  iconColor: isDark ? Colors.white : const Color(0xFF0F172A),
+                  onTap: () => Navigator.pop(context),
+                ),
               ),
             ),
-          ),
-          title: Text(
-            'Messages & Terminal',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            title: Text(
+              'Messages',
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                child: VisionGlassContainer(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  borderRadius: 28.0,
-                  backgroundColor:
-                      VizareColors.obsidianSurface.withValues(alpha: 0.88),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    width: 1.2,
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (_) => setState(_filterConversations),
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14.5,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                  child: VisionGlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    borderRadius: 28.0,
+                    backgroundColor: isDark
+                        ? VizareColors.obsidianSurface.withValues(alpha: 0.88)
+                        : Colors.white.withValues(alpha: 0.95),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : const Color(0xFFCBD5E1),
+                      width: 1.2,
                     ),
-                    decoration: InputDecoration(
-                      hintText: 'Search conversations & properties...',
-                      hintStyle: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13.5,
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (_) => setState(_filterConversations),
+                      style: GoogleFonts.inter(
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14.5,
                       ),
-                      filled: false,
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14.0, horizontal: 8.0),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: VizareColors.champagneGold,
-                        size: 20,
+                      decoration: InputDecoration(
+                        hintText: 'Search conversations & properties...',
+                        hintStyle: GoogleFonts.inter(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.4)
+                              : const Color(0xFF94A3B8),
+                          fontSize: 13.5,
+                        ),
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14.0, horizontal: 8.0),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: VizareColors.champagneGold,
+                          size: 20,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.close_rounded,
+                                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                                    size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(_filterConversations);
+                                },
+                              )
+                            : null,
                       ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.close_rounded,
-                                  color: Colors.white60, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(_filterConversations);
-                              },
-                            )
-                          : null,
                     ),
                   ),
                 ),
-              ),
 
-              // Content List
-              Expanded(
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
+                // Content List
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: VizareColors.champagneGold,
+                          ),
+                        )
+                      : RefreshIndicator(
                           color: VizareColors.champagneGold,
-                        ),
-                      )
-                    : RefreshIndicator(
-                        color: VizareColors.champagneGold,
-                        backgroundColor: VizareColors.obsidianSurface,
-                        onRefresh: _fetchConversations,
-                        child: _filteredConversations.isEmpty
-                            ? _buildEmptyInbox()
-                            : ListView.separated(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
+                          backgroundColor: isDark
+                              ? VizareColors.obsidianSurface
+                              : Colors.white,
+                          onRefresh: _fetchConversations,
+                          child: _filteredConversations.isEmpty
+                              ? _buildEmptyInbox(isDark)
+                              : ListView.separated(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  itemCount: _filteredConversations.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    final conv = _filteredConversations[index];
+                                    return _buildConversationCard(conv, isDark);
+                                  },
                                 ),
-                                itemCount: _filteredConversations.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  final conv = _filteredConversations[index];
-                                  return _buildConversationCard(conv);
-                                },
-                              ),
-                      ),
-              ),
-            ],
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildConversationCard(Conversation conv) {
+  Widget _buildConversationCard(Conversation conv, bool isDark) {
     final prop = conv.property;
     final timeStr = _formatRelativeTime(conv.lastMessageAt);
     final hasUnread = conv.unreadCount > 0;
@@ -212,21 +225,29 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: hasUnread
-              ? VizareColors.obsidianSurface.withValues(alpha: 0.95)
-              : VizareColors.obsidianSurface.withValues(alpha: 0.8),
+          color: isDark
+              ? (hasUnread
+                  ? VizareColors.obsidianSurface.withValues(alpha: 0.95)
+                  : VizareColors.obsidianSurface.withValues(alpha: 0.8))
+              : (hasUnread
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.95)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: hasUnread
                 ? VizareColors.champagneGold.withValues(alpha: 0.7)
-                : Colors.white.withValues(alpha: 0.1),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : const Color(0xFFE2E8F0)),
             width: hasUnread ? 1.5 : 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: hasUnread
                   ? VizareColors.champagneGold.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.25),
+                  : (isDark
+                      ? Colors.black.withValues(alpha: 0.25)
+                      : Colors.black.withValues(alpha: 0.05)),
               blurRadius: hasUnread ? 16 : 8,
               offset: const Offset(0, 3),
             ),
@@ -234,7 +255,6 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
         ),
         child: Row(
           children: [
-            // Property / User Avatar Stack
             Stack(
               clipBehavior: Clip.none,
               children: [
@@ -268,7 +288,7 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
                     height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: VizareColors.obsidianBlack,
+                      color: isDark ? VizareColors.obsidianBlack : Colors.white,
                       border: Border.all(
                         color: VizareColors.champagneGold,
                         width: 1.2,
@@ -286,8 +306,6 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
               ],
             ),
             const SizedBox(width: 14),
-
-            // Middle: Name, Property, Last Message
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +321,7 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: hasUnread ? FontWeight.w800 : FontWeight.w700,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                       ),
@@ -312,7 +330,11 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w500,
-                          color: hasUnread ? VizareColors.champagneGold : VizareColors.textSecondary,
+                          color: hasUnread
+                              ? VizareColors.champagneGold
+                              : (isDark
+                                  ? VizareColors.textSecondary
+                                  : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -339,7 +361,11 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
-                            color: hasUnread ? Colors.white : VizareColors.textSecondary,
+                            color: hasUnread
+                                ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                : (isDark
+                                    ? VizareColors.textSecondary
+                                    : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -371,7 +397,7 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
     );
   }
 
-  Widget _buildEmptyInbox() {
+  Widget _buildEmptyInbox(bool isDark) {
     return Center(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -401,7 +427,7 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 6),
@@ -410,7 +436,7 @@ class _ConversationsInboxPageState extends State<ConversationsInboxPage> {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: VizareColors.textSecondary,
+                color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
                 height: 1.4,
               ),
             ),

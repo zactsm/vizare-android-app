@@ -9,8 +9,12 @@ class PremiumBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite;
+
     return Scaffold(
-      backgroundColor: VizareColors.obsidianBlack,
+      backgroundColor: bgColor,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -24,17 +28,23 @@ class PremiumBackground extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    VizareColors.champagneGold.withValues(alpha: 0.20),
-                    VizareColors.goldDark.withValues(alpha: 0.06),
-                    Colors.transparent,
-                  ],
+                  colors: isDark
+                      ? [
+                          VizareColors.champagneGold.withValues(alpha: 0.20),
+                          VizareColors.goldDark.withValues(alpha: 0.06),
+                          Colors.transparent,
+                        ]
+                      : [
+                          VizareColors.champagneGold.withValues(alpha: 0.14),
+                          VizareColors.goldLight.withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ],
                 ),
               ),
             ),
           ),
 
-          // Clean Obsidian Status Bar Shield (Prevents glow bleed into status bar)
+          // Clean Status Bar Shield (Prevents glow bleed into status bar)
           Positioned(
             top: 0,
             left: 0,
@@ -42,15 +52,15 @@ class PremiumBackground extends StatelessWidget {
             height: 70,
             child: IgnorePointer(
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      VizareColors.obsidianBlack,
+                      bgColor,
                       Colors.transparent,
                     ],
-                    stops: [0.0, 1.0],
+                    stops: const [0.0, 1.0],
                   ),
                 ),
               ),
@@ -67,10 +77,15 @@ class PremiumBackground extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    VizareColors.neonPurple.withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
+                  colors: isDark
+                      ? [
+                          VizareColors.neonPurple.withValues(alpha: 0.18),
+                          Colors.transparent,
+                        ]
+                      : [
+                          VizareColors.pastelPurple.withValues(alpha: 0.08),
+                          Colors.transparent,
+                        ],
                 ),
               ),
             ),
@@ -79,7 +94,7 @@ class PremiumBackground extends StatelessWidget {
           // Luxury Ambient Wave Painter
           Positioned.fill(
             child: CustomPaint(
-              painter: LuxuryWavePainter(),
+              painter: LuxuryWavePainter(isDark: isDark),
             ),
           ),
 
@@ -99,12 +114,18 @@ class PremiumBackground extends StatelessWidget {
 }
 
 class LuxuryWavePainter extends CustomPainter {
+  final bool isDark;
+
+  const LuxuryWavePainter({this.isDark = true});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Layer 1: Deep obsidian wave
-    paint.color = VizareColors.obsidianSurface.withValues(alpha: 0.7);
+    // Layer 1 wave
+    paint.color = isDark
+        ? VizareColors.obsidianSurface.withValues(alpha: 0.7)
+        : const Color(0xFFE2E8F0).withValues(alpha: 0.5);
     final path1 = Path();
     path1.moveTo(0, size.height * 0.50);
     path1.quadraticBezierTo(
@@ -124,8 +145,10 @@ class LuxuryWavePainter extends CustomPainter {
     path1.close();
     canvas.drawPath(path1, paint);
 
-    // Layer 2: Elevated obsidian wave with subtle gold specular sheen
-    paint.color = VizareColors.obsidianElevated.withValues(alpha: 0.85);
+    // Layer 2 wave
+    paint.color = isDark
+        ? VizareColors.obsidianElevated.withValues(alpha: 0.85)
+        : const Color(0xFFCBD5E1).withValues(alpha: 0.35);
     final path2 = Path();
     path2.moveTo(0, size.height * 0.65);
     path2.quadraticBezierTo(
@@ -147,5 +170,6 @@ class LuxuryWavePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant LuxuryWavePainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }

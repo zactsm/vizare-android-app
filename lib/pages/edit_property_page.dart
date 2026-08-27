@@ -6,7 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/models/property_model.dart';
 
 class EditPropertyPage extends StatefulWidget {
@@ -164,130 +164,142 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: VisionGlassCircleButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                size: 38,
-                onTap: () => Navigator.pop(context),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: VisionGlassCircleButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  iconColor: isDark ? Colors.white : const Color(0xFF0F172A),
+                  size: 38,
+                  onTap: () => Navigator.pop(context),
+                ),
               ),
             ),
-          ),
-          title: Text(
-            'Edit Estate Listing',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            title: Text(
+              'Edit Estate Listing',
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Update Specifications',
-                  style: GoogleFonts.poppins(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.6,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Update Specifications',
+                    style: GoogleFonts.poppins(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      letterSpacing: -0.6,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Refine property details, pricing tiers, and architectural photography.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: VizareColors.textSecondary,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Refine property details, pricing tiers, and architectural photography.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: isDark
+                          ? VizareColors.textSecondary
+                          : const Color(0xFF64748B),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildImagePreview(),
-                const SizedBox(height: 24),
-                VisionGlassContainer(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLabel('Listing Title'),
-                      _buildInput(
-                        controller: _titleController,
-                        hintText: 'Listing Title',
-                        icon: Icons.home_work_rounded,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildLabel('Listing Price'),
-                      _buildInput(
-                        controller: _priceController,
-                        hintText: '4,850,000',
-                        icon: Icons.payments_rounded,
-                        prefixText: 'RM ',
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildLabel('Location / Vicinity'),
-                      _buildInput(
-                        controller: _locationController,
-                        hintText: 'Location',
-                        icon: Icons.location_on_rounded,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildLabel('Architectural Description'),
-                      _buildInput(
-                        controller: _descriptionController,
-                        hintText: 'Description',
-                        icon: Icons.notes_rounded,
-                        maxLines: 5,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildLabel('Listing Type'),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildCheckbox('For Sale', _isForSale, (v) {
-                              setState(() {
-                                _isForSale = v ?? false;
-                                if (_isForSale) _isForRent = false;
-                              });
-                            }),
-                          ),
-                          Expanded(
-                            child: _buildCheckbox('For Rent', _isForRent, (v) {
-                              setState(() {
-                                _isForRent = v ?? false;
-                                if (_isForRent) _isForSale = false;
-                              });
-                            }),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      _buildLabel('Tags & Keywords'),
-                      _buildTagsSection(),
-                    ],
+                  const SizedBox(height: 24),
+                  _buildImagePreview(isDark),
+                  const SizedBox(height: 24),
+                  VisionGlassContainer(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Listing Title'),
+                        _buildInput(
+                          controller: _titleController,
+                          hintText: 'Listing Title',
+                          icon: Icons.home_work_rounded,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Listing Price'),
+                        _buildInput(
+                          controller: _priceController,
+                          hintText: '4,850,000',
+                          icon: Icons.payments_rounded,
+                          prefixText: 'RM ',
+                          keyboardType: TextInputType.number,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Location / Vicinity'),
+                        _buildInput(
+                          controller: _locationController,
+                          hintText: 'Location',
+                          icon: Icons.location_on_rounded,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Architectural Description'),
+                        _buildInput(
+                          controller: _descriptionController,
+                          hintText: 'Description',
+                          icon: Icons.notes_rounded,
+                          maxLines: 5,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Listing Type'),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildCheckbox('For Sale', _isForSale, (v) {
+                                setState(() {
+                                  _isForSale = v ?? false;
+                                  if (_isForSale) _isForRent = false;
+                                });
+                              }, isDark),
+                            ),
+                            Expanded(
+                              child: _buildCheckbox('For Rent', _isForRent, (v) {
+                                setState(() {
+                                  _isForRent = v ?? false;
+                                  if (_isForRent) _isForSale = false;
+                                });
+                              }, isDark),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        _buildLabel('Tags & Keywords'),
+                        _buildTagsSection(isDark),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                LuxuryGradientButton(
-                  text: 'Save Modifications',
-                  icon: Icons.check_circle_rounded,
-                  isLoading: _isUploading,
-                  onPressed: _updateProperty,
-                ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                  LuxuryGradientButton(
+                    text: 'Save Modifications',
+                    icon: Icons.check_circle_rounded,
+                    isLoading: _isUploading,
+                    onPressed: _updateProperty,
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -317,13 +329,16 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     int maxLines = 1,
     String? prefixText,
     TextInputType? keyboardType,
+    bool isDark = true,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: VizareColors.obsidianSurface,
+        color: isDark ? VizareColors.obsidianSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
@@ -331,7 +346,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+        style: GoogleFonts.inter(
+          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          fontSize: 14,
+        ),
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
@@ -346,7 +364,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
-            color: VizareColors.textMuted,
+            color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
             fontSize: 13,
           ),
           border: InputBorder.none,
@@ -358,7 +376,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
   }
 
   Widget _buildCheckbox(
-      String label, bool value, ValueChanged<bool?> onChanged) {
+      String label, bool value, ValueChanged<bool?> onChanged, bool isDark) {
     return Row(
       children: [
         Checkbox(
@@ -369,13 +387,16 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         ),
         Text(
           label,
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+          style: GoogleFonts.inter(
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontSize: 13.5,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget _buildImagePreview(bool isDark) {
     ImageProvider imageProvider;
     if (_newSelectedImages.isNotEmpty) {
       final selected = _newSelectedImages.first;
@@ -392,10 +413,12 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
           height: 180,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: VizareColors.obsidianSurface,
+            color: isDark ? VizareColors.obsidianSurface : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: VizareColors.champagneGold.withValues(alpha: 0.3),
+              color: isDark
+                  ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                  : const Color(0xFFCBD5E1),
             ),
             image: DecorationImage(
               image: imageProvider,
@@ -439,7 +462,7 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
     );
   }
 
-  Widget _buildTagsSection() {
+  Widget _buildTagsSection(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -452,11 +475,14 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: VizareColors.obsidianSurface,
+                    color: isDark
+                        ? VizareColors.obsidianSurface
+                        : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color:
-                          VizareColors.champagneGold.withValues(alpha: 0.3),
+                      color: isDark
+                          ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                          : const Color(0xFFCBD5E1),
                     ),
                   ),
                   child: Row(
@@ -473,10 +499,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
                       const SizedBox(width: 6),
                       GestureDetector(
                         onTap: () => setState(() => _tags.remove(tag)),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           size: 14,
-                          color: Colors.white60,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -488,16 +514,23 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: VizareColors.obsidianSurface,
+            color: isDark ? VizareColors.obsidianSurface : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFCBD5E1),
+            ),
           ),
           child: TextField(
             controller: _tagInputController,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+            style: GoogleFonts.inter(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 13,
+            ),
             decoration: InputDecoration(
               hintText: 'Type keyword and press Enter...',
-              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
+              hintStyle: GoogleFonts.inter(
+                color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+              ),
               border: InputBorder.none,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

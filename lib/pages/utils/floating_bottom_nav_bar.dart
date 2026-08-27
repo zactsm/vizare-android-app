@@ -249,6 +249,8 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
     final double activePillWidth =
         dynamicItemWidths[prevIndex] + (dynamicItemWidths[nextIndex] - dynamicItemWidths[prevIndex]) * fraction;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     Widget buildNavItem(int index) {
       final double closeness = tabCloseness[index];
       final double itemWidth = dynamicItemWidths[index];
@@ -308,7 +310,9 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
                           inactiveIcons[index],
                           width: 20,
                           height: 20,
-                          color: VizareColors.textSecondary,
+                          color: isDark
+                              ? VizareColors.textSecondary
+                              : const Color(0xFF64748B),
                         ),
                       ),
                       Opacity(
@@ -354,6 +358,44 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
       );
     }
 
+    final navBgColor = isDark
+        ? VizareColors.obsidianSurface.withValues(alpha: 0.72)
+        : Colors.white.withValues(alpha: 0.88);
+    final navBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : const Color(0xFFCBD5E1);
+    final navGradientColors = isDark
+        ? [
+            Colors.white.withValues(alpha: 0.12),
+            Colors.white.withValues(alpha: 0.03),
+            VizareColors.obsidianSurface.withValues(alpha: 0.72),
+          ]
+        : [
+            Colors.white,
+            Colors.white.withValues(alpha: 0.85),
+            const Color(0xFFF8FAFC),
+          ];
+    final navShadows = isDark
+        ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.50),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: VizareColors.champagneGold.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 2),
+            ),
+          ]
+        : [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ];
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -370,34 +412,19 @@ class _FloatingBottomNavBarState extends State<FloatingBottomNavBar>
               width: barWidth,
               height: config.height,
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface.withValues(alpha: 0.72),
+                color: navBgColor,
                 borderRadius: BorderRadius.circular(containerRadius),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.18),
+                  color: navBorderColor,
                   width: 1.2,
                 ),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.12),
-                    Colors.white.withValues(alpha: 0.03),
-                    VizareColors.obsidianSurface.withValues(alpha: 0.72),
-                  ],
+                  colors: navGradientColors,
                   stops: const [0.0, 0.35, 1.0],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.50),
-                    blurRadius: 30,
-                    offset: const Offset(0, 12),
-                  ),
-                  BoxShadow(
-                    color: VizareColors.champagneGold.withValues(alpha: 0.08),
-                    blurRadius: 18,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: navShadows,
               ),
               child: Stack(
                 children: [

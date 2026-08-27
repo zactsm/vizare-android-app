@@ -65,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       await GoogleAuthService.signOut();
+      await AppThemeController.instance.resetToDefaultDark();
 
       _logger.i('User logged out successfully.');
 
@@ -84,6 +85,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final innerContent = Stack(
       fit: StackFit.expand,
       children: [
@@ -225,7 +228,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 'Log out',
                 Icons.logout_rounded,
                 _logout,
-                iconColor: VizareColors.goldLight,
+                iconColor: isDark ? VizareColors.goldLight : VizareColors.goldDark,
               ),
               _buildSettingsItem(
                 'Deactivate account',
@@ -250,7 +253,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.25),
                   letterSpacing: 2.0,
                 ),
               ),
@@ -275,7 +280,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                   letterSpacing: -0.6,
                 ),
               ),
@@ -284,7 +289,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 'Manage your account, notifications, and security.',
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  color: VizareColors.textSecondary,
+                  color: isDark
+                      ? VizareColors.textSecondary
+                      : const Color(0xFF64748B),
                 ),
               ),
             ],
@@ -303,7 +310,8 @@ class _SettingsPageState extends State<SettingsPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: VizareColors.obsidianBlack,
+        backgroundColor:
+            isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
         body: AbstractBackground(
           child: SafeArea(
             bottom: true,
@@ -330,12 +338,17 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildSettingsGroup(List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return VisionGlassContainer(
       padding: EdgeInsets.zero,
       borderRadius: 22,
-      backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.8),
+      backgroundColor: isDark
+          ? VizareColors.obsidianSurface.withValues(alpha: 0.8)
+          : Colors.white.withValues(alpha: 0.9),
       border: Border.all(
-        color: Colors.white.withValues(alpha: 0.10),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.10)
+            : const Color(0xFFE2E8F0),
         width: 1.0,
       ),
       child: Column(
@@ -353,6 +366,7 @@ class _SettingsPageState extends State<SettingsPage> {
     Color? textColor,
     String? trailingText,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Material(
       color: Colors.transparent,
       child: Column(
@@ -364,7 +378,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: (iconColor ?? VizareColors.champagneGold)
-                    .withValues(alpha: 0.12),
+                    .withValues(alpha: isDark ? 0.12 : 0.10),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -376,7 +390,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: Text(
               title,
               style: GoogleFonts.poppins(
-                color: textColor ?? Colors.white,
+                color: textColor ?? (isDark ? Colors.white : const Color(0xFF0F172A)),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -388,7 +402,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     trailingText,
                     style: GoogleFonts.inter(
-                      color: VizareColors.textMuted,
+                      color: isDark
+                          ? VizareColors.textMuted
+                          : const Color(0xFF64748B),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                     ),
@@ -408,7 +424,9 @@ class _SettingsPageState extends State<SettingsPage> {
             Divider(
               height: 1,
               thickness: 1,
-              color: Colors.white.withValues(alpha: 0.06),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : const Color(0xFFF1F5F9),
               indent: 58,
               endIndent: 18,
             ),
@@ -425,12 +443,16 @@ class _SettingsPageState extends State<SettingsPage> {
           listenable: AppThemeController.instance,
           builder: (context, _) {
             final currentMode = AppThemeController.instance.themeMode;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return AlertDialog(
-              backgroundColor: VizareColors.obsidianSurface,
+              backgroundColor:
+                  isDark ? VizareColors.obsidianSurface : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
                 side: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFE2E8F0),
                   width: 1,
                 ),
               ),
@@ -453,7 +475,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     "Appearance",
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                       fontSize: 18,
                     ),
                   ),
@@ -522,6 +544,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -529,13 +552,17 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? VizareColors.champagneGold.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.04),
+              ? VizareColors.champagneGold.withValues(alpha: isDark ? 0.15 : 0.12)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : const Color(0xFFF8FAFC)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? VizareColors.champagneGold
-                : Colors.white.withValues(alpha: 0.08),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFE2E8F0)),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -543,7 +570,9 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Icon(
               icon,
-              color: isSelected ? VizareColors.champagneGold : Colors.white70,
+              color: isSelected
+                  ? VizareColors.champagneGold
+                  : (isDark ? Colors.white70 : const Color(0xFF64748B)),
               size: 22,
             ),
             const SizedBox(width: 14),
@@ -554,7 +583,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     title,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       fontSize: 14,
                     ),
@@ -562,7 +591,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
-                      color: VizareColors.textMuted,
+                      color: isDark
+                          ? VizareColors.textMuted
+                          : const Color(0xFF64748B),
                       fontSize: 11.5,
                     ),
                   ),

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VizareColors {
   // Canvases & Surfaces (Dark)
@@ -105,6 +106,7 @@ class VisionGlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Widget content = Container(
       width: width,
       height: height,
@@ -114,9 +116,11 @@ class VisionGlassContainer extends StatelessWidget {
         boxShadow: shadows ??
             [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.black.withValues(alpha: 0.06),
+                blurRadius: isDark ? 20 : 16,
+                offset: isDark ? const Offset(0, 10) : const Offset(0, 4),
               ),
             ],
       ),
@@ -127,11 +131,16 @@ class VisionGlassContainer extends StatelessWidget {
           child: Container(
             padding: padding ?? const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: backgroundColor ?? VizareColors.glassFill,
+              color: backgroundColor ??
+                  (isDark
+                      ? VizareColors.glassFill
+                      : Colors.white.withValues(alpha: 0.9)),
               borderRadius: BorderRadius.circular(borderRadius),
               border: border ??
                   Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : const Color(0xFFE2E8F0),
                     width: 1.0,
                   ),
             ),
@@ -173,6 +182,7 @@ class VisionGlassPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       button: onTap != null,
       label: semanticLabel,
@@ -185,10 +195,16 @@ class VisionGlassPill extends StatelessWidget {
             child: Container(
               padding: padding,
               decoration: BoxDecoration(
-                color: color ?? Colors.white.withValues(alpha: 0.08),
+                color: color ??
+                    (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : const Color(0xFFF1F5F9)),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+                  color: borderColor ??
+                      (isDark
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : const Color(0xFFCBD5E1)),
                   width: 1.0,
                 ),
               ),
@@ -353,11 +369,15 @@ class VizareDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
-      backgroundColor: VizareColors.obsidianElevated,
+      backgroundColor: isDark ? VizareColors.obsidianElevated : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: const BorderSide(color: VizareColors.glassBorderSpecular, width: 1.0),
+        side: BorderSide(
+          color: isDark ? VizareColors.glassBorderSpecular : const Color(0xFFE2E8F0),
+          width: 1.0,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -370,7 +390,7 @@ class VizareDialog extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
-                color: VizareColors.textPrimary,
+                color: isDark ? VizareColors.textPrimary : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 12),
@@ -378,7 +398,7 @@ class VizareDialog extends StatelessWidget {
               message,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: VizareColors.textSecondary,
+                color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
                 height: 1.4,
               ),
             ),
@@ -394,7 +414,7 @@ class VizareDialog extends StatelessWidget {
                       child: Text(
                         cancelText!,
                         style: GoogleFonts.poppins(
-                          color: VizareColors.textMuted,
+                          color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -418,7 +438,7 @@ class VizareDialog extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         color: confirmColor == VizareColors.champagneGold || confirmColor == VizareColors.goldLight
                             ? VizareColors.obsidianBlack
-                            : VizareColors.textPrimary,
+                            : (isDark ? VizareColors.textPrimary : Colors.white),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -438,7 +458,7 @@ class VisionGlassCircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final double size;
-  final Color iconColor;
+  final Color? iconColor;
   final Color? color;
   final Color? borderColor;
   final String? semanticLabel;
@@ -448,7 +468,7 @@ class VisionGlassCircleButton extends StatelessWidget {
     required this.icon,
     this.onTap,
     this.size = 48.0,
-    this.iconColor = VizareColors.textPrimary,
+    this.iconColor,
     this.color,
     this.borderColor,
     this.semanticLabel,
@@ -456,6 +476,10 @@ class VisionGlassCircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveIconColor =
+        iconColor ?? (isDark ? VizareColors.textPrimary : const Color(0xFF0F172A));
+
     return Semantics(
       button: true,
       label: semanticLabel ?? 'Button',
@@ -470,16 +494,22 @@ class VisionGlassCircleButton extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: color ?? Colors.white.withValues(alpha: 0.08),
+                color: color ??
+                    (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.white.withValues(alpha: 0.9)),
                 border: Border.all(
-                  color: borderColor ?? Colors.white.withValues(alpha: 0.2),
+                  color: borderColor ??
+                      (isDark
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : const Color(0xFFCBD5E1)),
                   width: 1.0,
                 ),
               ),
               alignment: Alignment.center,
               child: Icon(
                 icon,
-                color: iconColor,
+                color: effectiveIconColor,
                 size: 18,
               ),
             ),
@@ -510,6 +540,7 @@ class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -529,7 +560,7 @@ class VizareAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(
         title,
         style: GoogleFonts.poppins(
-          color: VizareColors.textPrimary,
+          color: isDark ? VizareColors.textPrimary : const Color(0xFF0F172A),
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
@@ -634,12 +665,16 @@ class VizareSkeletonBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: width,
       height: height,
       margin: margin,
       decoration: BoxDecoration(
-        color: color ?? VizareColors.glassFillElevated,
+        color: color ??
+            (isDark
+                ? VizareColors.glassFillElevated
+                : const Color(0xFFE2E8F0)),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );
@@ -659,20 +694,27 @@ class VizareCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return VizareShimmer(
+      baseColor: isDark ? const Color(0x22FFFFFF) : const Color(0xFFE2E8F0),
+      highlightColor: isDark ? const Color(0x55E5C07B) : const Color(0xFFF8FAFC),
       child: VisionGlassContainer(
         height: height,
         width: width,
         margin: const EdgeInsets.only(bottom: 16),
         borderRadius: 24,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.7),
+        backgroundColor: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.9),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: VizareColors.glassFillElevated,
+                  color: isDark
+                      ? VizareColors.glassFillElevated
+                      : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
@@ -682,7 +724,9 @@ class VizareCardSkeleton extends StatelessWidget {
               width: 140,
               height: 16,
               decoration: BoxDecoration(
-                color: VizareColors.glassFill,
+                color: isDark
+                    ? VizareColors.glassFill
+                    : const Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -691,7 +735,9 @@ class VizareCardSkeleton extends StatelessWidget {
               width: 80,
               height: 14,
               decoration: BoxDecoration(
-                color: VizareColors.glassFill,
+                color: isDark
+                    ? VizareColors.glassFill
+                    : const Color(0xFFE2E8F0),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -800,7 +846,7 @@ class AppThemeController extends ChangeNotifier {
   static final AppThemeController instance = AppThemeController._internal();
   AppThemeController._internal();
 
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.dark;
   ThemeMode get themeMode => _themeMode;
 
   bool get isDarkMode {
@@ -821,31 +867,107 @@ class AppThemeController extends ChangeNotifier {
     }
   }
 
-  Future<void> loadThemeMode() async {
+  /// Loads theme mode. If unauthenticated, strictly enforces ThemeMode.dark.
+  /// If authenticated, loads cached preference and syncs from Supabase database.
+  Future<void> loadThemeMode({bool isAuthenticated = false}) async {
+    if (!isAuthenticated) {
+      _themeMode = ThemeMode.dark;
+      notifyListeners();
+      return;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedMode = prefs.getString('app_theme_mode');
-      if (savedMode == 'dark') {
-        _themeMode = ThemeMode.dark;
-      } else if (savedMode == 'light') {
+      if (savedMode == 'light') {
         _themeMode = ThemeMode.light;
-      } else {
+      } else if (savedMode == 'system') {
         _themeMode = ThemeMode.system;
+      } else {
+        _themeMode = ThemeMode.dark;
       }
       notifyListeners();
+
+      // Attempt background refresh from Supabase profile if session is active
+      fetchUserThemeFromDatabase();
     } catch (_) {}
   }
 
-  Future<void> setThemeMode(ThemeMode mode) async {
-    if (_themeMode == mode) return;
+  /// Fetches the authenticated user's theme preference from Supabase and applies it
+  Future<void> fetchUserThemeFromDatabase() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final profile = await Supabase.instance.client
+            .from('profiles')
+            .select('theme_preference')
+            .eq('auth_user_id', user.id)
+            .maybeSingle();
+
+        if (profile != null && profile['theme_preference'] != null) {
+          final prefStr = profile['theme_preference'].toString().toLowerCase();
+          applyUserThemePreference(prefStr, syncToDb: false);
+        }
+      }
+    } catch (_) {}
+  }
+
+  /// Applies theme from a string preference ('dark' | 'light' | 'system')
+  Future<void> applyUserThemePreference(String? preference,
+      {bool syncToDb = false}) async {
+    ThemeMode mode = ThemeMode.dark;
+    if (preference == 'light') {
+      mode = ThemeMode.light;
+    } else if (preference == 'system') {
+      mode = ThemeMode.system;
+    }
+
+    await setThemeMode(mode, syncToDb: syncToDb);
+  }
+
+  /// Updates current theme mode, saves to local cache, and optionally syncs to DB
+  Future<void> setThemeMode(ThemeMode mode, {bool syncToDb = true}) async {
     _themeMode = mode;
     notifyListeners();
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      String modeStr = 'system';
-      if (mode == ThemeMode.dark) modeStr = 'dark';
+      String modeStr = 'dark';
       if (mode == ThemeMode.light) modeStr = 'light';
+      if (mode == ThemeMode.system) modeStr = 'system';
       await prefs.setString('app_theme_mode', modeStr);
+
+      if (syncToDb) {
+        syncThemeToDatabase(mode);
+      }
+    } catch (_) {}
+  }
+
+  /// Persists theme preference into Supabase profiles table
+  Future<void> syncThemeToDatabase(ThemeMode mode) async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        String modeStr = 'dark';
+        if (mode == ThemeMode.light) modeStr = 'light';
+        if (mode == ThemeMode.system) modeStr = 'system';
+
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'theme_preference': modeStr})
+            .eq('auth_user_id', user.id);
+      }
+    } catch (_) {}
+  }
+
+  /// Resets theme to Obsidian Dark and cleans local cached preferences upon sign out
+  Future<void> resetToDefaultDark() async {
+    _themeMode = ThemeMode.dark;
+    notifyListeners();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('app_theme_mode');
     } catch (_) {}
   }
 }
@@ -882,6 +1004,83 @@ class VizareTheme {
         ),
         iconTheme: const IconThemeData(color: VizareColors.champagneGold),
       ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: VizareColors.champagneGold,
+          foregroundColor: const Color(0xFF050608),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          elevation: 8,
+          shadowColor: VizareColors.champagneGold.withValues(alpha: 0.35),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: VizareColors.champagneGold,
+          side: const BorderSide(color: VizareColors.champagneGold, width: 1.5),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: VizareColors.champagneGold,
+          textStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: false,
+        hintStyle: TextStyle(
+          color: Colors.white.withValues(alpha: 0.4),
+          fontSize: 14,
+          fontFamily: GoogleFonts.inter().fontFamily,
+        ),
+        labelStyle: const TextStyle(
+          color: VizareColors.champagneGold,
+          fontSize: 14,
+        ),
+        prefixIconColor: VizareColors.champagneGold,
+        suffixIconColor: Colors.white60,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 1.0,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 1.0,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: VizareColors.champagneGold,
+            width: 1.5,
+          ),
+        ),
+      ),
     );
   }
 
@@ -892,8 +1091,8 @@ class VizareTheme {
       primaryColor: VizareColors.champagneGold,
       colorScheme: const ColorScheme.light(
         primary: VizareColors.champagneGold,
-        secondary: Color(0xFFB88E18),
-        surface: Colors.white,
+        secondary: Color(0xFFAA7C11),
+        surface: Color(0xFFFFFFFF),
         error: Color(0xFFEF4444),
       ),
       fontFamily: GoogleFonts.inter().fontFamily,
@@ -914,6 +1113,83 @@ class VizareTheme {
           letterSpacing: 0.5,
         ),
         iconTheme: const IconThemeData(color: VizareColors.champagneGold),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: VizareColors.champagneGold,
+          foregroundColor: const Color(0xFF050608),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          elevation: 4,
+          shadowColor: VizareColors.champagneGold.withValues(alpha: 0.25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: VizareColors.champagneGold,
+          side: const BorderSide(color: VizareColors.champagneGold, width: 1.5),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: VizareColors.champagneGold,
+          textStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: false,
+        hintStyle: TextStyle(
+          color: const Color(0xFF94A3B8),
+          fontSize: 14,
+          fontFamily: GoogleFonts.inter().fontFamily,
+        ),
+        labelStyle: const TextStyle(
+          color: VizareColors.champagneGold,
+          fontSize: 14,
+        ),
+        prefixIconColor: VizareColors.champagneGold,
+        suffixIconColor: const Color(0xFF64748B),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color(0xFFCBD5E1),
+            width: 1.0,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: Color(0xFFCBD5E1),
+            width: 1.0,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: VizareColors.champagneGold,
+            width: 1.5,
+          ),
+        ),
       ),
     );
   }

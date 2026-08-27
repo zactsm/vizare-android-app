@@ -170,12 +170,16 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
+    return Theme(
+      data: VizareTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: VizareColors.obsidianBlack,
+        body: PremiumBackground(
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Padding(
@@ -306,6 +310,8 @@ class _WelcomePageState extends State<WelcomePage> {
           },
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

@@ -22,13 +22,16 @@ class TopBarGradientBlur extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor =
+        isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite;
     final colors = gradientColors ??
         [
-          VizareColors.obsidianBlack,
-          VizareColors.obsidianBlack.withValues(alpha: 0.92),
-          VizareColors.obsidianBlack.withValues(alpha: 0.60),
-          VizareColors.obsidianBlack.withValues(alpha: 0.20),
-          VizareColors.obsidianBlack.withValues(alpha: 0.0),
+          baseColor,
+          baseColor.withValues(alpha: 0.92),
+          baseColor.withValues(alpha: 0.60),
+          baseColor.withValues(alpha: 0.20),
+          baseColor.withValues(alpha: 0.0),
         ];
 
     final stops = gradientStops ?? const [0.0, 0.40, 0.70, 0.88, 1.0];

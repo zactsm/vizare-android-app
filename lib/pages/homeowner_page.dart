@@ -13,7 +13,6 @@ import 'package:untitled/pages/utils/top_bar_gradient_blur.dart';
 import 'package:untitled/pages/profile_page.dart';
 import 'package:untitled/pages/add_property_page.dart';
 import 'package:untitled/pages/edit_property_page.dart';
-import 'package:untitled/pages/to_respond_page.dart';
 import 'package:untitled/pages/chat/conversations_inbox_page.dart';
 
 class HomeownerPage extends StatefulWidget {
@@ -221,8 +220,10 @@ class _HomeownerPageState extends State<HomeownerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: VizareColors.obsidianBlack,
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
       body: AbstractBackground(
         child: SafeArea(
           child: Stack(
@@ -232,9 +233,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                       child: CircularProgressIndicator(
                           color: VizareColors.champagneGold),
                     )
-                  : _buildBody(),
+                  : _buildBody(isDark),
               const TopBarGradientBlur(height: 90.0),
-              _buildTopBar(context),
+              _buildTopBar(context, isDark),
             ],
           ),
         ),
@@ -242,7 +243,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, bool isDark) {
     return Positioned(
       top: 10.0,
       left: 20.0,
@@ -258,6 +259,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 'assets/images/logo.png',
                 width: 38,
                 height: 38,
+                color: isDark ? null : VizareColors.champagneGold,
                 errorBuilder: (c, e, s) =>
                     const SizedBox(width: 38, height: 38),
               ),
@@ -281,7 +283,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                       decoration: BoxDecoration(
                         color: _isSearchExpanded
                             ? VizareColors.champagneGold.withValues(alpha: 0.2)
-                            : VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                            : (isDark
+                                ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                                : Colors.white.withValues(alpha: 0.95)),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isSearchExpanded
@@ -291,7 +295,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.25)
+                                : Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -321,7 +327,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                        color: isDark
+                            ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                            : Colors.white.withValues(alpha: 0.95),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: VizareColors.champagneGold.withValues(alpha: 0.8),
@@ -329,7 +337,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.25)
+                                : Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -368,10 +378,13 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
                 borderRadius: 22.0,
-                backgroundColor:
-                    VizareColors.obsidianSurface.withValues(alpha: 0.92),
+                backgroundColor: isDark
+                    ? VizareColors.obsidianSurface.withValues(alpha: 0.92)
+                    : Colors.white.withValues(alpha: 0.95),
                 border: Border.all(
-                  color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                  color: isDark
+                      ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                      : const Color(0xFFCBD5E1),
                   width: 1.0,
                 ),
                 child: Row(
@@ -387,13 +400,15 @@ class _HomeownerPageState extends State<HomeownerPage> {
                         controller: _searchController,
                         autofocus: true,
                         style: GoogleFonts.inter(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                           fontSize: 13,
                         ),
                         decoration: InputDecoration(
                           hintText: 'Filter your portfolio...',
                           hintStyle: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.45),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.45)
+                                : const Color(0xFF94A3B8),
                             fontSize: 13,
                           ),
                           filled: false,
@@ -412,9 +427,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                           _searchController.clear();
                           setState(() {});
                         },
-                        child: const Icon(
+                        child: Icon(
                           Icons.clear_rounded,
-                          color: Colors.white54,
+                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
                           size: 16,
                         ),
                       ),
@@ -428,7 +443,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(bool isDark) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
@@ -440,7 +455,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
             style: GoogleFonts.poppins(
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
               letterSpacing: -0.6,
             ),
           ),
@@ -448,21 +463,23 @@ class _HomeownerPageState extends State<HomeownerPage> {
           Text(
             'Create, monitor, and manage your 3D architectural listings.',
             style: GoogleFonts.inter(
-              color: VizareColors.textSecondary,
+              color: isDark
+                  ? VizareColors.textSecondary
+                  : const Color(0xFF64748B),
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 20),
-          _buildButtonRow(),
+          _buildButtonRow(isDark),
           const SizedBox(height: 24),
-          _buildMyPropertiesList(),
+          _buildMyPropertiesList(isDark),
           const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _buildButtonRow() {
+  Widget _buildButtonRow(bool isDark) {
     return Row(
       children: [
         Expanded(
@@ -510,7 +527,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                 ],
@@ -522,7 +539,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
     );
   }
 
-  Widget _buildMyPropertiesList() {
+  Widget _buildMyPropertiesList(bool isDark) {
     if (_filteredProperties.isEmpty) {
       return Center(
         child: Padding(
@@ -533,7 +550,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 : 'You have not added any properties yet.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: VizareColors.textMuted,
+              color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
               fontSize: 14,
             ),
           ),
@@ -547,7 +564,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final property = _filteredProperties[index];
-        return _buildPropertyCard(property);
+        return _buildPropertyCard(property, isDark);
       },
     );
   }
@@ -564,7 +581,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
     }
   }
 
-  Widget _buildPropertyCard(Property property) {
+  Widget _buildPropertyCard(Property property, bool isDark) {
     final statusColor = _getStatusColor(property.status);
 
     return Container(
@@ -572,9 +589,13 @@ class _HomeownerPageState extends State<HomeownerPage> {
       child: VisionGlassContainer(
         padding: const EdgeInsets.all(12),
         borderRadius: 22,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+        backgroundColor: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+            : Colors.white,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFE2E8F0),
           width: 1.0,
         ),
         child: Row(
@@ -586,8 +607,15 @@ class _HomeownerPageState extends State<HomeownerPage> {
                 width: 76,
                 height: 76,
                 fit: BoxFit.cover,
-                errorBuilder: (c, e, s) =>
-                    const Icon(Icons.broken_image, color: Colors.white24),
+                errorBuilder: (c, e, s) => Container(
+                  width: 76,
+                  height: 76,
+                  color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
+                  child: Icon(
+                    Icons.broken_image,
+                    color: isDark ? Colors.white24 : const Color(0xFF94A3B8),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 14),
@@ -598,7 +626,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
                   Text(
                     property.name,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),
@@ -639,12 +667,16 @@ class _HomeownerPageState extends State<HomeownerPage> {
               ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded,
-                  color: Colors.white70, size: 20),
-              color: VizareColors.obsidianElevated,
+              icon: Icon(Icons.more_vert_rounded,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B), size: 20),
+              color: isDark ? VizareColors.obsidianElevated : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                side: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFE2E8F0),
+                ),
               ),
               onSelected: (value) {
                 if (value == 'edit') {
@@ -663,7 +695,9 @@ class _HomeownerPageState extends State<HomeownerPage> {
                       const SizedBox(width: 10),
                       Text(
                         'Edit',
-                        style: GoogleFonts.poppins(color: Colors.white),
+                        style: GoogleFonts.poppins(
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
                       ),
                     ],
                   ),

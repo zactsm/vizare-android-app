@@ -16,8 +16,12 @@ class AbstractBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite;
+
     return Container(
-      color: VizareColors.obsidianBlack,
+      color: bgColor,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -32,18 +36,24 @@ class AbstractBackground extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    colors: [
-                      VizareColors.champagneGold.withValues(alpha: 0.18),
-                      VizareColors.goldOchre.withValues(alpha: 0.08),
-                      Colors.transparent,
-                    ],
+                    colors: isDark
+                        ? [
+                            VizareColors.champagneGold.withValues(alpha: 0.18),
+                            VizareColors.goldOchre.withValues(alpha: 0.08),
+                            Colors.transparent,
+                          ]
+                        : [
+                            VizareColors.champagneGold.withValues(alpha: 0.14),
+                            VizareColors.goldLight.withValues(alpha: 0.08),
+                            Colors.transparent,
+                          ],
                     stops: const [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
             ),
 
-          // Clean Obsidian Status Bar Shield (Prevents glow bleed into status bar)
+          // Clean Status Bar Shield (Prevents glow bleed into status bar)
           Positioned(
             top: 0,
             left: 0,
@@ -51,15 +61,15 @@ class AbstractBackground extends StatelessWidget {
             height: 70,
             child: IgnorePointer(
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      VizareColors.obsidianBlack,
+                      bgColor,
                       Colors.transparent,
                     ],
-                    stops: [0.0, 1.0],
+                    stops: const [0.0, 1.0],
                   ),
                 ),
               ),
@@ -76,11 +86,17 @@ class AbstractBackground extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    VizareColors.neonPurple.withValues(alpha: 0.14),
-                    VizareColors.pastelPurple.withValues(alpha: 0.05),
-                    Colors.transparent,
-                  ],
+                  colors: isDark
+                      ? [
+                          VizareColors.neonPurple.withValues(alpha: 0.14),
+                          VizareColors.pastelPurple.withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ]
+                      : [
+                          VizareColors.pastelPurple.withValues(alpha: 0.09),
+                          VizareColors.neonPurple.withValues(alpha: 0.03),
+                          Colors.transparent,
+                        ],
                   stops: const [0.0, 0.5, 1.0],
                 ),
               ),
@@ -97,10 +113,15 @@ class AbstractBackground extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    VizareColors.spatialCyan.withValues(alpha: 0.09),
-                    Colors.transparent,
-                  ],
+                  colors: isDark
+                      ? [
+                          VizareColors.spatialCyan.withValues(alpha: 0.09),
+                          Colors.transparent,
+                        ]
+                      : [
+                          VizareColors.spatialCyan.withValues(alpha: 0.05),
+                          Colors.transparent,
+                        ],
                   stops: const [0.0, 0.7],
                 ),
               ),

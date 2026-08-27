@@ -355,6 +355,7 @@ class _AdminPageState extends State<AdminPage> {
       try {
         await GoogleAuthService.signOut();
       } catch (_) {}
+      await AppThemeController.instance.resetToDefaultDark();
     } catch (_) {}
     if (mounted) {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
@@ -425,9 +426,11 @@ class _AdminPageState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: VizareColors.obsidianBlack,
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
       drawer: AdminDrawer(
         currentView: _currentView,
         pendingCount: _pendingProperties.length,
@@ -451,9 +454,9 @@ class _AdminPageState extends State<AdminPage> {
                         VisionGlassPill(
                           padding: const EdgeInsets.all(10),
                           onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                          child: const Icon(
+                          child: Icon(
                             Icons.menu_rounded,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             size: 22,
                           ),
                         ),
@@ -466,7 +469,7 @@ class _AdminPageState extends State<AdminPage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
                                 letterSpacing: -0.4,
                               ),
                             ),
@@ -501,7 +504,9 @@ class _AdminPageState extends State<AdminPage> {
                   child: Text(
                     _viewSubtitle,
                     style: GoogleFonts.inter(
-                      color: VizareColors.textSecondary,
+                      color: isDark
+                          ? VizareColors.textSecondary
+                          : const Color(0xFF64748B),
                       fontSize: 13,
                     ),
                   ),
@@ -510,7 +515,7 @@ class _AdminPageState extends State<AdminPage> {
 
                 // View Body Content
                 Expanded(
-                  child: _buildCurrentViewBody(),
+                  child: _buildCurrentViewBody(isDark),
                 ),
               ],
             ),
@@ -520,16 +525,16 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildCurrentViewBody() {
+  Widget _buildCurrentViewBody(bool isDark) {
     switch (_currentView) {
       case AdminView.moderation:
-        return _buildModerationQueueView();
+        return _buildModerationQueueView(isDark);
       case AdminView.listings:
-        return _buildListingsManagementView();
+        return _buildListingsManagementView(isDark);
       case AdminView.users:
-        return _buildUserManagementView();
+        return _buildUserManagementView(isDark);
       case AdminView.analytics:
-        return _buildPlatformOverviewView();
+        return _buildPlatformOverviewView(isDark);
     }
   }
 
@@ -537,7 +542,7 @@ class _AdminPageState extends State<AdminPage> {
   // VIEW 1: MODERATION QUEUE
   // ==========================================
 
-  Widget _buildModerationQueueView() {
+  Widget _buildModerationQueueView(bool isDark) {
     if (_isLoadingPending) {
       return const Center(
         child: CircularProgressIndicator(color: VizareColors.champagneGold),
@@ -565,7 +570,7 @@ class _AdminPageState extends State<AdminPage> {
             Text(
               "Moderation Queue Clean",
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontWeight: FontWeight.w700,
                 fontSize: 17,
               ),
@@ -575,7 +580,7 @@ class _AdminPageState extends State<AdminPage> {
               "All submitted property listings have been reviewed.",
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                color: VizareColors.textMuted,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                 fontSize: 13,
               ),
             ),
@@ -595,9 +600,13 @@ class _AdminPageState extends State<AdminPage> {
           child: VisionGlassContainer(
             padding: const EdgeInsets.all(14),
             borderRadius: 22,
-            backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+            backgroundColor: isDark
+                ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                : Colors.white,
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : const Color(0xFFE2E8F0),
               width: 1.0,
             ),
             child: Column(
@@ -612,8 +621,15 @@ class _AdminPageState extends State<AdminPage> {
                         width: 78,
                         height: 78,
                         fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) =>
-                            const Icon(Icons.broken_image, color: Colors.white24),
+                        errorBuilder: (c, e, s) => Container(
+                          width: 78,
+                          height: 78,
+                          color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
+                          child: Icon(
+                            Icons.broken_image,
+                            color: isDark ? Colors.white24 : const Color(0xFF94A3B8),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -624,7 +640,7 @@ class _AdminPageState extends State<AdminPage> {
                           Text(
                             property.name,
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                               fontSize: 15.5,
                               fontWeight: FontWeight.w800,
                             ),
@@ -644,7 +660,9 @@ class _AdminPageState extends State<AdminPage> {
                           Text(
                             property.location,
                             style: GoogleFonts.inter(
-                              color: VizareColors.textSecondary,
+                              color: isDark
+                                  ? VizareColors.textSecondary
+                                  : const Color(0xFF64748B),
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -734,7 +752,7 @@ class _AdminPageState extends State<AdminPage> {
   // VIEW 2: LISTINGS MANAGEMENT
   // ==========================================
 
-  Widget _buildListingsManagementView() {
+  Widget _buildListingsManagementView(bool isDark) {
     if (_isLoadingListings) {
       return const Center(
         child: CircularProgressIndicator(color: VizareColors.champagneGold),
@@ -747,15 +765,27 @@ class _AdminPageState extends State<AdminPage> {
         VisionGlassContainer(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           borderRadius: 18,
-          backgroundColor: Colors.white.withValues(alpha: 0.05),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.white,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : const Color(0xFFCBD5E1),
+          ),
           child: TextField(
             controller: _listingSearchController,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+            style: GoogleFonts.inter(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 13.5,
+            ),
             decoration: InputDecoration(
               icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
               hintText: 'Search listings by name, city, price...',
-              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+              hintStyle: GoogleFonts.inter(
+                color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+                fontSize: 13,
+              ),
               border: InputBorder.none,
             ),
           ),
@@ -770,23 +800,23 @@ class _AdminPageState extends State<AdminPage> {
               _buildFilterChip('All', 'all', _listingStatusFilter, (v) {
                 setState(() => _listingStatusFilter = v);
                 _filterListings();
-              }),
+              }, isDark),
               _buildFilterChip('Approved', 'approved', _listingStatusFilter, (v) {
                 setState(() => _listingStatusFilter = v);
                 _filterListings();
-              }),
+              }, isDark),
               _buildFilterChip('Pending', 'pending', _listingStatusFilter, (v) {
                 setState(() => _listingStatusFilter = v);
                 _filterListings();
-              }),
+              }, isDark),
               _buildFilterChip('Sold', 'sold', _listingStatusFilter, (v) {
                 setState(() => _listingStatusFilter = v);
                 _filterListings();
-              }),
+              }, isDark),
               _buildFilterChip('Rejected', 'rejected', _listingStatusFilter, (v) {
                 setState(() => _listingStatusFilter = v);
                 _filterListings();
-              }),
+              }, isDark),
             ],
           ),
         ),
@@ -798,14 +828,17 @@ class _AdminPageState extends State<AdminPage> {
               ? Center(
                   child: Text(
                     'No listings matching filter criteria.',
-                    style: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+                    style: GoogleFonts.inter(
+                      color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+                      fontSize: 13,
+                    ),
                   ),
                 )
               : ListView.builder(
                   itemCount: _filteredProperties.length,
                   itemBuilder: (context, index) {
                     final p = _filteredProperties[index];
-                    return _buildAllListingCard(p);
+                    return _buildAllListingCard(p, isDark);
                   },
                 ),
         ),
@@ -813,7 +846,7 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildAllListingCard(Property p) {
+  Widget _buildAllListingCard(Property p, bool isDark) {
     Color statusColor;
     switch (p.status.toLowerCase()) {
       case 'approved':
@@ -837,8 +870,14 @@ class _AdminPageState extends State<AdminPage> {
       child: VisionGlassContainer(
         padding: const EdgeInsets.all(12),
         borderRadius: 20,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        backgroundColor: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+            : Colors.white,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFE2E8F0),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -849,8 +888,15 @@ class _AdminPageState extends State<AdminPage> {
                 width: 72,
                 height: 72,
                 fit: BoxFit.cover,
-                errorBuilder: (c, e, s) =>
-                    const Icon(Icons.broken_image, color: Colors.white24),
+                errorBuilder: (c, e, s) => Container(
+                  width: 72,
+                  height: 72,
+                  color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
+                  child: Icon(
+                    Icons.broken_image,
+                    color: isDark ? Colors.white24 : const Color(0xFF94A3B8),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -865,7 +911,7 @@ class _AdminPageState extends State<AdminPage> {
                         child: Text(
                           p.name,
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                           ),
@@ -904,7 +950,7 @@ class _AdminPageState extends State<AdminPage> {
                   Text(
                     p.location,
                     style: GoogleFonts.inter(
-                      color: VizareColors.textMuted,
+                      color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                       fontSize: 11,
                     ),
                     maxLines: 1,
@@ -921,13 +967,13 @@ class _AdminPageState extends State<AdminPage> {
                             Icon(
                               p.isFeatured ? Icons.star_rounded : Icons.star_outline_rounded,
                               size: 16,
-                              color: p.isFeatured ? VizareColors.champagneGold : VizareColors.textMuted,
+                              color: p.isFeatured ? VizareColors.champagneGold : (isDark ? VizareColors.textMuted : const Color(0xFF64748B)),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               p.isFeatured ? 'Featured' : 'Feature',
                               style: GoogleFonts.inter(
-                                color: p.isFeatured ? VizareColors.champagneGold : VizareColors.textMuted,
+                                color: p.isFeatured ? VizareColors.champagneGold : (isDark ? VizareColors.textMuted : const Color(0xFF64748B)),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -938,15 +984,53 @@ class _AdminPageState extends State<AdminPage> {
                       const Spacer(),
                       // Status Change Menu
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70, size: 20),
-                        color: VizareColors.obsidianElevated,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        icon: Icon(Icons.more_horiz_rounded,
+                            color: isDark ? Colors.white70 : const Color(0xFF64748B), size: 20),
+                        color: isDark ? VizareColors.obsidianElevated : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                          ),
+                        ),
                         onSelected: (newStatus) => _updatePropertyStatus(p.id, newStatus),
                         itemBuilder: (context) => [
-                          const PopupMenuItem(value: 'approved', child: Text('Mark as Approved', style: TextStyle(color: Colors.white))),
-                          const PopupMenuItem(value: 'pending', child: Text('Mark as Pending', style: TextStyle(color: Colors.white))),
-                          const PopupMenuItem(value: 'sold', child: Text('Mark as Sold', style: TextStyle(color: Colors.white))),
-                          const PopupMenuItem(value: 'rejected', child: Text('Mark as Rejected', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(
+                            value: 'approved',
+                            child: Text(
+                              'Mark as Approved',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'pending',
+                            child: Text(
+                              'Mark as Pending',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'sold',
+                            child: Text(
+                              'Mark as Sold',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'rejected',
+                            child: Text(
+                              'Mark as Rejected',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -964,7 +1048,7 @@ class _AdminPageState extends State<AdminPage> {
   // VIEW 3: USER MANAGEMENT
   // ==========================================
 
-  Widget _buildUserManagementView() {
+  Widget _buildUserManagementView(bool isDark) {
     if (_isLoadingUsers) {
       return const Center(
         child: CircularProgressIndicator(color: VizareColors.champagneGold),
@@ -977,15 +1061,27 @@ class _AdminPageState extends State<AdminPage> {
         VisionGlassContainer(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           borderRadius: 18,
-          backgroundColor: Colors.white.withValues(alpha: 0.05),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.white,
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : const Color(0xFFCBD5E1),
+          ),
           child: TextField(
             controller: _userSearchController,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+            style: GoogleFonts.inter(
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              fontSize: 13.5,
+            ),
             decoration: InputDecoration(
               icon: const Icon(Icons.search_rounded, color: VizareColors.champagneGold, size: 20),
               hintText: 'Search users by name, email, role...',
-              hintStyle: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+              hintStyle: GoogleFonts.inter(
+                color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+                fontSize: 13,
+              ),
               border: InputBorder.none,
             ),
           ),
@@ -1000,19 +1096,19 @@ class _AdminPageState extends State<AdminPage> {
               _buildFilterChip('All Users', 'all', _userRoleFilter, (v) {
                 setState(() => _userRoleFilter = v);
                 _filterUsers();
-              }),
+              }, isDark),
               _buildFilterChip('Homebuyers', 'homebuyer', _userRoleFilter, (v) {
                 setState(() => _userRoleFilter = v);
                 _filterUsers();
-              }),
+              }, isDark),
               _buildFilterChip('Homeowners', 'homeowner', _userRoleFilter, (v) {
                 setState(() => _userRoleFilter = v);
                 _filterUsers();
-              }),
+              }, isDark),
               _buildFilterChip('Admins', 'admin', _userRoleFilter, (v) {
                 setState(() => _userRoleFilter = v);
                 _filterUsers();
-              }),
+              }, isDark),
             ],
           ),
         ),
@@ -1024,14 +1120,17 @@ class _AdminPageState extends State<AdminPage> {
               ? Center(
                   child: Text(
                     'No user profiles found.',
-                    style: GoogleFonts.inter(color: VizareColors.textMuted, fontSize: 13),
+                    style: GoogleFonts.inter(
+                      color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+                      fontSize: 13,
+                    ),
                   ),
                 )
               : ListView.builder(
                   itemCount: _filteredUsers.length,
                   itemBuilder: (context, index) {
                     final u = _filteredUsers[index];
-                    return _buildUserCard(u);
+                    return _buildUserCard(u, isDark);
                   },
                 ),
         ),
@@ -1039,7 +1138,7 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildUserCard(UserProfile u) {
+  Widget _buildUserCard(UserProfile u, bool isDark) {
     Color roleColor;
     switch (u.role.toLowerCase()) {
       case 'admin':
@@ -1057,8 +1156,14 @@ class _AdminPageState extends State<AdminPage> {
       child: VisionGlassContainer(
         padding: const EdgeInsets.all(14),
         borderRadius: 20,
-        backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        backgroundColor: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+            : Colors.white,
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFE2E8F0),
+        ),
         child: Row(
           children: [
             // User Avatar
@@ -1093,7 +1198,7 @@ class _AdminPageState extends State<AdminPage> {
                         child: Text(
                           u.fullName,
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontWeight: FontWeight.w700,
                             fontSize: 14.5,
                           ),
@@ -1123,7 +1228,7 @@ class _AdminPageState extends State<AdminPage> {
                   Text(
                     u.email,
                     style: GoogleFonts.inter(
-                      color: VizareColors.textMuted,
+                      color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                       fontSize: 12,
                     ),
                     maxLines: 1,
@@ -1134,7 +1239,7 @@ class _AdminPageState extends State<AdminPage> {
                     Text(
                       u.phoneNumber,
                       style: GoogleFonts.inter(
-                        color: VizareColors.textMuted,
+                        color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                         fontSize: 11,
                       ),
                     ),
@@ -1145,15 +1250,45 @@ class _AdminPageState extends State<AdminPage> {
             const SizedBox(width: 6),
             // Change Role Menu
             PopupMenuButton<String>(
-              icon: const Icon(Icons.shield_outlined, color: Colors.white70, size: 20),
-              color: VizareColors.obsidianElevated,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              icon: Icon(Icons.shield_outlined,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B), size: 20),
+              color: isDark ? VizareColors.obsidianElevated : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                ),
+              ),
               tooltip: 'Change user role',
               onSelected: (newRole) => _updateUserRole(u, newRole),
               itemBuilder: (context) => [
-                const PopupMenuItem(value: 'homebuyer', child: Text('Role: Homebuyer', style: TextStyle(color: Colors.white))),
-                const PopupMenuItem(value: 'homeowner', child: Text('Role: Homeowner', style: TextStyle(color: Colors.white))),
-                const PopupMenuItem(value: 'admin', child: Text('Role: Administrator', style: TextStyle(color: Colors.white))),
+                PopupMenuItem(
+                  value: 'homebuyer',
+                  child: Text(
+                    'Role: Homebuyer',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'homeowner',
+                  child: Text(
+                    'Role: Homeowner',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'admin',
+                  child: Text(
+                    'Role: Administrator',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
@@ -1166,7 +1301,7 @@ class _AdminPageState extends State<AdminPage> {
   // VIEW 4: PLATFORM OVERVIEW & ANALYTICS
   // ==========================================
 
-  Widget _buildPlatformOverviewView() {
+  Widget _buildPlatformOverviewView(bool isDark) {
     if (_isLoadingStats) {
       return const Center(
         child: CircularProgressIndicator(color: VizareColors.champagneGold),
@@ -1186,7 +1321,7 @@ class _AdminPageState extends State<AdminPage> {
           Text(
             'Core Metrics',
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
@@ -1201,6 +1336,7 @@ class _AdminPageState extends State<AdminPage> {
                   icon: Icons.people_alt_rounded,
                   color: VizareColors.spatialCyan,
                   onTap: () => _onViewSelected(AdminView.users),
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1211,6 +1347,7 @@ class _AdminPageState extends State<AdminPage> {
                   icon: Icons.home_work_rounded,
                   color: VizareColors.champagneGold,
                   onTap: () => _onViewSelected(AdminView.listings),
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -1225,6 +1362,7 @@ class _AdminPageState extends State<AdminPage> {
                   icon: Icons.pending_actions_rounded,
                   color: VizareColors.crimsonRed,
                   onTap: () => _onViewSelected(AdminView.moderation),
+                  isDark: isDark,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1234,6 +1372,7 @@ class _AdminPageState extends State<AdminPage> {
                   value: totalInquiries.toString(),
                   icon: Icons.mark_chat_read_rounded,
                   color: VizareColors.emeraldGreen,
+                  isDark: isDark,
                 ),
               ),
             ],
@@ -1244,12 +1383,13 @@ class _AdminPageState extends State<AdminPage> {
             value: totalFavorites.toString(),
             icon: Icons.favorite_rounded,
             color: VizareColors.pastelPurple,
+            isDark: isDark,
           ),
           const SizedBox(height: 24),
           Text(
             'Quick Operations',
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
@@ -1258,8 +1398,14 @@ class _AdminPageState extends State<AdminPage> {
           VisionGlassContainer(
             padding: const EdgeInsets.all(16),
             borderRadius: 20,
-            backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            backgroundColor: isDark
+                ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                : Colors.white,
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFE2E8F0),
+            ),
             child: Column(
               children: [
                 _buildQuickActionTile(
@@ -1268,22 +1414,31 @@ class _AdminPageState extends State<AdminPage> {
                   subtitle: '$pendingMod listings waiting for review',
                   color: VizareColors.champagneGold,
                   onTap: () => _onViewSelected(AdminView.moderation),
+                  isDark: isDark,
                 ),
-                const Divider(color: VizareColors.obsidianBorder, height: 20),
+                Divider(
+                  color: isDark ? VizareColors.obsidianBorder : const Color(0xFFE2E8F0),
+                  height: 20,
+                ),
                 _buildQuickActionTile(
                   icon: Icons.group_add_rounded,
                   title: 'Manage System Users',
                   subtitle: 'Inspect user roles and permissions',
                   color: VizareColors.spatialCyan,
                   onTap: () => _onViewSelected(AdminView.users),
+                  isDark: isDark,
                 ),
-                const Divider(color: VizareColors.obsidianBorder, height: 20),
+                Divider(
+                  color: isDark ? VizareColors.obsidianBorder : const Color(0xFFE2E8F0),
+                  height: 20,
+                ),
                 _buildQuickActionTile(
                   icon: Icons.real_estate_agent_rounded,
                   title: 'Manage All Listings',
                   subtitle: 'Search and update live properties',
                   color: VizareColors.emeraldGreen,
                   onTap: () => _onViewSelected(AdminView.listings),
+                  isDark: isDark,
                 ),
               ],
             ),
@@ -1299,12 +1454,17 @@ class _AdminPageState extends State<AdminPage> {
     required IconData icon,
     required Color color,
     VoidCallback? onTap,
+    bool isDark = true,
   }) {
     return VisionGlassContainer(
       padding: const EdgeInsets.all(16),
       borderRadius: 20,
-      backgroundColor: VizareColors.obsidianSurface.withValues(alpha: 0.85),
-      border: Border.all(color: color.withValues(alpha: 0.25)),
+      backgroundColor: isDark
+          ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+          : Colors.white,
+      border: Border.all(
+        color: color.withValues(alpha: isDark ? 0.25 : 0.4),
+      ),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1321,14 +1481,18 @@ class _AdminPageState extends State<AdminPage> {
                 child: Icon(icon, color: color, size: 20),
               ),
               if (onTap != null)
-                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.white38),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 24,
               fontWeight: FontWeight.w900,
             ),
@@ -1336,7 +1500,7 @@ class _AdminPageState extends State<AdminPage> {
           Text(
             title,
             style: GoogleFonts.inter(
-              color: VizareColors.textMuted,
+              color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1352,6 +1516,7 @@ class _AdminPageState extends State<AdminPage> {
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
+    bool isDark = true,
   }) {
     return InkWell(
       onTap: onTap,
@@ -1373,7 +1538,7 @@ class _AdminPageState extends State<AdminPage> {
                 Text(
                   title,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1381,14 +1546,17 @@ class _AdminPageState extends State<AdminPage> {
                 Text(
                   subtitle,
                   style: GoogleFonts.inter(
-                    color: VizareColors.textMuted,
+                    color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                     fontSize: 11.5,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+          Icon(
+            Icons.chevron_right_rounded,
+            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+          ),
         ],
       ),
     );
@@ -1399,6 +1567,7 @@ class _AdminPageState extends State<AdminPage> {
     String value,
     String currentValue,
     ValueChanged<String> onSelected,
+    bool isDark,
   ) {
     final isSelected = currentValue == value;
     return Padding(
@@ -1410,18 +1579,24 @@ class _AdminPageState extends State<AdminPage> {
           decoration: BoxDecoration(
             color: isSelected
                 ? VizareColors.champagneGold
-                : Colors.white.withValues(alpha: 0.05),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected
                   ? VizareColors.champagneGold
-                  : Colors.white.withValues(alpha: 0.1),
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : const Color(0xFFCBD5E1)),
             ),
           ),
           child: Text(
             label,
             style: GoogleFonts.inter(
-              color: isSelected ? VizareColors.obsidianBlack : Colors.white,
+              color: isSelected
+                  ? VizareColors.obsidianBlack
+                  : (isDark ? Colors.white : const Color(0xFF334155)),
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
             ),

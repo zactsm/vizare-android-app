@@ -70,7 +70,9 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
               surface: VizareColors.obsidianSurface,
               onSurface: Colors.white,
             ),
-            dialogBackgroundColor: VizareColors.obsidianBlack,
+            dialogTheme: const DialogThemeData(
+              backgroundColor: VizareColors.obsidianBlack,
+            ),
           ),
           child: child!,
         );
@@ -83,6 +85,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final dateStr = DateFormat('EEE, MMM d, yyyy').format(_selectedDate);
 
@@ -94,15 +97,21 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
         bottom: bottomInset + 24,
       ),
       decoration: BoxDecoration(
-        color: VizareColors.obsidianSurface.withValues(alpha: 0.96),
+        color: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.96)
+            : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(
-          color: VizareColors.champagneGold.withValues(alpha: 0.25),
+          color: isDark
+              ? VizareColors.champagneGold.withValues(alpha: 0.25)
+              : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.6)
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 30,
             spreadRadius: 4,
           ),
@@ -119,7 +128,9 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -155,7 +166,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
                           letterSpacing: -0.4,
                         ),
                       ),
@@ -165,7 +176,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: VizareColors.textSecondary,
+                          color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -194,6 +205,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                     title: 'On-Site Tour',
                     subtitle: 'In-person estate visit',
                     icon: Icons.location_city_rounded,
+                    isDark: isDark,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -203,6 +215,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                     title: 'Virtual 3D AR',
                     subtitle: 'Guided walkthrough',
                     icon: Icons.view_in_ar_rounded,
+                    isDark: isDark,
                   ),
                 ),
               ],
@@ -225,10 +238,14 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                    color: isDark
+                        ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                        : const Color(0xFFCBD5E1),
                     width: 1.0,
                   ),
                 ),
@@ -245,7 +262,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
                     const Spacer(),
@@ -286,12 +303,16 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? VizareColors.champagneGold
-                          : Colors.white.withValues(alpha: 0.05),
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : const Color(0xFFF8FAFC)),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
                             ? VizareColors.champagneGold
-                            : Colors.white.withValues(alpha: 0.12),
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.12)
+                                : const Color(0xFFE2E8F0)),
                         width: 1.0,
                       ),
                     ),
@@ -300,7 +321,9 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? Colors.black : Colors.white70,
+                        color: isSelected
+                            ? Colors.black
+                            : (isDark ? Colors.white70 : const Color(0xFF475569)),
                       ),
                     ),
                   ),
@@ -323,26 +346,37 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
             TextField(
               controller: _noteController,
               maxLines: 2,
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
+              style: GoogleFonts.inter(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 13,
+              ),
               decoration: InputDecoration(
                 hintText: 'e.g. Would love to inspect the rooftop terrace and master suite...',
                 hintStyle: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.35),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.35)
+                      : const Color(0xFF94A3B8),
                   fontSize: 12,
                 ),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.04),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : const Color(0xFFCBD5E1),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : const Color(0xFFCBD5E1),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -410,6 +444,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
     required String title,
     required String subtitle,
     required IconData icon,
+    required bool isDark,
   }) {
     final isSelected = _selectedTourMode == id;
     return GestureDetector(
@@ -419,12 +454,16 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
         decoration: BoxDecoration(
           color: isSelected
               ? VizareColors.champagneGold.withValues(alpha: 0.12)
-              : Colors.white.withValues(alpha: 0.04),
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : const Color(0xFFF8FAFC)),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? VizareColors.champagneGold
-                : Colors.white.withValues(alpha: 0.1),
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : const Color(0xFFCBD5E1)),
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -432,7 +471,7 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
           children: [
             Icon(
               icon,
-              color: isSelected ? VizareColors.champagneGold : Colors.white60,
+              color: isSelected ? VizareColors.champagneGold : (isDark ? Colors.white60 : const Color(0xFF64748B)),
               size: 24,
             ),
             const SizedBox(width: 10),
@@ -445,14 +484,16 @@ class _ScheduleViewingDialogState extends State<ScheduleViewingDialog> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isSelected
+                          ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                          : (isDark ? Colors.white70 : const Color(0xFF475569)),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: VizareColors.textSecondary,
+                      color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
                     ),
                   ),
                 ],

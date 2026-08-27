@@ -73,6 +73,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final innerContent = Stack(
       fit: StackFit.expand,
       children: [
@@ -99,7 +101,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                   letterSpacing: -0.6,
                 ),
               ),
@@ -108,7 +110,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 'Your curated portfolio of luxury spaces.',
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  color: VizareColors.textSecondary,
+                  color: isDark
+                      ? VizareColors.textSecondary
+                      : const Color(0xFF64748B),
                 ),
               ),
             ],
@@ -127,7 +131,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: VizareColors.obsidianBlack,
+        backgroundColor:
+            isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
         body: AbstractBackground(
           child: SafeArea(
             child: innerContent,
@@ -138,6 +143,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 
   Widget _buildFavoritesList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_favorites.isEmpty) {
       return Center(
         child: Column(
@@ -163,7 +170,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             Text(
               'No Saved Properties Yet',
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
               ),
@@ -172,7 +179,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
             Text(
               'Explore the catalog and bookmark properties for quick AR access.',
               style: GoogleFonts.inter(
-                color: VizareColors.textMuted,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                 fontSize: 13,
               ),
               textAlign: TextAlign.center,
@@ -205,10 +212,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
             child: VisionGlassContainer(
               padding: const EdgeInsets.all(12),
               borderRadius: 22,
-              backgroundColor:
-                  VizareColors.obsidianSurface.withValues(alpha: 0.85),
+              backgroundColor: isDark
+                  ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.95),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.12),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : const Color(0xFFE2E8F0),
                 width: 1.0,
               ),
               child: Row(
@@ -233,7 +243,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         Text(
                           property.name,
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
                           ),
@@ -244,7 +254,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
                         Text(
                           property.location,
                           style: GoogleFonts.inter(
-                            color: VizareColors.textSecondary,
+                            color: isDark
+                                ? VizareColors.textSecondary
+                                : const Color(0xFF64748B),
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
                           ),

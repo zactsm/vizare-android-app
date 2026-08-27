@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 
 class NotificationPreferencesPage extends StatefulWidget {
   const NotificationPreferencesPage({super.key});
@@ -58,145 +58,156 @@ class _NotificationPreferencesPageState
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const VizareAppBar(
-          title: 'Notification Preferences',
-        ),
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
-                child: Text(
-                  'Select the notifications and delivery channels you want to receive.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    color: VizareColors.textSecondary,
-                    height: 1.45,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: const VizareAppBar(
+            title: 'Notification Preferences',
+          ),
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                  child: Text(
+                    'Select the notifications and delivery channels you want to receive.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      color: isDark
+                          ? VizareColors.textSecondary
+                          : const Color(0xFF64748B),
+                      height: 1.45,
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                'ALERT CATEGORIES',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                  color: VizareColors.champagneGold,
+                Text(
+                  'ALERT CATEGORIES',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: VizareColors.champagneGold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              VisionGlassContainer(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: generalNotifications.keys.map((key) {
-                    final subtitle = _getSubtitle(key);
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Switch.adaptive(
-                            value: generalNotifications[key] ?? false,
-                            activeThumbColor: VizareColors.champagneGold,
-                            activeTrackColor:
-                                VizareColors.champagneGold.withValues(alpha: 0.3),
-                            inactiveThumbColor: Colors.white60,
-                            inactiveTrackColor: Colors.white12,
-                            onChanged: (val) async {
-                              setState(() {
-                                generalNotifications[key] = val;
-                              });
-                              await _savePreference(key, val);
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  key,
-                                  style: GoogleFonts.inter(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (subtitle != null) ...[
-                                  const SizedBox(height: 2),
+                const SizedBox(height: 12),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: generalNotifications.keys.map((key) {
+                      final subtitle = _getSubtitle(key);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Switch.adaptive(
+                              value: generalNotifications[key] ?? false,
+                              activeThumbColor: VizareColors.champagneGold,
+                              activeTrackColor:
+                                  VizareColors.champagneGold.withValues(alpha: 0.3),
+                              inactiveThumbColor:
+                                  isDark ? Colors.white60 : const Color(0xFF94A3B8),
+                              inactiveTrackColor:
+                                  isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                              onChanged: (val) async {
+                                setState(() {
+                                  generalNotifications[key] = val;
+                                });
+                                await _savePreference(key, val);
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Text(
-                                    subtitle,
+                                    key,
                                     style: GoogleFonts.inter(
-                                      color: VizareColors.textMuted,
-                                      fontSize: 11.5,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                                  if (subtitle != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      subtitle,
+                                      style: GoogleFonts.inter(
+                                        color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+                                        fontSize: 11.5,
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'DELIVERY CHANNELS',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                  color: VizareColors.champagneGold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              VisionGlassContainer(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: deliveryMethods.keys.map((key) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        children: [
-                          Switch.adaptive(
-                            value: deliveryMethods[key] ?? false,
-                            activeThumbColor: VizareColors.champagneGold,
-                            activeTrackColor:
-                                VizareColors.champagneGold.withValues(alpha: 0.3),
-                            inactiveThumbColor: Colors.white60,
-                            inactiveTrackColor: Colors.white12,
-                            onChanged: (val) async {
-                              setState(() {
-                                deliveryMethods[key] = val;
-                              });
-                              await _savePreference(key, val);
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              key,
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-            ],
+                const SizedBox(height: 28),
+                Text(
+                  'DELIVERY CHANNELS',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: VizareColors.champagneGold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                VisionGlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: deliveryMethods.keys.map((key) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          children: [
+                            Switch.adaptive(
+                              value: deliveryMethods[key] ?? false,
+                              activeThumbColor: VizareColors.champagneGold,
+                              activeTrackColor:
+                                  VizareColors.champagneGold.withValues(alpha: 0.3),
+                              inactiveThumbColor:
+                                  isDark ? Colors.white60 : const Color(0xFF94A3B8),
+                              inactiveTrackColor:
+                                  isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                              onChanged: (val) async {
+                                setState(() {
+                                  deliveryMethods[key] = val;
+                                });
+                                await _savePreference(key, val);
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                key,
+                                style: GoogleFonts.inter(
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

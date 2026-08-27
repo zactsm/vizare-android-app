@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'api_service.dart';
+import 'app_theme.dart';
 
 class GoogleAuthResult {
   const GoogleAuthResult({
@@ -62,6 +63,9 @@ class GoogleAuthService {
       await prefs.setString('user_email', googleUser.email);
       await prefs.setString('user_type', userType);
       await prefs.setBool('has_password', hasPassword);
+
+      // Load and apply authenticated user's theme preference
+      await AppThemeController.instance.loadThemeMode(isAuthenticated: true);
 
       return GoogleAuthResult(
         email: googleUser.email,

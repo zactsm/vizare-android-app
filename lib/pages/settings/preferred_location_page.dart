@@ -7,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 import '../utils/location_geocoder.dart';
 
 class PreferredLocationPage extends StatefulWidget {
@@ -217,144 +217,155 @@ class _PreferredLocationPageState extends State<PreferredLocationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const VizareAppBar(
-          title: 'Preferred Location',
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
-                  child: Text(
-                    'Search a city or tap anywhere on the map to center your curated recommendations.',
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      color: VizareColors.textSecondary,
-                      height: 1.45,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: const VizareAppBar(
+            title: 'Preferred Location',
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                    child: Text(
+                      'Search a city or tap anywhere on the map to center your curated recommendations.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        color: isDark
+                            ? VizareColors.textSecondary
+                            : const Color(0xFF64748B),
+                        height: 1.45,
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: VizareColors.obsidianSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      width: 1,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? VizareColors.obsidianSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : const Color(0xFFCBD5E1),
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onSubmitted: (_) => _searchLocation(),
-                    style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: 'Search city, state, or region...',
-                      hintStyle: GoogleFonts.inter(
-                        color: VizareColors.textMuted,
-                        fontSize: 13,
+                    child: TextField(
+                      controller: _searchController,
+                      onSubmitted: (_) => _searchLocation(),
+                      style: GoogleFonts.inter(
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        fontSize: 14,
                       ),
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: VizareColors.champagneGold,
-                        size: 20,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
+                      decoration: InputDecoration(
+                        hintText: 'Search city, state, or region...',
+                        hintStyle: GoogleFonts.inter(
+                          color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+                          fontSize: 13,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
                           color: VizareColors.champagneGold,
-                          size: 18,
+                          size: 20,
                         ),
-                        onPressed: _searchLocation,
+                        suffixIcon: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: VizareColors.champagneGold,
+                            size: 18,
+                          ),
+                          onPressed: _searchLocation,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14.0, horizontal: 16.0),
                       ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14.0, horizontal: 16.0),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                if (_showConfirmation) ...[
-                  VisionGlassContainer(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              color: VizareColors.champagneGold,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _selectedLocationName,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14.5,
-                                  color: Colors.white,
+                  const SizedBox(height: 20),
+                  if (_showConfirmation) ...[
+                    VisionGlassContainer(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on_rounded,
+                                color: VizareColors.champagneGold,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _selectedLocationName,
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14.5,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(14.0),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.38,
-                            child: GoogleMap(
-                              style: kVizareDarkMapStyle,
-                              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                                Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer(),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(14.0),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.38,
+                              child: GoogleMap(
+                                style: isDark ? kVizareDarkMapStyle : null,
+                                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                                  Factory<OneSequenceGestureRecognizer>(
+                                    () => EagerGestureRecognizer(),
+                                  ),
+                                },
+                                onMapCreated: (controller) {
+                                  _mapController = controller;
+                                },
+                                initialCameraPosition: CameraPosition(
+                                  target: _selectedLocationCoords,
+                                  zoom: 14.0,
                                 ),
-                              },
-                              onMapCreated: (controller) {
-                                _mapController = controller;
-                                controller.setMapStyle(kVizareDarkMapStyle);
-                              },
-                              initialCameraPosition: CameraPosition(
-                                target: _selectedLocationCoords,
-                                zoom: 14.0,
+                                markers: _markers,
+                                onTap: _onMapTapped,
+                                zoomGesturesEnabled: true,
+                                scrollGesturesEnabled: true,
+                                tiltGesturesEnabled: false,
+                                rotateGesturesEnabled: true,
                               ),
-                              markers: _markers,
-                              onTap: _onMapTapped,
-                              zoomGesturesEnabled: true,
-                              scrollGesturesEnabled: true,
-                              tiltGesturesEnabled: false,
-                              rotateGesturesEnabled: true,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          "Tap anywhere on the spatial map to pinpoint an exact neighborhood.",
-                          style: GoogleFonts.inter(
-                            color: VizareColors.textMuted,
-                            fontSize: 11.5,
+                          const SizedBox(height: 10),
+                          Text(
+                            "Tap anywhere on the spatial map to pinpoint an exact neighborhood.",
+                            style: GoogleFonts.inter(
+                              color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
+                              fontSize: 11.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  LuxuryGradientButton(
-                    text: 'Save Vicinity Preference',
-                    icon: Icons.check_circle_rounded,
-                    onPressed: _savePreferences,
-                  ),
-                  const SizedBox(height: 28),
+                    const SizedBox(height: 28),
+                    LuxuryGradientButton(
+                      text: 'Save Vicinity Preference',
+                      icon: Icons.check_circle_rounded,
+                      onPressed: _savePreferences,
+                    ),
+                    const SizedBox(height: 28),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

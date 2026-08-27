@@ -138,7 +138,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Messages & Terminal'), findsOneWidget);
+      expect(find.text('Messages'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
   });

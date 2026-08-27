@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'google_maps_loader_stub.dart'
     if (dart.library.html) 'google_maps_loader_web.dart';
 import 'welcome_page.dart';
@@ -122,7 +121,9 @@ void main() async {
       }
     }
 
+    bool isAuthenticated = false;
     if (userEmail != null && (hasSupabaseSession || !supabaseReady)) {
+      isAuthenticated = true;
       if (userType == 'admin') {
         startRoute = '/admin';
       } else if (userType == 'homeowner') {
@@ -131,12 +132,14 @@ void main() async {
         startRoute = '/';
       }
     }
+
+    // 6. Load theme mode (defaults to Obsidian Dark for unauthenticated guest users)
+    await AppThemeController.instance
+        .loadThemeMode(isAuthenticated: isAuthenticated);
   } catch (e) {
     debugPrint('Session check note: $e');
+    await AppThemeController.instance.loadThemeMode(isAuthenticated: false);
   }
-
-  // 6. Load saved theme mode
-  await AppThemeController.instance.loadThemeMode();
 
   // 7. Launch App
   runApp(MyApp(initialRoute: startRoute));

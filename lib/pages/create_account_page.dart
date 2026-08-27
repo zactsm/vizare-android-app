@@ -363,12 +363,38 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         controller: _nameController,
                         style: GoogleFonts.inter(
                             color: Colors.white, fontSize: 14.5),
-                        decoration: const InputDecoration(
+                        cursorColor: VizareColors.champagneGold,
+                        decoration: InputDecoration(
                           hintText: 'Sarah Jenkins',
-                          prefixIcon: Icon(
+                          hintStyle: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14.5,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          prefixIcon: const Icon(
                             Icons.person_outline_rounded,
                             color: VizareColors.champagneGold,
                             size: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: VizareColors.champagneGold,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -388,12 +414,38 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         keyboardType: TextInputType.emailAddress,
                         style: GoogleFonts.inter(
                             color: Colors.white, fontSize: 14.5),
-                        decoration: const InputDecoration(
+                        cursorColor: VizareColors.champagneGold,
+                        decoration: InputDecoration(
                           hintText: 'yourname@luxury.com',
-                          prefixIcon: Icon(
+                          hintStyle: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14.5,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          prefixIcon: const Icon(
                             Icons.email_outlined,
                             color: VizareColors.champagneGold,
                             size: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: VizareColors.champagneGold,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -413,8 +465,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         obscureText: !_isPasswordVisible,
                         style: GoogleFonts.inter(
                             color: Colors.white, fontSize: 14.5),
+                        cursorColor: VizareColors.champagneGold,
                         decoration: InputDecoration(
                           hintText: '••••••••',
+                          hintStyle: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14.5,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
                           prefixIcon: const Icon(
                             Icons.lock_outline_rounded,
                             color: VizareColors.champagneGold,
@@ -434,6 +493,25 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                               });
                             },
                           ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: VizareColors.champagneGold,
+                              width: 1.5,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 18),
@@ -452,8 +530,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         obscureText: !_isConfirmPasswordVisible,
                         style: GoogleFonts.inter(
                             color: Colors.white, fontSize: 14.5),
+                        cursorColor: VizareColors.champagneGold,
                         decoration: InputDecoration(
                           hintText: '••••••••',
+                          hintStyle: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 14.5,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
                           prefixIcon: const Icon(
                             Icons.lock_outline_rounded,
                             color: VizareColors.champagneGold,
@@ -473,6 +558,25 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                                     !_isConfirmPasswordVisible;
                               });
                             },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: VizareColors.champagneGold,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),

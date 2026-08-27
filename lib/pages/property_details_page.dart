@@ -13,7 +13,6 @@ import 'package:untitled/pages/chat/schedule_viewing_dialog.dart';
 import 'package:untitled/pages/utils/chat_service.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/send_inquiry_page.dart';
 import 'package:untitled/pages/ar_view_page.dart';
 import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/pages/utils/property_details_skeleton.dart';
@@ -163,8 +162,10 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: VizareColors.obsidianBlack,
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
       body: AbstractBackground(
         child: SafeArea(
           child: AnimatedSwitcher(
@@ -181,6 +182,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   }
 
   Widget _buildLoadedContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       key: const ValueKey('loaded_content'),
       children: [
@@ -194,9 +196,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               VisionGlassPill(
                 padding: const EdgeInsets.all(10),
                 onTap: () => Navigator.of(context).pop(),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                   size: 18,
                 ),
               ),
@@ -255,7 +257,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                 Text(
                   widget.property.name,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     height: 1.2,
@@ -276,7 +278,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       child: Text(
                         widget.property.location,
                         style: GoogleFonts.inter(
-                          color: VizareColors.textSecondary,
+                          color: isDark
+                              ? VizareColors.textSecondary
+                              : const Color(0xFF64748B),
                           fontSize: 13.5,
                           fontWeight: FontWeight.w400,
                         ),
@@ -318,16 +322,21 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                 VisionGlassContainer(
                   padding: const EdgeInsets.all(18.0),
                   borderRadius: 20,
-                  backgroundColor:
-                      VizareColors.obsidianSurface.withValues(alpha: 0.8),
+                  backgroundColor: isDark
+                      ? VizareColors.obsidianSurface.withValues(alpha: 0.8)
+                      : Colors.white.withValues(alpha: 0.95),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : const Color(0xFFE2E8F0),
                     width: 1.0,
                   ),
                   child: Text(
                     widget.property.description,
                     style: GoogleFonts.inter(
-                      color: Colors.white.withValues(alpha: 0.85),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.85)
+                          : const Color(0xFF334155),
                       fontSize: 14,
                       height: 1.65,
                       fontWeight: FontWeight.w400,
@@ -347,6 +356,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   }
 
   Widget _buildSpecsBentoGrid() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final has3D = widget.property.modelPath.isNotEmpty;
     final nameLower = widget.property.name.toLowerCase();
     final isVilla = nameLower.contains('villa') || nameLower.contains('mansion') || nameLower.contains('estate');
@@ -390,10 +400,13 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
         return VisionGlassContainer(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           borderRadius: 16,
-          backgroundColor:
-              VizareColors.obsidianElevated.withValues(alpha: 0.7),
+          backgroundColor: isDark
+              ? VizareColors.obsidianElevated.withValues(alpha: 0.7)
+              : Colors.white.withValues(alpha: 0.95),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFE2E8F0),
             width: 1.0,
           ),
           child: Row(
@@ -421,7 +434,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -430,7 +443,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                       item['label'] as String,
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: VizareColors.textMuted,
+                        color: isDark
+                            ? VizareColors.textMuted
+                            : const Color(0xFF64748B),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -753,6 +768,7 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool hasModel = widget.property.modelPath.isNotEmpty;
 
     return ClipRRect(
@@ -762,18 +778,24 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 22),
           decoration: BoxDecoration(
-            color: VizareColors.obsidianSurface.withValues(alpha: 0.92),
+            color: isDark
+                ? VizareColors.obsidianSurface.withValues(alpha: 0.92)
+                : Colors.white.withValues(alpha: 0.96),
             borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : const Color(0xFFCBD5E1),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 24,
-                offset: const Offset(0, -6),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.6)
+                    : Colors.black.withValues(alpha: 0.08),
+                blurRadius: isDark ? 24 : 16,
+                offset: isDark ? const Offset(0, -6) : const Offset(0, -3),
               ),
             ],
           ),
@@ -807,7 +829,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               // Schedule Viewing Button
               VisionGlassPill(
                 padding: const EdgeInsets.all(13),
-                color: VizareColors.obsidianElevated,
+                color: isDark
+                    ? VizareColors.obsidianElevated
+                    : const Color(0xFFF1F5F9),
                 borderColor:
                     VizareColors.champagneGold.withValues(alpha: 0.5),
                 onTap: _openScheduleViewing,
@@ -822,7 +846,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
               // 2-Way Direct Chat Pill
               VisionGlassPill(
                 padding: const EdgeInsets.all(13),
-                color: VizareColors.obsidianElevated,
+                color: isDark
+                    ? VizareColors.obsidianElevated
+                    : const Color(0xFFF1F5F9),
                 borderColor:
                     VizareColors.champagneGold.withValues(alpha: 0.7),
                 onTap: _openChat,

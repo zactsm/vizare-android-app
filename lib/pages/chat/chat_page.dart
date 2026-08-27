@@ -10,7 +10,7 @@ import 'package:untitled/pages/chat/schedule_viewing_dialog.dart';
 import 'package:untitled/pages/property_details_page.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/chat_service.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 
 class ChatPage extends StatefulWidget {
   final Conversation conversation;
@@ -32,7 +32,6 @@ class _ChatPageState extends State<ChatPage> {
   bool _isLoading = true;
   bool _isSending = false;
   int _currentUserId = 0;
-  String _currentUserEmail = '';
   String _currentUserRole = '';
   RealtimeChannel? _realtimeChannel;
 
@@ -52,7 +51,6 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _loadUserAndMessages() async {
     final prefs = await SharedPreferences.getInstance();
-    _currentUserEmail = prefs.getString('user_email') ?? '';
     _currentUserRole = (prefs.getString('user_type') ?? 'homebuyer').toLowerCase();
 
     // Determine current user profile id
@@ -216,36 +214,41 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final prop = widget.conversation.property;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(context, prop),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Property Mini Banner
-              if (prop != null) _buildPropertyBanner(context, prop),
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: _buildAppBar(context, prop),
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Property Mini Banner
+                if (prop != null) _buildPropertyBanner(context, prop),
 
-              // Messages Stream Area
-              Expanded(
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: VizareColors.champagneGold,
-                        ),
-                      )
-                    : _messages.isEmpty
-                        ? _buildEmptyState()
-                        : _buildMessagesList(),
-              ),
+                // Messages Stream Area
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: VizareColors.champagneGold,
+                          ),
+                        )
+                      : _messages.isEmpty
+                          ? _buildEmptyState()
+                          : _buildMessagesList(),
+                ),
 
-              // Quick Action Chips
-              _buildQuickChips(),
+                // Quick Action Chips
+                _buildQuickChips(),
 
-              // Bottom Input Bar
-              _buildInputBar(),
-            ],
+                // Bottom Input Bar
+                _buildInputBar(),
+              ],
+            ),
           ),
         ),
       ),
@@ -253,14 +256,16 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context, Property? prop) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
-      backgroundColor: Colors.black.withValues(alpha: 0.3),
+      backgroundColor: Colors.transparent,
       elevation: 0,
       leading: Center(
         child: Padding(
           padding: const EdgeInsets.only(left: 8.0),
           child: VisionGlassCircleButton(
             icon: Icons.arrow_back_ios_new_rounded,
+            iconColor: isDark ? Colors.white : const Color(0xFF0F172A),
             size: 38,
             onTap: () => Navigator.pop(context),
           ),
@@ -273,7 +278,7 @@ class _ChatPageState extends State<ChatPage> {
             height: 36,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: VizareColors.obsidianSurface,
+              color: isDark ? VizareColors.obsidianSurface : Colors.white,
               border: Border.all(
                 color: VizareColors.champagneGold.withValues(alpha: 0.8),
                 width: 1.2,
@@ -305,7 +310,7 @@ class _ChatPageState extends State<ChatPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
                 Row(
@@ -377,6 +382,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildPropertyBanner(BuildContext context, Property prop) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -390,15 +396,21 @@ class _ChatPageState extends State<ChatPage> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+          color: isDark
+              ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+              : Colors.white.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: VizareColors.champagneGold.withValues(alpha: 0.2),
+            color: isDark
+                ? VizareColors.champagneGold.withValues(alpha: 0.2)
+                : const Color(0xFFE2E8F0),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -433,7 +445,7 @@ class _ChatPageState extends State<ChatPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   Text(
@@ -442,7 +454,9 @@ class _ChatPageState extends State<ChatPage> {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: VizareColors.textSecondary,
+                      color: isDark
+                          ? VizareColors.textSecondary
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -470,6 +484,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -498,7 +513,7 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 6),
@@ -507,7 +522,7 @@ class _ChatPageState extends State<ChatPage> {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: VizareColors.textSecondary,
+                color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
                 height: 1.4,
               ),
             ),
@@ -537,6 +552,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildTextBubble(ChatMessage message, bool isMe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final timeStr = DateFormat('h:mm a').format(message.createdAt);
 
     return Align(
@@ -556,7 +572,11 @@ class _ChatPageState extends State<ChatPage> {
                   ],
                 )
               : null,
-          color: isMe ? null : VizareColors.obsidianSurface.withValues(alpha: 0.9),
+          color: isMe
+              ? null
+              : (isDark
+                  ? VizareColors.obsidianSurface.withValues(alpha: 0.9)
+                  : Colors.white),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -566,12 +586,16 @@ class _ChatPageState extends State<ChatPage> {
           border: isMe
               ? null
               : Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : const Color(0xFFE2E8F0),
                   width: 1.0,
                 ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -586,7 +610,9 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.inter(
                 fontSize: 13.5,
                 fontWeight: isMe ? FontWeight.w600 : FontWeight.w400,
-                color: isMe ? Colors.black87 : Colors.white,
+                color: isMe
+                    ? Colors.black87
+                    : (isDark ? Colors.white : const Color(0xFF0F172A)),
                 height: 1.35,
               ),
             ),
@@ -600,7 +626,9 @@ class _ChatPageState extends State<ChatPage> {
                     fontSize: 9.5,
                     color: isMe
                         ? Colors.black.withValues(alpha: 0.6)
-                        : Colors.white.withValues(alpha: 0.4),
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : const Color(0xFF94A3B8)),
                   ),
                 ),
                 if (isMe) ...[
@@ -620,6 +648,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildViewingAppointmentCard(ChatMessage message, bool isMe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final status = message.viewingStatus ?? 'pending';
     final isConfirmed = status == 'confirmed';
     final isPending = status == 'pending';
@@ -630,18 +659,22 @@ class _ChatPageState extends State<ChatPage> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VizareColors.obsidianSurface.withValues(alpha: 0.94),
+        color: isDark
+            ? VizareColors.obsidianSurface.withValues(alpha: 0.94)
+            : Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isConfirmed
               ? VizareColors.emeraldGreen
-              : VizareColors.champagneGold.withValues(alpha: 0.5),
+              : (isDark
+                  ? VizareColors.champagneGold.withValues(alpha: 0.5)
+                  : const Color(0xFFCBD5E1)),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: (isConfirmed ? VizareColors.emeraldGreen : VizareColors.champagneGold)
-                .withValues(alpha: 0.15),
+                .withValues(alpha: isDark ? 0.15 : 0.10),
             blurRadius: 16,
             spreadRadius: 1,
           ),
@@ -667,7 +700,7 @@ class _ChatPageState extends State<ChatPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                 ],
@@ -700,7 +733,10 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ],
           ),
-          const Divider(color: Colors.white12, height: 16),
+          Divider(
+            color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+            height: 16,
+          ),
 
           // Date & Time Details
           Row(
@@ -716,7 +752,7 @@ class _ChatPageState extends State<ChatPage> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
               const Spacer(),
@@ -731,7 +767,7 @@ class _ChatPageState extends State<ChatPage> {
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
             ],
@@ -743,7 +779,7 @@ class _ChatPageState extends State<ChatPage> {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
-                color: VizareColors.textSecondary,
+                color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -782,9 +818,13 @@ class _ChatPageState extends State<ChatPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white24),
+                        border: Border.all(
+                          color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                        ),
                       ),
                       child: Center(
                         child: Text(
@@ -792,7 +832,7 @@ class _ChatPageState extends State<ChatPage> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         ),
                       ),
@@ -808,6 +848,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildQuickChips() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final chips = [
       '📅 Schedule Viewing',
       '💰 Price Breakdown',
@@ -838,10 +879,14 @@ class _ChatPageState extends State<ChatPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface.withValues(alpha: 0.8),
+                color: isDark
+                    ? VizareColors.obsidianSurface.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                  color: isDark
+                      ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                      : const Color(0xFFCBD5E1),
                   width: 1.0,
                 ),
               ),
@@ -863,13 +908,16 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildInputBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
+        color: isDark ? Colors.black.withValues(alpha: 0.5) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFE2E8F0),
           ),
         ),
       ),
@@ -879,10 +927,14 @@ class _ChatPageState extends State<ChatPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface.withValues(alpha: 0.9),
+                color: isDark
+                    ? VizareColors.obsidianSurface.withValues(alpha: 0.9)
+                    : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: VizareColors.champagneGold.withValues(alpha: 0.3),
+                  color: isDark
+                      ? VizareColors.champagneGold.withValues(alpha: 0.3)
+                      : const Color(0xFFCBD5E1),
                   width: 1.0,
                 ),
               ),
@@ -890,11 +942,16 @@ class _ChatPageState extends State<ChatPage> {
                 controller: _messageController,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _handleSendMessage(),
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontSize: 13.5,
+                ),
                 decoration: InputDecoration(
                   hintText: 'Type your message...',
                   hintStyle: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.35)
+                        : const Color(0xFF94A3B8),
                     fontSize: 13,
                   ),
                   border: InputBorder.none,

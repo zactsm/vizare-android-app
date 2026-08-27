@@ -9,7 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/welcome_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -139,6 +139,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await Supabase.instance.client.auth.signOut();
     } catch (_) {}
+    await AppThemeController.instance.resetToDefaultDark();
 
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
@@ -236,273 +237,296 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: VisionGlassCircleButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => Navigator.pop(context),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: VisionGlassCircleButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  iconColor: isDark ? Colors.white : const Color(0xFF0F172A),
+                  onTap: () => Navigator.pop(context),
+                ),
               ),
             ),
-          ),
-          actions: null,
-          title: Text(
-            'Member Identity',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            actions: null,
+            title: Text(
+              'Member Identity',
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    color: VizareColors.champagneGold,
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (!_isHomeowner) ...[
-                        Align(
-                          alignment: Alignment.centerLeft,
+          body: SafeArea(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: VizareColors.champagneGold,
+                    ),
+                  )
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (!_isHomeowner) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Profile & Identity',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF0F172A),
+                                    letterSpacing: -0.6,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Manage your verified architectural credentials and contact settings.',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: isDark
+                                        ? VizareColors.textSecondary
+                                        : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                        ] else ...[
+                          const SizedBox(height: 8),
+                        ],
+                        // Profile Avatar with Luxury Specular Ring
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isDark
+                                    ? VizareColors.obsidianSurface
+                                    : const Color(0xFFF1F5F9),
+                                border: Border.all(
+                                  color: VizareColors.champagneGold,
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: VizareColors.champagneGold
+                                        .withValues(alpha: 0.25),
+                                    blurRadius: 20,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                                image: _getImageProvider() != null
+                                    ? DecorationImage(
+                                        image: _getImageProvider()!,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: _getImageProvider() == null
+                                  ? const Icon(
+                                      Icons.person_rounded,
+                                      size: 64,
+                                      color: VizareColors.champagneGold,
+                                    )
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _pickImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: VizareColors.goldGradient,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: VizareColors.champagneGold
+                                            .withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        if (_getImageProvider() != null)
+                          GestureDetector(
+                            onTap: _deleteImage,
+                            child: Text(
+                              'Remove Avatar',
+                              style: GoogleFonts.inter(
+                                color: VizareColors.crimsonRed,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 28),
+                        // Form Fields
+                        VisionGlassContainer(
+                          padding: const EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Profile & Identity',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.6,
-                                ),
+                              _buildLabel('Full Name'),
+                              _buildInput(
+                                controller: _nameController,
+                                hintText: 'Your legal or display name',
+                                icon: Icons.badge_outlined,
+                                isDark: isDark,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Manage your verified architectural credentials and contact settings.',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: VizareColors.textSecondary,
+                              const SizedBox(height: 18),
+                              _buildLabel('Email Address (Verified)'),
+                              _buildInput(
+                                controller: _emailController,
+                                hintText: 'name@domain.com',
+                                icon: Icons.alternate_email_rounded,
+                                readOnly: true,
+                                isDark: isDark,
+                              ),
+                              const SizedBox(height: 18),
+                              _buildLabel('Phone Number'),
+                              _buildInput(
+                                controller: _phoneController,
+                                hintText: '+60 12-345 6789',
+                                icon: Icons.phone_outlined,
+                                keyboardType: TextInputType.phone,
+                                isDark: isDark,
+                              ),
+                              const SizedBox(height: 18),
+                              _buildLabel('Account Role'),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? VizareColors.obsidianSurface
+                                      : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.verified_user_rounded,
+                                      color: VizareColors.champagneGold,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      _isHomeowner
+                                          ? 'Verified Homeowner / Architect'
+                                          : (_isHomebuyer
+                                              ? 'Curated Homebuyer'
+                                              : 'Administrator'),
+                                      style: GoogleFonts.inter(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF334155),
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 28),
-                      ] else ...[
-                        const SizedBox(height: 8),
-                      ],
-                      // Profile Avatar with Luxury Specular Ring
-                      Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: VizareColors.obsidianSurface,
-                              border: Border.all(
-                                color: VizareColors.champagneGold,
-                                width: 2.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: VizareColors.champagneGold
-                                      .withValues(alpha: 0.25),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                              image: _getImageProvider() != null
-                                  ? DecorationImage(
-                                      image: _getImageProvider()!,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : null,
-                            ),
-                            child: _getImageProvider() == null
-                                ? const Icon(
-                                    Icons.person_rounded,
-                                    size: 64,
-                                    color: VizareColors.champagneGold,
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: _pickImage,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: VizareColors.goldGradient,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: VizareColors.champagneGold
-                                          .withValues(alpha: 0.4),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 16,
-                                  color: Colors.black,
+                        const SizedBox(height: 16),
+                        if (_dateJoined.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Member since $_dateJoined',
+                                style: GoogleFonts.inter(
+                                  color: isDark
+                                      ? VizareColors.textMuted
+                                      : const Color(0xFF64748B),
+                                  fontSize: 12,
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      if (_getImageProvider() != null)
-                        GestureDetector(
-                          onTap: _deleteImage,
-                          child: Text(
-                            'Remove Avatar',
-                            style: GoogleFonts.inter(
-                              color: VizareColors.crimsonRed,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        const SizedBox(height: 32),
+                        LuxuryGradientButton(
+                          text: 'Save Changes',
+                          icon: Icons.check_circle_rounded,
+                          isLoading: _isSaving,
+                          onPressed: _saveProfile,
                         ),
-                      const SizedBox(height: 28),
-                      // Form Fields
-                      VisionGlassContainer(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel('Full Name'),
-                            _buildInput(
-                              controller: _nameController,
-                              hintText: 'Your legal or display name',
-                              icon: Icons.badge_outlined,
-                            ),
-                            const SizedBox(height: 18),
-                            _buildLabel('Email Address (Verified)'),
-                            _buildInput(
-                              controller: _emailController,
-                              hintText: 'name@domain.com',
-                              icon: Icons.alternate_email_rounded,
-                              readOnly: true,
-                            ),
-                            const SizedBox(height: 18),
-                            _buildLabel('Phone Number'),
-                            _buildInput(
-                              controller: _phoneController,
-                              hintText: '+60 12-345 6789',
-                              icon: Icons.phone_outlined,
-                              keyboardType: TextInputType.phone,
-                            ),
-                            const SizedBox(height: 18),
-                            _buildLabel('Account Role'),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: VizareColors.obsidianSurface,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.08),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.verified_user_rounded,
-                                    color: VizareColors.champagneGold,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    _isHomeowner
-                                        ? 'Verified Homeowner / Architect'
-                                        : (_isHomebuyer
-                                            ? 'Curated Homebuyer'
-                                            : 'Administrator'),
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white70,
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (_dateJoined.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Member since $_dateJoined',
-                              style: GoogleFonts.inter(
-                                color: VizareColors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 32),
-                      LuxuryGradientButton(
-                        text: 'Save Changes',
-                        icon: Icons.check_circle_rounded,
-                        isLoading: _isSaving,
-                        onPressed: _saveProfile,
-                      ),
-                      const SizedBox(height: 14),
-                      VisionGlassPill(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        borderColor: VizareColors.crimsonRed.withValues(alpha: 0.4),
-                        onTap: _logout,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.logout_rounded,
-                              color: VizareColors.crimsonRed,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Log Out',
-                              style: GoogleFonts.poppins(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                        const SizedBox(height: 14),
+                        VisionGlassPill(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          borderColor: VizareColors.crimsonRed.withValues(alpha: 0.4),
+                          onTap: _logout,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.logout_rounded,
                                 color: VizareColors.crimsonRed,
-                                letterSpacing: 0.5,
+                                size: 18,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Text(
+                                'Log Out',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: VizareColors.crimsonRed,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );
@@ -529,15 +553,20 @@ class _ProfilePageState extends State<ProfilePage> {
     required IconData icon,
     bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
+    bool isDark = true,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: readOnly
-            ? Colors.white.withValues(alpha: 0.03)
-            : VizareColors.obsidianSurface,
+            ? (isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : const Color(0xFFF1F5F9))
+            : (isDark ? VizareColors.obsidianSurface : Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
@@ -546,20 +575,22 @@ class _ProfilePageState extends State<ProfilePage> {
         readOnly: readOnly,
         keyboardType: keyboardType,
         style: GoogleFonts.inter(
-          color: readOnly ? Colors.white54 : Colors.white,
+          color: readOnly
+              ? (isDark ? Colors.white54 : const Color(0xFF64748B))
+              : (isDark ? Colors.white : const Color(0xFF0F172A)),
           fontSize: 14,
         ),
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
             color: readOnly
-                ? Colors.white24
+                ? (isDark ? Colors.white24 : const Color(0xFF94A3B8))
                 : VizareColors.champagneGold.withValues(alpha: 0.7),
             size: 20,
           ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
-            color: VizareColors.textMuted,
+            color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
             fontSize: 13,
           ),
           border: InputBorder.none,

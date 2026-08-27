@@ -8,7 +8,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 
 class ContactSupportPage extends StatefulWidget {
   const ContactSupportPage({super.key});
@@ -149,165 +149,180 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const VizareAppBar(
-          title: 'Contact Support',
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
-                  child: Text(
-                    'Submit architectural inquiries, technical assistance, or property portfolio requests.',
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      color: VizareColors.textSecondary,
-                      height: 1.45,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: const VizareAppBar(
+            title: 'Contact Support',
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
+                    child: Text(
+                      'Submit architectural inquiries, technical assistance, or property portfolio requests.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        color: isDark
+                            ? VizareColors.textSecondary
+                            : const Color(0xFF64748B),
+                        height: 1.45,
+                      ),
                     ),
                   ),
-                ),
-                VisionGlassContainer(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTextFieldLabel('Subject'),
-                      _buildInput(
-                        controller: _subjectController,
-                        hintText: 'e.g. 3D AR Model Viewport Inquiry',
-                        icon: Icons.title_rounded,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildTextFieldLabel('Description'),
-                      _buildInput(
-                        controller: _descriptionController,
-                        hintText: 'Provide details regarding your issue or inquiry...',
-                        icon: Icons.description_rounded,
-                        maxLines: 5,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildTextFieldLabel('Attachments (Optional)'),
-                      GestureDetector(
-                        onTap: _isSubmitting ? null : _pickFiles,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: VizareColors.champagneGold
-                                  .withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.attach_file_rounded,
-                                color: VizareColors.champagneGold,
-                                size: 18,
+                  VisionGlassContainer(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTextFieldLabel('Subject'),
+                        _buildInput(
+                          controller: _subjectController,
+                          hintText: 'e.g. 3D AR Model Viewport Inquiry',
+                          icon: Icons.title_rounded,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTextFieldLabel('Description'),
+                        _buildInput(
+                          controller: _descriptionController,
+                          hintText: 'Provide details regarding your issue or inquiry...',
+                          icon: Icons.description_rounded,
+                          maxLines: 5,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTextFieldLabel('Attachments (Optional)'),
+                        GestureDetector(
+                          onTap: _isSubmitting ? null : _pickFiles,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: VizareColors.champagneGold
+                                    .withValues(alpha: 0.3),
+                                width: 1,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Select Files / Screenshots',
-                                style: GoogleFonts.inter(
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.attach_file_rounded,
                                   color: VizareColors.champagneGold,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
+                                  size: 18,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Select Files / Screenshots',
+                                  style: GoogleFonts.inter(
+                                    color: VizareColors.champagneGold,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      if (_attachedFiles.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8.0,
-                          runSpacing: 8.0,
-                          children: _attachedFiles.map((file) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: VizareColors.obsidianSurface,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.15),
+                        if (_attachedFiles.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: _attachedFiles.map((file) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? VizareColors.obsidianSurface
+                                      : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.15)
+                                        : const Color(0xFFCBD5E1),
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    file.name,
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white,
-                                      fontSize: 12,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      file.name,
+                                      style: GoogleFonts.inter(
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        fontSize: 12,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  GestureDetector(
-                                    onTap: () => setState(
-                                        () => _attachedFiles.remove(file)),
-                                    child: const Icon(
-                                      Icons.close_rounded,
-                                      size: 14,
-                                      color: Colors.white70,
+                                    const SizedBox(width: 6),
+                                    GestureDetector(
+                                      onTap: () => setState(
+                                          () => _attachedFiles.remove(file)),
+                                      child: Icon(
+                                        Icons.close_rounded,
+                                        size: 14,
+                                        color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitSupportTicket,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: VizareColors.champagneGold,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 4,
                     ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'Submit',
-                            style: GoogleFonts.poppins(
-                              color: Colors.black,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
                   ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submitSupportTicket,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: VizareColors.champagneGold,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Submit',
+                              style: GoogleFonts.poppins(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -335,20 +350,23 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
     required String hintText,
     required IconData icon,
     int maxLines = 1,
+    bool isDark = true,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: VizareColors.obsidianSurface,
+        color: isDark ? VizareColors.obsidianSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : const Color(0xFFCBD5E1),
           width: 1,
         ),
       ),
       child: TextField(
         controller: controller,
         style: GoogleFonts.inter(
-          color: Colors.white,
+          color: isDark ? Colors.white : const Color(0xFF0F172A),
           fontSize: 14,
         ),
         maxLines: maxLines,
@@ -360,7 +378,7 @@ class _ContactSupportPageState extends State<ContactSupportPage> {
           ),
           hintText: hintText,
           hintStyle: GoogleFonts.inter(
-            color: VizareColors.textMuted,
+            color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
             fontSize: 13,
           ),
           border: InputBorder.none,

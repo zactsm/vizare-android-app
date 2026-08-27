@@ -54,10 +54,15 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return PopScope(
-      canPop: _currentIndex == NavPageIndex.home,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _currentIndex != NavPageIndex.home) {
+        if (didPop) return;
+        if (_currentIndex != NavPageIndex.home) {
+          setState(() {
+            _currentIndex = NavPageIndex.home;
+          });
           _pageController.animateToPage(
             NavPageIndex.home.index,
             duration: const Duration(milliseconds: 300),
@@ -66,7 +71,8 @@ class _HomeBuyerPageState extends State<HomeBuyerPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: VizareColors.obsidianBlack,
+        backgroundColor:
+            isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
         body: AbstractBackground(
           child: SafeArea(
             bottom: false,
@@ -222,6 +228,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -238,7 +245,8 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               )
             : RefreshIndicator(
                 color: VizareColors.champagneGold,
-                backgroundColor: VizareColors.obsidianElevated,
+                backgroundColor:
+                    isDark ? VizareColors.obsidianElevated : Colors.white,
                 onRefresh: _fetchProperties,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -259,7 +267,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                               style: GoogleFonts.poppins(
                                 fontSize: 34,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF0F172A),
                                 letterSpacing: -1.0,
                                 height: 1.15,
                               ),
@@ -281,7 +291,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                             style: GoogleFonts.inter(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w400,
-                              color: VizareColors.textSecondary,
+                              color: isDark
+                                  ? VizareColors.textSecondary
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -301,13 +313,24 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                               const SizedBox(height: 12),
                               Text(
                                 'Connection Notice',
-                                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF0F172A),
+                                ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 _errorMessage!,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(fontSize: 13, color: VizareColors.textSecondary),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? VizareColors.textSecondary
+                                      : const Color(0xFF64748B),
+                                ),
                               ),
                               const SizedBox(height: 18),
                               LuxuryGradientButton(
@@ -358,6 +381,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
   }
 
   Widget _buildSectionHeader(String boldText, String accentText) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Row(
@@ -367,7 +391,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
             text: TextSpan(
               style: GoogleFonts.poppins(
                 fontSize: 21,
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 letterSpacing: -0.4,
               ),
               children: [
@@ -407,6 +431,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
   Widget _buildFeaturedCarousel(
       BuildContext context, List<Property> properties) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 290,
       child: ListView.builder(
@@ -435,10 +460,13 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               child: VisionGlassContainer(
                 padding: EdgeInsets.zero,
                 borderRadius: 26,
-                backgroundColor:
-                    VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                backgroundColor: isDark
+                    ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.95),
                 border: Border.all(
-                  color: VizareColors.champagneGold.withValues(alpha: 0.35),
+                  color: isDark
+                      ? VizareColors.champagneGold.withValues(alpha: 0.35)
+                      : const Color(0xFFE2E8F0),
                   width: 1.2,
                 ),
                 child: Column(
@@ -529,7 +557,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                           Text(
                             property.name,
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -539,9 +569,11 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.location_on_outlined,
-                                color: VizareColors.textMuted,
+                                color: isDark
+                                    ? VizareColors.textMuted
+                                    : const Color(0xFF94A3B8),
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
@@ -549,7 +581,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                                 child: Text(
                                   property.location,
                                   style: GoogleFonts.inter(
-                                    color: VizareColors.textSecondary,
+                                    color: isDark
+                                        ? VizareColors.textSecondary
+                                        : const Color(0xFF64748B),
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -574,6 +608,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
 
   Widget _buildNearbyCarousel(
       BuildContext context, List<Property> properties) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 240,
       child: ListView.builder(
@@ -600,10 +635,13 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
               child: VisionGlassContainer(
                 padding: EdgeInsets.zero,
                 borderRadius: 22,
-                backgroundColor:
-                    VizareColors.obsidianElevated.withValues(alpha: 0.6),
+                backgroundColor: isDark
+                    ? VizareColors.obsidianElevated.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.95),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFE2E8F0),
                   width: 1.0,
                 ),
                 child: Column(
@@ -629,7 +667,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                           Text(
                             property.name,
                             style: GoogleFonts.poppins(
-                              color: Colors.white,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
                             ),
@@ -657,190 +695,197 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
       ),
     );
   }
-
-  Widget _buildPopularFeed(
-      BuildContext context, List<Property> properties) {
+  Widget _buildPopularFeed(BuildContext context, List<Property> properties) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: properties.length,
-        itemBuilder: (context, index) {
-          final property = properties[index];
-          final bool hasModel = property.modelPath.isNotEmpty;
+      child: Column(
+        children: List.generate(
+          properties.length,
+          (index) {
+            final property = properties[index];
+            final bool hasModel = property.modelPath.isNotEmpty;
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      PropertyDetailsPage(property: property),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              child: VisionGlassContainer(
-                padding: EdgeInsets.zero,
-                borderRadius: 26,
-                backgroundColor:
-                    VizareColors.obsidianSurface.withValues(alpha: 0.85),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 1.2,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 210,
-                      width: double.infinity,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.network(
-                            property.imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, e, s) => Container(
-                              color: Colors.white10,
-                              child: const Icon(Icons.broken_image,
-                                  color: Colors.white24, size: 44),
-                            ),
-                          ),
-                          Positioned(
-                            top: 14,
-                            left: 14,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                    sigmaX: 12, sigmaY: 12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.7),
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(
-                                      color: VizareColors.champagneGold
-                                          .withValues(alpha: 0.6),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    property.price,
-                                    style: GoogleFonts.poppins(
-                                      color: VizareColors.champagneGold,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 13.5,
-                                    ),
-                                  ),
-                                ),
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        PropertyDetailsPage(property: property),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                child: VisionGlassContainer(
+                  padding: EdgeInsets.zero,
+                  borderRadius: 26,
+                  backgroundColor: isDark
+                      ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.95),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 210,
+                        width: double.infinity,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(
+                              property.imagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, e, s) => Container(
+                                color: Colors.white10,
+                                child: const Icon(Icons.broken_image,
+                                    color: Colors.white24, size: 44),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  property.name,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  property.location,
-                                  style: GoogleFonts.inter(
-                                    color: VizareColors.textSecondary,
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          // View in AR Button
-                          ElevatedButton(
-                            onPressed: hasModel
-                                ? () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ArViewPage(
-                                          modelUrl: property.modelPath,
-                                          propertyName: property.name,
-                                        ),
+                            Positioned(
+                              top: 14,
+                              left: 14,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                      sigmaX: 12, sigmaY: 12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.7),
+                                      borderRadius: BorderRadius.circular(18),
+                                      border: Border.all(
+                                        color: VizareColors.champagneGold
+                                            .withValues(alpha: 0.6),
+                                        width: 1.0,
                                       ),
-                                    );
-                                  }
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: hasModel
-                                  ? VizareColors.champagneGold
-                                  : Colors.white10,
-                              foregroundColor: VizareColors.obsidianBlack,
-                              disabledForegroundColor: Colors.white24,
-                              elevation: hasModel ? 8 : 0,
-                              shadowColor: VizareColors.champagneGold
-                                  .withValues(alpha: 0.4),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 14),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (hasModel) ...[
-                                  const Icon(Icons.view_in_ar_rounded,
-                                      size: 16, color: VizareColors.obsidianBlack),
-                                  const SizedBox(width: 6),
-                                ],
-                                Text(
-                                  hasModel ? 'VIEW AR' : 'NO AR',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 12,
-                                    letterSpacing: 0.5,
+                                    ),
+                                    child: Text(
+                                      property.price,
+                                      style: GoogleFonts.poppins(
+                                        color: VizareColors.champagneGold,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13.5,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    property.name,
+                                    style: GoogleFonts.poppins(
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF0F172A),
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    property.location,
+                                    style: GoogleFonts.inter(
+                                      color: isDark
+                                          ? VizareColors.textSecondary
+                                          : const Color(0xFF64748B),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            // View in AR Button
+                            ElevatedButton(
+                              onPressed: hasModel
+                                  ? () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ArViewPage(
+                                            modelUrl: property.modelPath,
+                                            propertyName: property.name,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: hasModel
+                                    ? VizareColors.champagneGold
+                                    : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                                foregroundColor: VizareColors.obsidianBlack,
+                                disabledForegroundColor: isDark ? Colors.white24 : const Color(0xFF94A3B8),
+                                elevation: hasModel ? 8 : 0,
+                                shadowColor: VizareColors.champagneGold
+                                    .withValues(alpha: 0.4),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 14),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (hasModel) ...[
+                                    const Icon(Icons.view_in_ar_rounded,
+                                        size: 16, color: VizareColors.obsidianBlack),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Text(
+                                    hasModel ? 'VIEW AR' : 'NO AR',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildTopSearchCapsule(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Positioned(
       top: 10.0,
       left: 20.0,
@@ -853,6 +898,7 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
             'assets/images/logo.png',
             width: 38,
             height: 38,
+            color: isDark ? null : VizareColors.champagneGold,
             errorBuilder: (context, e, s) =>
                 const SizedBox(width: 38, height: 38),
           ),
@@ -867,7 +913,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    color: isDark
+                        ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.95),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: VizareColors.champagneGold.withValues(alpha: 0.8),
@@ -875,7 +923,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : Colors.black.withValues(alpha: 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -906,7 +956,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    color: isDark
+                        ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.95),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: VizareColors.champagneGold.withValues(alpha: 0.8),
@@ -914,7 +966,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : Colors.black.withValues(alpha: 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -941,7 +995,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: VizareColors.obsidianSurface.withValues(alpha: 0.85),
+                    color: isDark
+                        ? VizareColors.obsidianSurface.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.95),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: VizareColors.champagneGold.withValues(alpha: 0.8),
@@ -949,7 +1005,9 @@ class _HomeBuyerHomeBodyState extends State<HomeBuyerHomeBody> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : Colors.black.withValues(alpha: 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

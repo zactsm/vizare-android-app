@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ToRespondPage extends StatefulWidget {
@@ -57,69 +57,75 @@ class _ToRespondPageState extends State<ToRespondPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: Center(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: VisionGlassCircleButton(
-                icon: Icons.arrow_back_ios_new_rounded,
-                size: 38,
-                onTap: () => Navigator.pop(context),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: VisionGlassCircleButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  iconColor: isDark ? Colors.white : const Color(0xFF0F172A),
+                  size: 38,
+                  onTap: () => Navigator.pop(context),
+                ),
               ),
             ),
-          ),
-          title: Text(
-            'Inquiry Terminal',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            title: Text(
+              'Inquiry Terminal',
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    color: VizareColors.champagneGold,
-                  ),
-                )
-              : _error != null
-                  ? Center(
-                      child: Text(
-                        _error!,
-                        style: GoogleFonts.inter(color: VizareColors.crimsonRed),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : _buildInquiryList(),
+          body: SafeArea(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: VizareColors.champagneGold,
+                    ),
+                  )
+                : _error != null
+                    ? Center(
+                        child: Text(
+                          _error!,
+                          style: GoogleFonts.inter(color: VizareColors.crimsonRed),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : _buildInquiryList(isDark),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInquiryList() {
+  Widget _buildInquiryList(bool isDark) {
     if (_inquiries.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.mark_email_read_outlined,
               size: 56,
-              color: Colors.white24,
+              color: isDark ? Colors.white24 : const Color(0xFF94A3B8),
             ),
             const SizedBox(height: 16),
             Text(
               'No Inquiries Pending Response',
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -128,7 +134,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
             Text(
               'New prospective homebuyer inquiries will arrive here.',
               style: GoogleFonts.inter(
-                color: VizareColors.textMuted,
+                color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                 fontSize: 13,
               ),
             ),
@@ -140,6 +146,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
     return RefreshIndicator(
       onRefresh: _fetchInquiries,
       color: VizareColors.champagneGold,
+      backgroundColor: isDark ? VizareColors.obsidianElevated : Colors.white,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         itemCount: _inquiries.length,
@@ -167,7 +174,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
                         child: Text(
                           data['property_name'] ?? 'Architectural Listing',
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
@@ -179,7 +186,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
                         Text(
                           timeString,
                           style: GoogleFonts.inter(
-                            color: VizareColors.textMuted,
+                            color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                             fontSize: 11,
                           ),
                         ),
@@ -212,7 +219,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
                   Text(
                     data['message'] ?? '',
                     style: GoogleFonts.inter(
-                      color: VizareColors.textSecondary,
+                      color: isDark ? VizareColors.textSecondary : const Color(0xFF475569),
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -221,7 +228,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
                   ),
                   const SizedBox(height: 14),
                   GestureDetector(
-                    onTap: () => _showInquiryDetails(context, data),
+                    onTap: () => _showInquiryDetails(context, data, isDark),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
@@ -262,7 +269,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
     );
   }
 
-  void _showInquiryDetails(BuildContext context, Map<String, dynamic> data) {
+  void _showInquiryDetails(BuildContext context, Map<String, dynamic> data, bool isDark) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -271,10 +278,12 @@ class _ToRespondPageState extends State<ToRespondPage> {
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: VizareColors.obsidianSurface,
+            color: isDark ? VizareColors.obsidianSurface : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : const Color(0xFFE2E8F0),
             ),
           ),
           child: Column(
@@ -284,7 +293,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
               Text(
                 data['property_name'] ?? 'Listing Inquiry',
                 style: GoogleFonts.poppins(
-                  color: Colors.white,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
@@ -293,7 +302,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
               Text(
                 'From Buyer:',
                 style: GoogleFonts.inter(
-                  color: VizareColors.textMuted,
+                  color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                   fontSize: 12,
                 ),
               ),
@@ -309,7 +318,7 @@ class _ToRespondPageState extends State<ToRespondPage> {
               Text(
                 'Message:',
                 style: GoogleFonts.inter(
-                  color: VizareColors.textMuted,
+                  color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
                   fontSize: 12,
                 ),
               ),
@@ -318,13 +327,16 @@ class _ToRespondPageState extends State<ToRespondPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.black45,
+                  color: isDark ? Colors.black45 : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                  ),
                 ),
                 child: Text(
                   data['message'] ?? '',
                   style: GoogleFonts.inter(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 13.5,
                     height: 1.4,
                   ),

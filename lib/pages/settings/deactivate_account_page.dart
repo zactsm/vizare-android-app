@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/utils/premium_background.dart';
+import 'package:untitled/pages/utils/abstract_background.dart';
 import 'package:untitled/welcome_page.dart';
 import '../utils/google_auth_service.dart';
 
@@ -113,6 +113,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
         try {
           await Supabase.instance.client.auth.signOut();
         } catch (_) {}
+        await AppThemeController.instance.resetToDefaultDark();
 
         if (!mounted) return;
 
@@ -160,150 +161,161 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: VizareAppBar(
-          title: 'Deactivate Account',
-          onBackPressed: () {
-            if (_isPasswordStep) {
-              setState(() => _isPasswordStep = false);
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
-                  child: Text(
-                    _isPermanentDeletion
-                        ? 'Under GDPR Art. 17 / CCPA, your account, authentication tokens, profile data, and media files will be permanently erased.'
-                        : 'Deactivating will archive your profile, spatial favorites, and listing views. You can reactivate anytime by logging in.',
-                    style: GoogleFonts.inter(
-                      fontSize: 13.5,
-                      color: VizareColors.textSecondary,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-                if (!_isPasswordStep) ...[
-                  VisionGlassContainer(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isPermanentDeletion = false),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.15) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.5) : Colors.transparent,
-                                ),
-                              ),
-                              child: Text(
-                                'Temporary',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: !_isPermanentDeletion ? VizareColors.champagneGold : VizareColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isPermanentDeletion = true),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.2) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.5) : Colors.transparent,
-                                ),
-                              ),
-                              child: Text(
-                                'Permanent Erasure',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: _isPermanentDeletion ? Colors.redAccent : VizareColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor:
+          isDark ? VizareColors.obsidianBlack : VizareColors.alabasterWhite,
+      body: AbstractBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: VizareAppBar(
+            title: 'Deactivate Account',
+            onBackPressed: () {
+              if (_isPasswordStep) {
+                setState(() => _isPasswordStep = false);
+              } else {
+                Navigator.pop(context);
+              }
+            },
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
+                    padding: const EdgeInsets.only(top: 4.0, bottom: 20.0),
                     child: Text(
-                      'Reason for Deactivation:',
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                      _isPermanentDeletion
+                          ? 'Under GDPR Art. 17 / CCPA, your account, authentication tokens, profile data, and media files will be permanently erased.'
+                          : 'Deactivating will archive your profile, spatial favorites, and listing views. You can reactivate anytime by logging in.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        color: isDark
+                            ? VizareColors.textSecondary
+                            : const Color(0xFF64748B),
+                        height: 1.45,
                       ),
                     ),
                   ),
-                ],
-                _isPasswordStep ? _buildPasswordView() : _buildReasonsView(),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _isDeactivating
-                        ? null
-                        : (_isPasswordStep
-                            ? _handleFinalDeactivation
-                            : _handlePrimaryDeactivation),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: VizareColors.crimsonRed,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 4,
-                    ),
-                    child: _isDeactivating
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            _isPasswordStep
-                                ? 'Confirm Deactivation'
-                                : 'Deactivate',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                  if (!_isPasswordStep) ...[
+                    VisionGlassContainer(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isPermanentDeletion = false),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.15) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: !_isPermanentDeletion ? VizareColors.champagneGold.withValues(alpha: 0.5) : Colors.transparent,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Temporary',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: !_isPermanentDeletion
+                                        ? VizareColors.champagneGold
+                                        : (isDark ? VizareColors.textSecondary : const Color(0xFF64748B)),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isPermanentDeletion = true),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.2) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _isPermanentDeletion ? VizareColors.crimsonRed.withValues(alpha: 0.5) : Colors.transparent,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Permanent Erasure',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _isPermanentDeletion
+                                        ? Colors.redAccent
+                                        : (isDark ? VizareColors.textSecondary : const Color(0xFF64748B)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        'Reason for Deactivation:',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                  ],
+                  _isPasswordStep ? _buildPasswordView(isDark) : _buildReasonsView(isDark),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isDeactivating
+                          ? null
+                          : (_isPasswordStep
+                              ? _handleFinalDeactivation
+                              : _handlePrimaryDeactivation),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: VizareColors.crimsonRed,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: _isDeactivating
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _isPasswordStep
+                                  ? 'Confirm Deactivation'
+                                  : 'Deactivate',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -311,7 +323,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     );
   }
 
-  Widget _buildReasonsView() {
+  Widget _buildReasonsView(bool isDark) {
     return VisionGlassContainer(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -347,7 +359,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                               : Icons.radio_button_unchecked,
                           color: isSelected
                               ? VizareColors.champagneGold
-                              : Colors.white38,
+                              : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -356,8 +368,8 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                             reason,
                             style: GoogleFonts.inter(
                               color: isSelected
-                                  ? Colors.white
-                                  : VizareColors.textSecondary,
+                                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                  : (isDark ? VizareColors.textSecondary : const Color(0xFF475569)),
                               fontSize: 14,
                               fontWeight: isSelected
                                   ? FontWeight.w600
@@ -376,17 +388,26 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: VizareColors.obsidianSurface,
+                color: isDark ? VizareColors.obsidianSurface : Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : const Color(0xFFCBD5E1),
+                ),
               ),
               child: TextField(
                 controller: _otherReasonController,
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 13.5),
+                style: GoogleFonts.inter(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontSize: 13.5,
+                ),
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Tell us why...',
-                  hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
+                  hintStyle: GoogleFonts.inter(
+                    color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(14),
                 ),
@@ -398,7 +419,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
     );
   }
 
-  Widget _buildPasswordView() {
+  Widget _buildPasswordView(bool isDark) {
     return VisionGlassContainer(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -407,7 +428,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
           Text(
             'Confirm with Password',
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -416,21 +437,28 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
           Text(
             'Please enter your account password to confirm deactivation.',
             style: GoogleFonts.inter(
-              color: VizareColors.textSecondary,
+              color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 18),
           Container(
             decoration: BoxDecoration(
-              color: VizareColors.obsidianSurface,
+              color: isDark ? VizareColors.obsidianSurface : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : const Color(0xFFCBD5E1),
+              ),
             ),
             child: TextField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+              style: GoogleFonts.inter(
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                fontSize: 14,
+              ),
               decoration: InputDecoration(
                 prefixIcon: const Icon(
                   Icons.lock_outline_rounded,
@@ -442,7 +470,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                     _isPasswordVisible
                         ? Icons.visibility_off_rounded
                         : Icons.visibility_rounded,
-                    color: Colors.white70,
+                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
                     size: 20,
                   ),
                   onPressed: () {
@@ -451,7 +479,9 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
                   },
                 ),
                 hintText: '••••••••••••',
-                hintStyle: GoogleFonts.inter(color: VizareColors.textMuted),
+                hintStyle: GoogleFonts.inter(
+                  color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
+                ),
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
