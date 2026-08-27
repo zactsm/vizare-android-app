@@ -381,6 +381,28 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, { message: 'Verification email sent. Please check your inbox or spam folder.' }];
   }
 
+  if (name === 'forgot_password.php') {
+    const email = String(input.email || '').trim().toLowerCase();
+    if (!email) {
+      return [400, { message: 'Email address is required.' }];
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return [400, { message: 'Please enter a valid email address.' }];
+    }
+    if (!checkRateLimit(`forgot_pw_${clientIp}_${email}`, 3, 300000)) {
+      return [429, { message: 'Too many password reset requests. Please wait a few minutes before trying again.' }];
+    }
+    const res = await publicClient.auth.resetPasswordForEmail(email);
+    if (res.error) {
+      if (res.error.status === 429 || res.error.message?.toLowerCase().includes('rate limit')) {
+        return [429, { message: 'Rate limit reached. Please wait a few minutes before trying again.' }];
+      }
+      return [res.error.status || 400, { message: res.error.message }];
+    }
+    return [200, { success: true, message: 'Password reset link has been sent to your email.' }];
+  }
+
   if (name === 'get_all_listings.php') {
     const result = await admin
       .from('properties')
@@ -1106,6 +1128,7 @@ const MUTATING_ROUTES = new Set([
   'send_message.php',
   'update_viewing_status.php',
   'resend_verification.php',
+  'forgot_password.php',
 ]);
 
 module.exports = async function handler(request, response) {

@@ -154,6 +154,15 @@ void main() {
       expect(find.byType(AdminPage), findsNothing);
     });
 
+    testWidgets('initialRoute "/forgot_password" renders ForgotPasswordPage',
+        (tester) async {
+      await tester.pumpWidget(const MyApp(initialRoute: '/forgot_password'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Forgot Password'), findsWidgets);
+      expect(find.text('Send Reset Link'), findsOneWidget);
+    });
+
     testWidgets('Theme configures dark mode and luxury champagne gold accents',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
@@ -161,10 +170,12 @@ void main() {
       await tester.pump();
 
       final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
-      expect(materialApp.theme?.brightness, Brightness.dark);
-      expect(materialApp.theme?.primaryColor, VizareColors.champagneGold);
-      expect(materialApp.theme?.scaffoldBackgroundColor,
+      expect(materialApp.darkTheme?.brightness, Brightness.dark);
+      expect(materialApp.darkTheme?.primaryColor, VizareColors.champagneGold);
+      expect(materialApp.darkTheme?.scaffoldBackgroundColor,
           VizareColors.obsidianBlack);
+      expect(materialApp.theme?.brightness, Brightness.light);
+      expect(materialApp.theme?.primaryColor, VizareColors.champagneGold);
     });
   });
 }

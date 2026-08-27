@@ -143,6 +143,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 showDivider: false,
               ),
             ]),
+            _buildSectionHeader('Appearance'),
+            _buildSettingsGroup([
+              ListenableBuilder(
+                listenable: AppThemeController.instance,
+                builder: (context, _) {
+                  return _buildSettingsItem(
+                    'Theme Mode',
+                    Icons.palette_outlined,
+                    _showThemeSelectorDialog,
+                    trailingText: AppThemeController.instance.themeModeName,
+                    showDivider: false,
+                  );
+                },
+              ),
+            ]),
             _buildSectionHeader('Support & Legal'),
             _buildSettingsGroup([
               _buildSettingsItem(
@@ -336,6 +351,7 @@ class _SettingsPageState extends State<SettingsPage> {
     bool showDivider = true,
     Color? iconColor,
     Color? textColor,
+    String? trailingText,
   }) {
     return Material(
       color: Colors.transparent,
@@ -365,10 +381,26 @@ class _SettingsPageState extends State<SettingsPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            trailing: const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: VizareColors.champagneGold,
-              size: 13,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (trailingText != null) ...[
+                  Text(
+                    trailingText,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textMuted,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: VizareColors.champagneGold,
+                  size: 13,
+                ),
+              ],
             ),
             onTap: onTap,
           ),
@@ -384,4 +416,169 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  void _showThemeSelectorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ListenableBuilder(
+          listenable: AppThemeController.instance,
+          builder: (context, _) {
+            final currentMode = AppThemeController.instance.themeMode;
+            return AlertDialog(
+              backgroundColor: VizareColors.obsidianSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 1,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: VizareColors.champagneGold.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.palette_outlined,
+                      color: VizareColors.champagneGold,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    "Appearance",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildThemeOption(
+                    title: "System Default",
+                    subtitle: "Matches device operating system",
+                    icon: Icons.brightness_auto_rounded,
+                    isSelected: currentMode == ThemeMode.system,
+                    onTap: () {
+                      AppThemeController.instance.setThemeMode(ThemeMode.system);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildThemeOption(
+                    title: "Obsidian Dark",
+                    subtitle: "Vizare signature luxury dark aesthetic",
+                    icon: Icons.dark_mode_rounded,
+                    isSelected: currentMode == ThemeMode.dark,
+                    onTap: () {
+                      AppThemeController.instance.setThemeMode(ThemeMode.dark);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildThemeOption(
+                    title: "Alabaster Light",
+                    subtitle: "Crisp daylight luxury palette",
+                    icon: Icons.light_mode_rounded,
+                    isSelected: currentMode == ThemeMode.light,
+                    onTap: () {
+                      AppThemeController.instance.setThemeMode(ThemeMode.light);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    "Close",
+                    style: GoogleFonts.inter(
+                      color: VizareColors.champagneGold,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? VizareColors.champagneGold.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? VizareColors.champagneGold
+                : Colors.white.withValues(alpha: 0.08),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? VizareColors.champagneGold : Colors.white70,
+              size: 22,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      color: VizareColors.textMuted,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: VizareColors.champagneGold,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+

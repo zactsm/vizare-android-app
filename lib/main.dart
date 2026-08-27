@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'google_maps_loader_stub.dart'
     if (dart.library.html) 'google_maps_loader_web.dart';
 import 'welcome_page.dart';
+import 'pages/forgot_password_page.dart';
 import 'pages/create_account_page.dart';
 import 'pages/login_page.dart';
 import 'pages/homebuyer_page.dart';
@@ -134,7 +135,10 @@ void main() async {
     debugPrint('Session check note: $e');
   }
 
-  // 6. Launch App
+  // 6. Load saved theme mode
+  await AppThemeController.instance.loadThemeMode();
+
+  // 7. Launch App
   runApp(MyApp(initialRoute: startRoute));
 }
 
@@ -145,116 +149,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Vizare AR Real Estate',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF050608),
-        primaryColor: const Color(0xFFD4AF37), // Champagne Gold
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFD4AF37),
-          secondary: Color(0xFFF3E5AB),
-          surface: Color(0xFF0E1118),
-          error: Color(0xFFEF4444),
-        ),
-        fontFamily: GoogleFonts.inter().fontFamily,
-        textTheme: GoogleFonts.poppinsTextTheme(
-          ThemeData.dark().textTheme.apply(
-            bodyColor: const Color(0xFFFFFFFF),
-            displayColor: const Color(0xFFFFFFFF),
-          ),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          titleTextStyle: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          ),
-          iconTheme: const IconThemeData(color: Color(0xFFD4AF37)),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD4AF37),
-            foregroundColor: const Color(0xFF050608),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            elevation: 8,
-            shadowColor: const Color(0xFFD4AF37).withValues(alpha: 0.35),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            textStyle: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFD4AF37),
-            side: const BorderSide(color: Color(0xFFD4AF37), width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-            textStyle: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFFD4AF37),
-            textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF0E1118).withValues(alpha: 0.7),
-          hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
-            fontSize: 14,
-            fontFamily: 'Inter',
-          ),
-          labelStyle: const TextStyle(
-            color: Color(0xFFD4AF37),
-            fontSize: 14,
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.12),
-              width: 1.0,
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.12),
-              width: 1.0,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(
-              color: Color(0xFFD4AF37),
-              width: 1.5,
-            ),
-          ),
-        ),
-      ),
-      builder: (context, child) {
+    return ListenableBuilder(
+      listenable: AppThemeController.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'VIZARE',
+          debugShowCheckedModeBanner: false,
+          themeMode: AppThemeController.instance.themeMode,
+          theme: VizareTheme.lightTheme,
+          darkTheme: VizareTheme.darkTheme,
+          builder: (context, child) {
         if (!kIsWeb) {
           return child ?? const SizedBox.shrink();
         }
@@ -362,6 +266,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const WelcomePage(),
         '/create-account': (context) => const CreateAccountPage(),
         '/login': (context) => const LoginPage(),
+        '/forgot_password': (context) => const ForgotPasswordPage(),
         '/tos': (context) => const TOSPage(),
         '/privacy': (context) => const PrivacyPolicyPage(),
         '/home': (context) => const RoleGuard(
@@ -399,6 +304,8 @@ class MyApp extends StatelessWidget {
               routeName: '/admin',
               child: AdminPage(),
             ),
+      },
+    );
       },
     );
   }

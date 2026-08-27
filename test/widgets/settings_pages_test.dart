@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/pages/settings_page.dart';
+import 'package:untitled/pages/forgot_password_page.dart';
 import 'package:untitled/pages/settings/change_password_page.dart';
 import 'package:untitled/pages/settings/contact_support_page.dart';
 import 'package:untitled/pages/settings/deactivate_account_page.dart';
@@ -21,14 +22,26 @@ void main() {
   }
 
   group('Settings and Preference Pages Tests', () {
-    testWidgets('SettingsPage renders sections and header properly',
+    testWidgets('SettingsPage renders sections, appearance, and header properly',
         (tester) async {
       await tester.pumpWidget(wrapWithMaterial(const SettingsPage()));
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('ACCOUNT PREFERENCES'), findsOneWidget);
+      expect(find.text('APPEARANCE'), findsOneWidget);
+      expect(find.text('Theme Mode'), findsOneWidget);
       expect(find.text('SUPPORT & LEGAL'), findsOneWidget);
+    });
+
+    testWidgets('ForgotPasswordPage renders email input and submit button',
+        (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(const ForgotPasswordPage()));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Forgot Password'), findsOneWidget);
+      expect(find.text('Send Reset Link'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
     });
 
     testWidgets('ChangePasswordPage renders fields and validates empty inputs',

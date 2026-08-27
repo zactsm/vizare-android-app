@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/admin_page.dart';
+import 'package:untitled/pages/forgot_password_page.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
 import 'package:untitled/pages/utils/google_auth_service.dart';
@@ -347,10 +348,40 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ForgotPasswordPage(),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 4,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Forgot Password?',
+                            style: GoogleFonts.inter(
+                              color: VizareColors.champagneGold,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 22),
 
                 // Login CTA Button
                 LuxuryGradientButton(

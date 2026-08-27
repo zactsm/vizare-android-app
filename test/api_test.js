@@ -135,6 +135,32 @@ describe('Supabase Router API Tests', () => {
     assert.deepStrictEqual(res.body, { message: 'Email is required.' });
   });
 
+  test('forgot_password.php validates email and returns 400 when missing or invalid', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key-abc';
+
+    const req1 = createMockRequest({
+      method: 'POST',
+      url: '/api/forgot_password.php',
+      body: {},
+    });
+    const res1 = createMockResponse();
+    await router(req1, res1);
+    assert.strictEqual(res1.statusCode, 400);
+    assert.match(res1.body.message, /Email address is required/);
+
+    const req2 = createMockRequest({
+      method: 'POST',
+      url: '/api/forgot_password.php',
+      body: { email: 'invalid-email' },
+    });
+    const res2 = createMockResponse();
+    await router(req2, res2);
+    assert.strictEqual(res2.statusCode, 400);
+    assert.match(res2.body.message, /valid email address/);
+  });
+
   test('create_account.php enforces strong password rules and required fields', async () => {
     process.env.SUPABASE_URL = 'https://mock.supabase.co';
     process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-anon-key-xyz';

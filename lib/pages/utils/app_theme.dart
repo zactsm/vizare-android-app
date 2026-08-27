@@ -1,13 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VizareColors {
-  // Canvases & Surfaces
+  // Canvases & Surfaces (Dark)
   static const Color obsidianBlack = Color(0xFF050608);
   static const Color obsidianSurface = Color(0xFF0E1118);
   static const Color obsidianElevated = Color(0xFF161A24);
   static const Color obsidianBorder = Color(0xFF1F2432);
+
+  // Canvases & Surfaces (Light)
+  static const Color alabasterWhite = Color(0xFFF6F8FA);
+  static const Color alabasterSurface = Color(0xFFFFFFFF);
+  static const Color alabasterElevated = Color(0xFFF1F5F9);
+  static const Color alabasterBorder = Color(0xFFE2E8F0);
 
   // Luxury Champagne Gold Palette
   static const Color champagneGold = Color(0xFFD4AF37);
@@ -787,5 +794,130 @@ const String kVizareDarkMapStyle = '''
   }
 ]
 ''';
+
+/// Theme Controller managing System, Dark Obsidian, and Alabaster Light modes
+class AppThemeController extends ChangeNotifier {
+  static final AppThemeController instance = AppThemeController._internal();
+  AppThemeController._internal();
+
+  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode get themeMode => _themeMode;
+
+  bool get isDarkMode {
+    if (_themeMode == ThemeMode.dark) return true;
+    if (_themeMode == ThemeMode.light) return false;
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark;
+  }
+
+  String get themeModeName {
+    switch (_themeMode) {
+      case ThemeMode.dark:
+        return 'Obsidian Dark';
+      case ThemeMode.light:
+        return 'Alabaster Light';
+      case ThemeMode.system:
+        return 'System Default';
+    }
+  }
+
+  Future<void> loadThemeMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedMode = prefs.getString('app_theme_mode');
+      if (savedMode == 'dark') {
+        _themeMode = ThemeMode.dark;
+      } else if (savedMode == 'light') {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (_themeMode == mode) return;
+    _themeMode = mode;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String modeStr = 'system';
+      if (mode == ThemeMode.dark) modeStr = 'dark';
+      if (mode == ThemeMode.light) modeStr = 'light';
+      await prefs.setString('app_theme_mode', modeStr);
+    } catch (_) {}
+  }
+}
+
+/// Global Theme Definitions for Vizare
+class VizareTheme {
+  static ThemeData get darkTheme {
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF050608),
+      primaryColor: VizareColors.champagneGold,
+      colorScheme: const ColorScheme.dark(
+        primary: VizareColors.champagneGold,
+        secondary: Color(0xFFF3E5AB),
+        surface: Color(0xFF0E1118),
+        error: Color(0xFFEF4444),
+      ),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: GoogleFonts.poppinsTextTheme(
+        ThemeData.dark().textTheme.apply(
+          bodyColor: const Color(0xFFFFFFFF),
+          displayColor: const Color(0xFFFFFFFF),
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: GoogleFonts.poppins(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+        iconTheme: const IconThemeData(color: VizareColors.champagneGold),
+      ),
+    );
+  }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFF6F8FA),
+      primaryColor: VizareColors.champagneGold,
+      colorScheme: const ColorScheme.light(
+        primary: VizareColors.champagneGold,
+        secondary: Color(0xFFB88E18),
+        surface: Colors.white,
+        error: Color(0xFFEF4444),
+      ),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: GoogleFonts.poppinsTextTheme(
+        ThemeData.light().textTheme.apply(
+          bodyColor: const Color(0xFF0F172A),
+          displayColor: const Color(0xFF0F172A),
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: GoogleFonts.poppins(
+          color: const Color(0xFF0F172A),
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
+        iconTheme: const IconThemeData(color: VizareColors.champagneGold),
+      ),
+    );
+  }
+}
+
 
 
