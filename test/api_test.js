@@ -367,6 +367,9 @@ describe('Supabase Router API Tests', () => {
     assert.match(csp, /connect-src[^;]*gstatic\.com/);
     assert.match(csp, /connect-src[^;]*accounts\.google\.com/);
     assert.match(csp, /connect-src[^;]*googleapis\.com/);
+    assert.match(csp, /connect-src[^;]*unsplash\.com/);
+    assert.match(csp, /connect-src[^;]*googleusercontent\.com/);
+    assert.match(csp, /connect-src[^;]*githubusercontent\.com/);
     assert.match(csp, /connect-src[^;]*vizare\.app/);
     assert.match(csp, /connect-src[^;]*vercel\.app/);
     assert.match(csp, /frame-src[^;]*sketchfab\.com/);
