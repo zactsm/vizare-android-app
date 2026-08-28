@@ -21,13 +21,20 @@ class ApiService {
     // (CanvasKit requires a concrete decodable format; webp/avif may not decode)
     String normalized = trimmed;
     if (normalized.contains('images.unsplash.com')) {
-      // Strip auto=format (may conflict with fm=) and ensure fm=jpg
-      normalized = normalized
-          .replaceAll(RegExp(r'[&?]auto=format'), '')
-          .replaceAll(RegExp(r'[&?]fm=[^&]*'), '');
-      normalized = normalized.contains('?')
-          ? '$normalized&fm=jpg'
-          : '$normalized?fm=jpg';
+      try {
+        final uri = Uri.parse(normalized);
+        final queryMap = Map<String, String>.from(uri.queryParameters);
+        queryMap.remove('auto');
+        queryMap['fm'] = 'jpg';
+        normalized = uri.replace(queryParameters: queryMap).toString();
+      } catch (_) {
+        normalized = normalized.replaceAll('auto=format', 'fm=jpg');
+        if (!normalized.contains('fm=')) {
+          normalized = normalized.contains('?')
+              ? '$normalized&fm=jpg'
+              : '$normalized?fm=jpg';
+        }
+      }
     }
 
     // On Flutter Web, CanvasKit uses fetch() in cors mode to load images.

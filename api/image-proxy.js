@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
     return res.status(204).end();
   }
 
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
@@ -80,17 +80,30 @@ module.exports = async function handler(req, res) {
     return res.status(403).json({ error: 'URL origin not allowed' });
   }
 
+  // Normalize Unsplash URLs to JPEG to prevent AVIF decoding failure on CanvasKit
+  if (decodedUrl.includes('images.unsplash.com')) {
+    try {
+      const u = new URL(decodedUrl);
+      u.searchParams.delete('auto');
+      u.searchParams.set('fm', 'jpg');
+      decodedUrl = u.toString();
+    } catch {
+      decodedUrl = decodedUrl.replace(/auto=format/g, 'fm=jpg');
+    }
+  }
+
   let upstream;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     upstream = await fetch(decodedUrl, {
+      method: req.method,
       signal: controller.signal,
       headers: {
-        // Pass through a benign user-agent; do not forward client auth headers
+        // Benign user agent; exclude avif to avoid CanvasKit Web decode failures
         'User-Agent': 'Vizare-ImageProxy/1.0',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept': 'image/jpeg,image/png,image/webp,image/*,*/*;q=0.8',
       },
     });
 

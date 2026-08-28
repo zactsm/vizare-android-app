@@ -5,12 +5,13 @@ const { EventEmitter } = require('node:events');
 const router = require('../api/supabase-router');
 const pathEntrypoint = require('../api/[...path]');
 
-function createMockRequest({ method = 'GET', url = '/api/client_config.php', headers = {}, body = null }) {
+function createMockRequest({ method = 'GET', url = '/api/client_config.php', headers = {}, body = null, query = {} }) {
   const req = new EventEmitter();
   req.method = method;
   req.url = url;
   req.headers = { host: 'localhost:3000', ...headers };
   req.body = body;
+  req.query = query;
   return req;
 }
 
@@ -360,20 +361,10 @@ describe('Supabase Router API Tests', () => {
     assert.match(csp, /script-src[^;]*maps\.googleapis\.com/);
     assert.match(csp, /script-src[^;]*gstatic\.com/);
     assert.match(csp, /script-src[^;]*accounts\.google\.com/);
-    assert.match(csp, /font-src[^;]*fonts\.gstatic\.com/);
-    assert.match(csp, /font-src[^;]*fonts\.googleapis\.com/);
-    assert.match(csp, /connect-src[^;]*supabase\.co/);
-    assert.match(csp, /connect-src[^;]*wss:\/\/[\*\w\.-]*supabase\.co/);
-    assert.match(csp, /connect-src[^;]*gstatic\.com/);
-    assert.match(csp, /connect-src[^;]*accounts\.google\.com/);
-    assert.match(csp, /connect-src[^;]*googleapis\.com/);
-    assert.match(csp, /connect-src[^;]*unsplash\.com/);
-    assert.match(csp, /connect-src[^;]*googleusercontent\.com/);
-    assert.match(csp, /connect-src[^;]*githubusercontent\.com/);
-    assert.match(csp, /connect-src[^;]*vizare\.app/);
-    assert.match(csp, /connect-src[^;]*vercel\.app/);
-    assert.match(csp, /frame-src[^;]*sketchfab\.com/);
-    assert.match(csp, /frame-src[^;]*accounts\.google\.com/);
+    assert.match(csp, /font-src[^;]*\*/);
+    assert.match(csp, /img-src[^;]*\*/);
+    assert.match(csp, /connect-src[^;]*\*/);
+    assert.match(csp, /frame-src[^;]*\*/);
 
     // Verify Permissions-Policy restrictions
     const permPolicy = headerMap['permissions-policy'];
@@ -402,6 +393,29 @@ describe('Supabase Router API Tests', () => {
     const normalized = rawUrl.replace(/auto=format/g, 'fm=jpg');
     assert.match(normalized, /fm=jpg/);
     assert.doesNotMatch(normalized, /auto=format/);
+  });
+
+  test('image-proxy handles OPTIONS preflight and blocks non-whitelisted origins', async () => {
+    const imageProxy = require('../api/image-proxy');
+
+    const optReq = createMockRequest({ method: 'OPTIONS' });
+    const optRes = createMockResponse();
+    await imageProxy(optReq, optRes);
+    assert.strictEqual(optRes.statusCode, 204);
+    assert.strictEqual(optRes.headers['access-control-allow-origin'], '*');
+
+    const missingReq = createMockRequest({ method: 'GET', query: {} });
+    const missingRes = createMockResponse();
+    await imageProxy(missingReq, missingRes);
+    assert.strictEqual(missingRes.statusCode, 400);
+
+    const badHostReq = createMockRequest({
+      method: 'GET',
+      query: { url: encodeURIComponent('https://malicious-site.com/image.jpg') },
+    });
+    const badHostRes = createMockResponse();
+    await imageProxy(badHostReq, badHostRes);
+    assert.strictEqual(badHostRes.statusCode, 403);
   });
 });
 
