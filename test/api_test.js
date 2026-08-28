@@ -347,14 +347,14 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(headerMap['x-frame-options'], 'SAMEORIGIN');
     assert.strictEqual(headerMap['referrer-policy'], 'strict-origin-when-cross-origin');
 
-    // Verify CSP directives include essential sources
+    // Verify CSP directives include essential sources and exclude dangerous script-src unsafe keywords
     const csp = headerMap['content-security-policy'];
     assert.match(csp, /default-src\s+'self'/);
-    assert.match(csp, /script-src[^;]*'unsafe-inline'/);
-    assert.match(csp, /script-src[^;]*'unsafe-eval'/);
     assert.match(csp, /script-src[^;]*wasm-unsafe-eval/);
     assert.match(csp, /script-src[^;]*ajax\.googleapis\.com/);
     assert.match(csp, /script-src[^;]*maps\.googleapis\.com/);
+    assert.doesNotMatch(csp.match(/script-src[^;]*/)[0], /'unsafe-inline'/, 'script-src must not contain unsafe-inline');
+    assert.doesNotMatch(csp.match(/script-src[^;]*/)[0], /'unsafe-eval'/, 'script-src must not contain unsafe-eval');
     assert.match(csp, /connect-src[^;]*supabase\.co/);
     assert.match(csp, /connect-src[^;]*wss:\/\/[\*\w\.-]*supabase\.co/);
     assert.match(csp, /frame-src[^;]*sketchfab\.com/);

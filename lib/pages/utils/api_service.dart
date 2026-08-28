@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
   static final Logger _logger = Logger();
-  static const String defaultApiBaseUrl = 'https://vizare-app.vercel.app/api';
+  static const String defaultApiBaseUrl = 'https://vizare-web.vercel.app/api';
   static const String avatarsBucket = 'avatars';
   static const String propertyAssetsBucket = 'property-assets';
   static const String supportAttachmentsBucket = 'support-attachments';

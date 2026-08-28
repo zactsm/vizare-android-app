@@ -74,9 +74,9 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
     });
 
     test('getUri correctly preserves base url with path prefix', () {
-      dotenv.env['API_BASE_URL'] = 'https://vizare-app.vercel.app/api';
+      dotenv.env['API_BASE_URL'] = 'https://vizare-web.vercel.app/api';
       final uri = ApiService.getUri('login.php');
-      expect(uri.toString(), 'https://vizare-app.vercel.app/api/login.php');
+      expect(uri.toString(), 'https://vizare-web.vercel.app/api/login.php');
       expect(uri.scheme, 'https');
       expect(uri.host, 'vizare-app.vercel.app');
       expect(uri.path, '/api/login.php');
