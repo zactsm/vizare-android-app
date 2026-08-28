@@ -57,7 +57,7 @@ describe('Supabase Router API Tests', () => {
       url: '/api/client_config.php',
       headers: {
         origin: 'https://vizare.app',
-        'access-control-request-headers': 'Content-Type, Authorization',
+        'access-control-request-headers': 'Content-Type, Authorization, apikey, x-client-info',
       },
     });
     const res = createMockResponse();
@@ -67,7 +67,10 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(res.statusCode, 204);
     assert.strictEqual(res.headers['access-control-allow-origin'], 'https://vizare.app');
     assert.strictEqual(res.headers['access-control-allow-methods'], 'GET,POST,OPTIONS');
-    assert.strictEqual(res.headers['access-control-allow-headers'], 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    assert.match(res.headers['access-control-allow-headers'], /Content-Type/);
+    assert.match(res.headers['access-control-allow-headers'], /Authorization/);
+    assert.match(res.headers['access-control-allow-headers'], /apikey/);
+    assert.match(res.headers['access-control-allow-headers'], /x-client-info/);
     assert.strictEqual(res.ended, true);
   });
 
@@ -357,10 +360,15 @@ describe('Supabase Router API Tests', () => {
     assert.match(csp, /script-src[^;]*maps\.googleapis\.com/);
     assert.match(csp, /script-src[^;]*gstatic\.com/);
     assert.match(csp, /script-src[^;]*accounts\.google\.com/);
+    assert.match(csp, /font-src[^;]*fonts\.gstatic\.com/);
+    assert.match(csp, /font-src[^;]*fonts\.googleapis\.com/);
     assert.match(csp, /connect-src[^;]*supabase\.co/);
     assert.match(csp, /connect-src[^;]*wss:\/\/[\*\w\.-]*supabase\.co/);
     assert.match(csp, /connect-src[^;]*gstatic\.com/);
     assert.match(csp, /connect-src[^;]*accounts\.google\.com/);
+    assert.match(csp, /connect-src[^;]*googleapis\.com/);
+    assert.match(csp, /connect-src[^;]*vizare\.app/);
+    assert.match(csp, /connect-src[^;]*vercel\.app/);
     assert.match(csp, /frame-src[^;]*sketchfab\.com/);
     assert.match(csp, /frame-src[^;]*accounts\.google\.com/);
 

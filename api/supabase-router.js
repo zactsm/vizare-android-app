@@ -59,23 +59,35 @@ function corsHeaders(request) {
           parsed.hostname.endsWith('.vercel.app')
         ) {
           allowOrigin = origin;
+        } else {
+          allowOrigin = origin;
         }
-      } catch (_) {}
+      } catch (_) {
+        allowOrigin = origin;
+      }
     }
   } else {
     allowOrigin = '*';
   }
 
+  const requestedHeaders =
+    (request && request.headers && (request.headers['access-control-request-headers'] || request.headers['Access-Control-Request-Headers'])) || '';
+  const defaultHeaders =
+    'Content-Type, Authorization, X-Requested-With, Accept, Origin, apikey, X-Client-Info, Range, Prefer, Cache-Control, Pragma';
+  const allowHeaders = requestedHeaders
+    ? `${requestedHeaders}, ${defaultHeaders}`
+    : defaultHeaders;
+
   return {
     ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}),
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+    'Access-Control-Allow-Headers': allowHeaders,
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
+    'X-Frame-Options': 'SAMEORIGIN',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), display-capture=(), screen-wake-lock=(self), accelerometer=(self "https://sketchfab.com"), gyroscope=(self "https://sketchfab.com"), xr-spatial-tracking=(self "https://sketchfab.com")',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' wasm-unsafe-eval https://ajax.googleapis.com https://maps.googleapis.com https://www.gstatic.com https://*.gstatic.com https://accounts.google.com blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://*.gstatic.com https://ajax.googleapis.com https://accounts.google.com https://*.vercel.app https://sketchfab.com https://*.sketchfab.com https://api.emailjs.com; media-src 'self' data: blob: https:; frame-src 'self' https://accounts.google.com https://sketchfab.com https://*.sketchfab.com https://maps.googleapis.com https://*.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';",
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' wasm-unsafe-eval https://ajax.googleapis.com https://maps.googleapis.com https://www.gstatic.com https://*.gstatic.com https://accounts.google.com blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://*.gstatic.com https://ajax.googleapis.com https://accounts.google.com https://*.googleapis.com https://*.vercel.app https://vizare.app https://*.vizare.app https://vercel.app https://sketchfab.com https://*.sketchfab.com https://api.emailjs.com http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; media-src 'self' data: blob: https:; frame-src 'self' https://accounts.google.com https://sketchfab.com https://*.sketchfab.com https://maps.googleapis.com https://*.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';",
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };

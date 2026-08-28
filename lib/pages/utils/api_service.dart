@@ -14,6 +14,20 @@ class ApiService {
   static const String supportAttachmentsBucket = 'support-attachments';
 
   static String get baseUrl {
+    if (kIsWeb) {
+      try {
+        final origin = Uri.base.origin;
+        if (origin.isNotEmpty && origin.startsWith('http')) {
+          final host = Uri.base.host;
+          if (host.endsWith('vercel.app') ||
+              host == 'vizare.app' ||
+              host.endsWith('.vizare.app')) {
+            return '$origin/api';
+          }
+        }
+      } catch (_) {}
+    }
+
     final envBase =
         (dotenv.isInitialized ? dotenv.env['API_BASE_URL'] : null)?.trim();
     if (envBase != null && envBase.isNotEmpty) {
