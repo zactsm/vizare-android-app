@@ -108,6 +108,22 @@ void main() {
       expect(find.byType(TextField), findsWidgets);
     });
 
+    testWidgets('AddPropertyPage validates required fields when submitting empty form',
+        (tester) async {
+      await tester.pumpWidget(wrapWithMaterial(const AddPropertyPage()));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Tap submit button with empty form
+      final submitButton = find.text('Submit Property Listing');
+      expect(submitButton, findsOneWidget);
+      await tester.ensureVisible(submitButton);
+      await tester.tap(submitButton);
+      await tester.pump();
+
+      // Expect validation snackbar for property title
+      expect(find.text('Please enter a property title.'), findsOneWidget);
+    });
+
     testWidgets('EditPropertyPage pre-fills existing property fields',
         (tester) async {
       await tester.pumpWidget(

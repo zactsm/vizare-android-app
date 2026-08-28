@@ -123,11 +123,37 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       ApiService.uploadPropertyAsset(image);
 
   Future<void> _updateProperty() async {
-    if (_titleController.text.trim().isEmpty ||
-        _priceController.text.trim().isEmpty) {
+    final title = _titleController.text.trim();
+    final location = _locationController.text.trim();
+    final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
+    final priceVal = double.tryParse(rawPrice) ?? 0.0;
+
+    if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Title and Price cannot be empty.',
+          content: Text('Property title cannot be empty.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
+      );
+      return;
+    }
+
+    if (location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Property location cannot be empty.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
+      );
+      return;
+    }
+
+    if (priceVal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid listing price.',
               style: GoogleFonts.inter()),
           backgroundColor: VizareColors.crimsonRed,
         ),
@@ -143,10 +169,10 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
 
       if (_newSelectedImages.isNotEmpty) {
         final newUrl = await _uploadToSupabase(_newSelectedImages.first);
-        if (newUrl != null) {
-          finalImageUrl = newUrl;
+        if (newUrl != null && newUrl.trim().isNotEmpty) {
+          finalImageUrl = newUrl.trim();
         } else {
-          throw Exception("Failed to upload new image.");
+          throw Exception("Failed to upload new image. Please check your network connection.");
         }
       }
 
@@ -154,17 +180,16 @@ class _EditPropertyPageState extends State<EditPropertyPage> {
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User not logged in");
 
-      final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
-      final cleanPrice = (double.tryParse(rawPrice) ?? 0.0).toString();
+      final cleanPrice = priceVal.toString();
 
       final response = await ApiService.post(
         'edit_property.php',
         body: {
           'email': email,
           'property_id': widget.property.id.toString(),
-          'name': _titleController.text.trim(),
+          'name': title,
           'property_type': _selectedPropertyType,
-          'location': _locationController.text.trim(),
+          'location': location,
           'price': cleanPrice,
           'description': _descriptionController.text.trim(),
           'image_path': finalImageUrl,

@@ -138,11 +138,37 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
       ApiService.uploadPropertyAsset(file);
 
   Future<void> _submitProperty() async {
-    if (_titleController.text.trim().isEmpty ||
-        _priceController.text.trim().isEmpty) {
+    final title = _titleController.text.trim();
+    final location = _locationController.text.trim();
+    final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
+    final priceVal = double.tryParse(rawPrice) ?? 0.0;
+
+    if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please provide at least Title and Price.',
+          content: Text('Please enter a property title.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
+      );
+      return;
+    }
+
+    if (location.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter the property location.',
+              style: GoogleFonts.inter()),
+          backgroundColor: VizareColors.crimsonRed,
+        ),
+      );
+      return;
+    }
+
+    if (priceVal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please provide a valid listing price.',
               style: GoogleFonts.inter()),
           backgroundColor: VizareColors.crimsonRed,
         ),
@@ -165,41 +191,51 @@ class _AddPropertyPageState extends State<AddPropertyPage> {
 
     try {
       final String? mainImageUrl = await _uploadToSupabase(_selectedImages.first);
+      if (mainImageUrl == null || mainImageUrl.trim().isEmpty) {
+        throw Exception(
+            "Failed to upload primary image. Please check your connection and try again.");
+      }
 
       String? modelUrl;
       if (_selectedModel != null) {
         modelUrl = await _uploadToSupabase(_selectedModel!);
+        if (modelUrl == null || modelUrl.trim().isEmpty) {
+          throw Exception(
+              "Failed to upload 3D model asset. Please check the file and try again.");
+        }
       }
 
       final List<String> additionalImageUrls = [];
       if (_selectedImages.length > 1) {
         for (int i = 1; i < _selectedImages.length; i++) {
           final url = await _uploadToSupabase(_selectedImages[i]);
-          if (url != null) additionalImageUrls.add(url);
+          if (url != null && url.trim().isNotEmpty) {
+            additionalImageUrls.add(url.trim());
+          }
         }
       }
 
-       final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('user_email');
       if (email == null) throw Exception("User session missing.");
 
-      final rawPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9.]'), '');
-      final cleanPrice = (double.tryParse(rawPrice) ?? 0.0).toString();
+      final cleanPrice = priceVal.toString();
 
-       final response = await ApiService.post(
+      final response = await ApiService.post(
         'add_property.php',
         body: {
           'email': email,
-          'name': _titleController.text.trim(),
+          'name': title,
           'property_type': _selectedPropertyType,
           'price': cleanPrice,
           'description': _descriptionController.text.trim(),
-          'location': _locationController.text.trim(),
-          'image_path': mainImageUrl ?? '',
+          'location': location,
+          'image_path': mainImageUrl,
           'model_path': modelUrl ?? '',
           'tags': jsonEncode(_tags),
           'is_for_rent': _isForRent.toString(),
           'is_for_sale': _isForSale.toString(),
+          'gallery_images': additionalImageUrls.join(','),
           'additional_images': jsonEncode(additionalImageUrls),
         },
       );

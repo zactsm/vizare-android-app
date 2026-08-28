@@ -927,8 +927,17 @@ async function dispatch(name, request, admin, publicClient) {
 
     const propertyTypeStr = String(input.property_type || 'Modern Luxury').trim().slice(0, 100);
 
-    if (!nameStr || !locStr || !priceNum || !imagePathStr) {
-      return [400, { message: 'Title, location, price, and primary image are required.' }];
+    if (!nameStr) {
+      return [400, { message: 'Title is required.' }];
+    }
+    if (!locStr) {
+      return [400, { message: 'Location is required.' }];
+    }
+    if (!priceNum || priceNum <= 0) {
+      return [400, { message: 'A valid listing price is required.' }];
+    }
+    if (!imagePathStr) {
+      return [400, { message: 'Primary image is required.' }];
     }
 
     const result = await admin
@@ -948,9 +957,26 @@ async function dispatch(name, request, admin, publicClient) {
       .single();
     failOn(result.error);
 
-    const images = String(input.gallery_images || '')
-      .split(',')
-      .map((url) => url.trim().slice(0, 500))
+    const rawGallery = input.gallery_images || input.additional_images || '';
+    let galleryList = [];
+    if (Array.isArray(rawGallery)) {
+      galleryList = rawGallery;
+    } else if (typeof rawGallery === 'string') {
+      const trimmed = rawGallery.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) galleryList = parsed;
+        } catch (_) {
+          galleryList = trimmed.split(',');
+        }
+      } else {
+        galleryList = trimmed.split(',');
+      }
+    }
+
+    const images = galleryList
+      .map((url) => String(url).trim().slice(0, 500))
       .filter(Boolean)
       .slice(0, 20)
       .map((image_url, sort_order) => ({

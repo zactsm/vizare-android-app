@@ -417,5 +417,23 @@ describe('Supabase Router API Tests', () => {
     await imageProxy(badHostReq, badHostRes);
     assert.strictEqual(badHostRes.statusCode, 403);
   });
+
+  test('add_property.php requires authenticated session and homeowner role', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
+
+    const req = createMockRequest({
+      method: 'POST',
+      url: '/api/add_property.php',
+      body: { name: 'Test Villa', location: 'KL', price: '1000000', image_path: 'https://example.com/img.jpg' },
+    });
+    const res = createMockResponse();
+    await router(req, res);
+
+    // Without Bearer token, it must reject with 401
+    assert.strictEqual(res.statusCode, 401);
+    assert.match(res.body.message, /Authentication required/i);
+  });
 });
 

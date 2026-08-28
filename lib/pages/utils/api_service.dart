@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -92,7 +93,7 @@ class ApiService {
   }
 
   static String get supabaseUrl =>
-      (dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null) ?? '';
+    (dotenv.isInitialized ? dotenv.env['SUPABASE_URL'] : null) ?? '';
   static String get supabasePublishableKey =>
       (dotenv.isInitialized
           ? dotenv.env['SUPABASE_PUBLISHABLE_KEY']
@@ -120,9 +121,20 @@ class ApiService {
     bool signedUrl = false,
   }) async {
     try {
-      final bytes = file.bytes;
-      if (bytes == null) {
-        _logger.e("Cannot upload file: bytes are null");
+      Uint8List? bytes = file.bytes;
+      if (bytes == null && !kIsWeb && file.path != null && file.path!.isNotEmpty) {
+        try {
+          final ioFile = File(file.path!);
+          if (await ioFile.exists()) {
+            bytes = await ioFile.readAsBytes();
+          }
+        } catch (e) {
+          _logger.e("Failed to read file from path ${file.path}", error: e);
+        }
+      }
+
+      if (bytes == null || bytes.isEmpty) {
+        _logger.e("Cannot upload file: bytes are null or empty");
         return null;
       }
 
