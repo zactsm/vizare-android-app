@@ -328,4 +328,57 @@ describe('Supabase Router API Tests', () => {
     const migrationPath = path.join(__dirname, '..', 'supabase', 'migrations', '20260828030000_security_and_compliance_hardening.sql');
     assert.strictEqual(fs.existsSync(migrationPath), true, 'Migration 20260828030000 must exist');
   });
+
+  test('vercel.json and supabase-router.js configure complete Content-Security-Policy and Permissions-Policy headers', async () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const vercelConfig = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8')
+    );
+    const globalHeaders = vercelConfig.headers.find((h) => h.source === '/(.*)').headers;
+    const headerMap = Object.fromEntries(globalHeaders.map((h) => [h.key.toLowerCase(), h.value]));
+
+    // Verify all required security headers exist in vercel.json
+    assert.ok(headerMap['content-security-policy'], 'Content-Security-Policy must be present');
+    assert.ok(headerMap['permissions-policy'], 'Permissions-Policy must be present');
+    assert.ok(headerMap['strict-transport-security'], 'Strict-Transport-Security must be present');
+    assert.strictEqual(headerMap['x-content-type-options'], 'nosniff');
+    assert.strictEqual(headerMap['x-frame-options'], 'SAMEORIGIN');
+    assert.strictEqual(headerMap['referrer-policy'], 'strict-origin-when-cross-origin');
+
+    // Verify CSP directives include essential sources
+    const csp = headerMap['content-security-policy'];
+    assert.match(csp, /default-src\s+'self'/);
+    assert.match(csp, /script-src[^;]*'unsafe-inline'/);
+    assert.match(csp, /script-src[^;]*'unsafe-eval'/);
+    assert.match(csp, /script-src[^;]*wasm-unsafe-eval/);
+    assert.match(csp, /script-src[^;]*ajax\.googleapis\.com/);
+    assert.match(csp, /script-src[^;]*maps\.googleapis\.com/);
+    assert.match(csp, /connect-src[^;]*supabase\.co/);
+    assert.match(csp, /connect-src[^;]*wss:\/\/[\*\w\.-]*supabase\.co/);
+    assert.match(csp, /frame-src[^;]*sketchfab\.com/);
+
+    // Verify Permissions-Policy restrictions
+    const permPolicy = headerMap['permissions-policy'];
+    assert.match(permPolicy, /camera=\(\)/);
+    assert.match(permPolicy, /microphone=\(\)/);
+    assert.match(permPolicy, /geolocation=\(self\)/);
+    assert.match(permPolicy, /payment=\(\)/);
+
+    // Verify router OPTIONS response contains security headers
+    const req = createMockRequest({
+      method: 'OPTIONS',
+      url: '/api/client_config.php',
+      headers: { origin: 'https://vizare.app' },
+    });
+    const res = createMockResponse();
+    await router(req, res);
+
+    assert.ok(res.headers['content-security-policy'], 'Router must set Content-Security-Policy');
+    assert.ok(res.headers['permissions-policy'], 'Router must set Permissions-Policy');
+    assert.ok(res.headers['strict-transport-security'], 'Router must set Strict-Transport-Security');
+    assert.ok(res.headers['referrer-policy'], 'Router must set Referrer-Policy');
+  });
 });
+
