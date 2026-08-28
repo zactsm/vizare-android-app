@@ -52,7 +52,7 @@ void main() async {
           base.endsWith('/') ? '${base}client_config.php' : '$base/client_config.php');
       final response = await http
           .get(configUri)
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         supabaseUrl ??= data['supabase_url']?.toString();

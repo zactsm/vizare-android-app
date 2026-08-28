@@ -67,7 +67,7 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(res.statusCode, 204);
     assert.strictEqual(res.headers['access-control-allow-origin'], 'https://vizare.app');
     assert.strictEqual(res.headers['access-control-allow-methods'], 'GET,POST,OPTIONS');
-    assert.strictEqual(res.headers['access-control-allow-headers'], 'Content-Type, Authorization');
+    assert.strictEqual(res.headers['access-control-allow-headers'], 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
     assert.strictEqual(res.ended, true);
   });
 

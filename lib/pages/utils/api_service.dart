@@ -230,7 +230,7 @@ class ApiService {
             body: body,
             headers: _authenticatedHeaders(headers),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       _logResponse(response);
       if (response.statusCode >= 200 && response.statusCode < 300) {
         _responseCache.clear(); // Safe invalidation on successful mutation
@@ -269,7 +269,7 @@ class ApiService {
     try {
       final response = await http
           .get(url, headers: _authenticatedHeaders())
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       _logResponse(response);
       if (response.statusCode == 200) {
         _responseCache[cacheKey] = _CachedResponse(response, now);

@@ -36,22 +36,40 @@ function validatePasswordStrength(password) {
 }
 
 function corsHeaders(request) {
-  const origin = request.headers.origin;
+  const origin = (request && request.headers && request.headers.origin) ? request.headers.origin : '';
   const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://vizare.app,https://vizare-web.vercel.app,https://vizare-app.vercel.app,http://localhost:3000';
   const allowedOrigins = rawAllowed
     .split(',')
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/\/+$/, ''))
     .filter(Boolean);
 
   let allowOrigin = '';
-  if (origin && allowedOrigins.includes(origin)) {
-    allowOrigin = origin;
+  if (origin) {
+    const normalized = origin.trim().replace(/\/+$/, '');
+    if (allowedOrigins.includes(normalized)) {
+      allowOrigin = origin;
+    } else {
+      try {
+        const parsed = new URL(normalized);
+        if (
+          parsed.hostname === 'localhost' ||
+          parsed.hostname === '127.0.0.1' ||
+          parsed.hostname === 'vizare.app' ||
+          parsed.hostname.endsWith('.vizare.app') ||
+          parsed.hostname.endsWith('.vercel.app')
+        ) {
+          allowOrigin = origin;
+        }
+      } catch (_) {}
+    }
+  } else {
+    allowOrigin = '*';
   }
 
   return {
     ...(allowOrigin ? { 'Access-Control-Allow-Origin': allowOrigin } : {}),
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
