@@ -168,9 +168,22 @@ function parseBody(raw, contentType = '') {
   return Object.fromEntries(new URLSearchParams(raw));
 }
 
+function sanitizeImageUrl(url) {
+  if (typeof url !== 'string' || !url) return url;
+  if (url.includes('images.unsplash.com')) {
+    if (url.includes('auto=format')) {
+      return url.replace(/auto=format/g, 'fm=jpg');
+    } else if (!url.includes('fm=')) {
+      return url.includes('?') ? `${url}&fm=jpg` : `${url}?fm=jpg`;
+    }
+  }
+  return url;
+}
+
 function propertyJson(property) {
   return {
     ...property,
+    image_path: sanitizeImageUrl(property.image_path),
     is_featured: property.is_featured ? 1 : 0,
     property_type: property.property_type || 'Modern Luxury',
   };
@@ -594,7 +607,7 @@ async function dispatch(name, request, admin, publicClient) {
       .eq('property_id', propId)
       .order('sort_order');
     failOn(result.error);
-    return [200, result.data.map((item) => item.image_url)];
+    return [200, result.data.map((item) => sanitizeImageUrl(item.image_url))];
   }
 
   const { user, profile } = await requireProfile(request, admin, publicClient);
@@ -619,7 +632,7 @@ async function dispatch(name, request, admin, publicClient) {
         email: profile.email,
         name: profile.full_name,
         phone: profile.phone,
-        profile_pic: profile.profile_pic,
+        profile_pic: sanitizeImageUrl(profile.profile_pic),
         user_type: profile.role,
         has_password: profile.has_password,
         created_at: profile.created_at,
@@ -1028,7 +1041,7 @@ async function dispatch(name, request, admin, publicClient) {
       email: u.email,
       role: u.role,
       phone_number: u.phone || '',
-      profile_pic: u.profile_pic,
+      profile_pic: sanitizeImageUrl(u.profile_pic),
       created_at: u.created_at,
     }));
     return [200, mappedUsers];

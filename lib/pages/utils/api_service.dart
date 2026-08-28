@@ -13,6 +13,19 @@ class ApiService {
   static const String propertyAssetsBucket = 'property-assets';
   static const String supportAttachmentsBucket = 'support-attachments';
 
+  static String sanitizeImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    final trimmed = url.trim();
+    if (trimmed.contains('images.unsplash.com')) {
+      if (trimmed.contains('auto=format')) {
+        return trimmed.replaceAll('auto=format', 'fm=jpg');
+      } else if (!trimmed.contains('fm=')) {
+        return trimmed.contains('?') ? '$trimmed&fm=jpg' : '$trimmed?fm=jpg';
+      }
+    }
+    return trimmed;
+  }
+
   static String get baseUrl {
     if (kIsWeb) {
       try {

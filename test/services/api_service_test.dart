@@ -86,5 +86,20 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
       dotenv.env.remove('API_BASE_URL');
       expect(ApiService.baseUrl, ApiService.defaultApiBaseUrl);
     });
+
+    test('sanitizeImageUrl normalizes Unsplash auto=format URLs to fm=jpg', () {
+      const input = 'https://images.unsplash.com/photo-1234?auto=format&fit=crop&w=1200&q=80';
+      final result = ApiService.sanitizeImageUrl(input);
+      expect(result, 'https://images.unsplash.com/photo-1234?fm=jpg&fit=crop&w=1200&q=80');
+      expect(result.contains('fm=jpg'), isTrue);
+      expect(result.contains('auto=format'), isFalse);
+    });
+
+    test('sanitizeImageUrl leaves non-Unsplash URLs unchanged', () {
+      const input = 'https://example.com/images/house.png';
+      expect(ApiService.sanitizeImageUrl(input), input);
+      expect(ApiService.sanitizeImageUrl(''), '');
+      expect(ApiService.sanitizeImageUrl(null), '');
+    });
   });
 }

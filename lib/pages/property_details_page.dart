@@ -75,8 +75,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
         if (mounted && data.isNotEmpty) {
           setState(() {
             for (var imgObj in data) {
-              String imgUrl = imgObj.toString();
-              if (imgUrl != widget.property.imagePath &&
+              String imgUrl = ApiService.sanitizeImageUrl(imgObj.toString());
+              if (imgUrl.isNotEmpty &&
+                  imgUrl != widget.property.imagePath &&
                   !_galleryImages.contains(imgUrl)) {
                 _galleryImages.add(imgUrl);
               }

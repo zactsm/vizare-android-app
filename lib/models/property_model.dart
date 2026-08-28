@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import '../pages/utils/api_service.dart';
 
 class PropertyTypeItem {
   final int id;
@@ -102,7 +103,7 @@ class Property {
       price: formatPrice(rawPrice),
       numericPrice: parseNumericPrice(rawPrice),
       description: json['description']?.toString() ?? '',
-      imagePath: json['image_path']?.toString() ?? '',
+      imagePath: ApiService.sanitizeImageUrl(json['image_path']?.toString()),
       modelPath: json['model_path']?.toString() ?? '',
       isFeatured: json['is_featured'] == 1 ||
           json['is_featured'] == true ||

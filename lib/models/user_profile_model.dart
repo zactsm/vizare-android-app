@@ -1,3 +1,5 @@
+import '../pages/utils/api_service.dart';
+
 class UserProfile {
   final String id;
   final String fullName;
@@ -18,13 +20,18 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final rawPic = json['profile_pic']?.toString();
+    final sanitizedPic = rawPic != null && rawPic.isNotEmpty
+        ? ApiService.sanitizeImageUrl(rawPic)
+        : null;
+
     return UserProfile(
       id: json['id']?.toString() ?? '',
       fullName: json['full_name']?.toString() ?? 'Unknown User',
       email: json['email']?.toString() ?? '',
       role: json['role']?.toString().toLowerCase() ?? 'homebuyer',
       phoneNumber: json['phone_number']?.toString() ?? '',
-      profilePic: json['profile_pic']?.toString(),
+      profilePic: sanitizedPic,
       createdAt: json['created_at']?.toString() ?? '',
     );
   }

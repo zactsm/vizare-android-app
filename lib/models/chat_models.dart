@@ -1,4 +1,5 @@
 import 'package:untitled/models/property_model.dart';
+import '../pages/utils/api_service.dart';
 
 class ConversationParticipant {
   final int id;
@@ -16,12 +17,17 @@ class ConversationParticipant {
   });
 
   factory ConversationParticipant.fromJson(Map<String, dynamic> json) {
+    final rawPic = json['profile_pic']?.toString();
+    final sanitizedPic = rawPic != null && rawPic.isNotEmpty
+        ? ApiService.sanitizeImageUrl(rawPic)
+        : null;
+
     return ConversationParticipant(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       fullName: json['full_name']?.toString() ?? json['name']?.toString() ?? 'User',
       email: json['email']?.toString() ?? '',
       role: json['role']?.toString() ?? 'homeowner',
-      profilePic: json['profile_pic']?.toString(),
+      profilePic: sanitizedPic,
     );
   }
 }

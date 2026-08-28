@@ -396,5 +396,12 @@ describe('Supabase Router API Tests', () => {
     assert.ok(res.headers['strict-transport-security'], 'Router must set Strict-Transport-Security');
     assert.ok(res.headers['referrer-policy'], 'Router must set Referrer-Policy');
   });
+
+  test('Image URLs from Unsplash are normalized to fm=jpg for CanvasKit compatibility', () => {
+    const rawUrl = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1200&q=80';
+    const normalized = rawUrl.replace(/auto=format/g, 'fm=jpg');
+    assert.match(normalized, /fm=jpg/);
+    assert.doesNotMatch(normalized, /auto=format/);
+  });
 });
 
