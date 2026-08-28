@@ -141,5 +141,17 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: true
-  image_path: "assets/icon/app_icon.png"
+  ios: false # Managed directly in Xcode Assets (ios/Runner/Assets.xcassets/AppIcon.appiconset) for iOS 18 Liquid Glass & Dark/Tinted
+  image_path: "assets/icon/AppIcon-iOS-Default-1024@1x.png"
+  adaptive_icon_background: "assets/icon/AppIcon-iOS-Default-1024@1x.png"
+  adaptive_icon_foreground: "assets/icon/AppIcon-iOS-ClearLight-1024@1x.png"
+  adaptive_icon_monochrome: "assets/icon/AppIcon-iOS-TintedLight-1024@1x.png"
+  web:
+    generate: true
+    image_path: "assets/icon/AppIcon-iOS-Default-1024@1x.png"
+  macos:
+    generate: true
+    image_path: "assets/icon/AppIcon-iOS-Default-1024@1x.png"
+
+
+
