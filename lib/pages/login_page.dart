@@ -172,6 +172,9 @@ class _LoginPageState extends State<LoginPage> {
         if (userType != null) {
           await prefs.setString('user_type', userType);
         }
+        if (responseData.containsKey('has_password')) {
+          await prefs.setBool('has_password', responseData['has_password'] == true);
+        }
 
         // Load and apply authenticated user's theme preference
         await AppThemeController.instance.loadThemeMode(isAuthenticated: true);
@@ -373,12 +376,14 @@ class _LoginPageState extends State<LoginPage> {
                             size: 18,
                           ),
                           suffixIcon: IconButton(
+                            tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               color: Colors.white60,
                               size: 18,
+                              semanticLabel: _obscurePassword ? 'Show password' : 'Hide password',
                             ),
                             onPressed: () {
                               setState(() {

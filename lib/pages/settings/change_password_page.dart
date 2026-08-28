@@ -51,7 +51,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       _hasUppercase = password.contains(RegExp(r'[A-Z]'));
       _hasLowercase = password.contains(RegExp(r'[a-z]'));
       _hasNumber = password.contains(RegExp(r'[0-9]'));
-      _hasSymbol = password.contains(RegExp(r'[!@#^&*(),.?":{}|<>]'));
+      _hasSymbol = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
     });
   }
 

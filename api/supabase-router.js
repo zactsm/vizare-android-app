@@ -295,6 +295,30 @@ async function assertPropertyOwner(admin, profile, propertyId) {
   }
 }
 
+async function assertConversationParticipant(admin, profile, conversationId) {
+  const convRes = await admin
+    .from('conversations')
+    .select('id, buyer_id, homeowner_id')
+    .eq('id', conversationId)
+    .maybeSingle();
+  failOn(convRes.error);
+  if (!convRes.data) {
+    throw Object.assign(new Error('Conversation not found.'), {
+      status: 404,
+    });
+  }
+  if (
+    profile.role !== 'admin' &&
+    convRes.data.buyer_id !== profile.id &&
+    convRes.data.homeowner_id !== profile.id
+  ) {
+    throw Object.assign(new Error('You are not authorized to access this conversation.'), {
+      status: 403,
+    });
+  }
+  return convRes.data;
+}
+
 async function dispatch(name, request, admin, publicClient) {
   const input = request.method === 'GET' ? query(request) : await readBody(request);
   const clientIp = request.headers['x-forwarded-for'] || request.socket?.remoteAddress || 'unknown';
@@ -723,6 +747,8 @@ async function dispatch(name, request, admin, publicClient) {
       return [400, { message: 'conversation_id is required.' }];
     }
 
+    await assertConversationParticipant(admin, profile, conversationId);
+
     // Mark incoming messages as read
     await admin
       .from('messages')
@@ -750,6 +776,8 @@ async function dispatch(name, request, admin, publicClient) {
     if (!conversationId || (!messageText && messageType === 'text')) {
       return [400, { message: 'conversation_id and message content are required.' }];
     }
+
+    await assertConversationParticipant(admin, profile, conversationId);
 
     const newMsg = {
       conversation_id: conversationId,
@@ -785,6 +813,19 @@ async function dispatch(name, request, admin, publicClient) {
     if (!messageId || !['confirmed', 'rescheduled', 'declined'].includes(newStatus)) {
       return [400, { message: 'Valid message_id and status are required.' }];
     }
+
+    const msgLookup = await admin
+      .from('messages')
+      .select('id, conversation_id, sender_id, message_type')
+      .eq('id', messageId)
+      .maybeSingle();
+    failOn(msgLookup.error);
+
+    if (!msgLookup.data) {
+      return [404, { message: 'Message not found.' }];
+    }
+
+    await assertConversationParticipant(admin, profile, msgLookup.data.conversation_id);
 
     const updateRes = await admin
       .from('messages')

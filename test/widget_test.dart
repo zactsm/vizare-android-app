@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/main.dart';
+import 'package:untitled/welcome_page.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    // 👇 FIX: Pass 'initialRoute' here
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('App starts with WelcomePage and renders properly', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp(initialRoute: '/'));
+    await tester.pump();
 
-    // Note: The rest of this default test looks for a counter '0'. 
-    // Since your app starts with a Welcome Page (not a counter), 
-    // this test will likely fail logic-wise, but at least it will compile now.
-
-    // For now, let's just make it compile so you can ignore it or write real tests later.
+    expect(find.byType(WelcomePage), findsOneWidget);
   });
 }

@@ -1095,9 +1095,9 @@ class VizareTheme {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: const Color(0xFFF6F8FA),
-      primaryColor: VizareColors.champagneGold,
+      primaryColor: VizareColors.champagneGoldAccessible,
       colorScheme: const ColorScheme.light(
-        primary: VizareColors.champagneGold,
+        primary: VizareColors.champagneGoldAccessible,
         secondary: Color(0xFFAA7C11),
         surface: Color(0xFFFFFFFF),
         error: Color(0xFFEF4444),
@@ -1119,15 +1119,15 @@ class VizareTheme {
           fontWeight: FontWeight.w700,
           letterSpacing: 0.5,
         ),
-        iconTheme: const IconThemeData(color: VizareColors.champagneGold),
+        iconTheme: const IconThemeData(color: VizareColors.champagneGoldAccessible),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: VizareColors.champagneGold,
-          foregroundColor: const Color(0xFF050608),
+          backgroundColor: VizareColors.champagneGoldAccessible,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           elevation: 4,
-          shadowColor: VizareColors.champagneGold.withValues(alpha: 0.25),
+          shadowColor: VizareColors.champagneGoldAccessible.withValues(alpha: 0.25),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -1140,8 +1140,8 @@ class VizareTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: VizareColors.champagneGold,
-          side: const BorderSide(color: VizareColors.champagneGold, width: 1.5),
+          foregroundColor: VizareColors.champagneGoldAccessible,
+          side: const BorderSide(color: VizareColors.champagneGoldAccessible, width: 1.5),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
@@ -1155,7 +1155,7 @@ class VizareTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: VizareColors.champagneGold,
+          foregroundColor: VizareColors.champagneGoldAccessible,
           textStyle: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
           ),
@@ -1169,10 +1169,10 @@ class VizareTheme {
           fontFamily: GoogleFonts.inter().fontFamily,
         ),
         labelStyle: const TextStyle(
-          color: VizareColors.champagneGold,
+          color: VizareColors.champagneGoldAccessible,
           fontSize: 14,
         ),
-        prefixIconColor: VizareColors.champagneGold,
+        prefixIconColor: VizareColors.champagneGoldAccessible,
         suffixIconColor: const Color(0xFF64748B),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1193,7 +1193,7 @@ class VizareTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(
-            color: VizareColors.champagneGold,
+            color: VizareColors.champagneGoldAccessible,
             width: 1.5,
           ),
         ),

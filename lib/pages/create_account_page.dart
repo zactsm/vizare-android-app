@@ -487,12 +487,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             size: 18,
                           ),
                           suffixIcon: IconButton(
+                            tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
                             icon: Icon(
                               _isPasswordVisible
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               color: Colors.white60,
                               size: 18,
+                              semanticLabel: _isPasswordVisible ? 'Hide password' : 'Show password',
                             ),
                             onPressed: () {
                               setState(() {
@@ -552,12 +554,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             size: 18,
                           ),
                           suffixIcon: IconButton(
+                            tooltip: _isConfirmPasswordVisible ? 'Hide password' : 'Show password',
                             icon: Icon(
                               _isConfirmPasswordVisible
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
                               color: Colors.white60,
                               size: 18,
+                              semanticLabel: _isConfirmPasswordVisible ? 'Hide password' : 'Show password',
                             ),
                             onPressed: () {
                               setState(() {

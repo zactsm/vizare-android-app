@@ -175,7 +175,7 @@ void main() {
       expect(materialApp.darkTheme?.scaffoldBackgroundColor,
           VizareColors.obsidianBlack);
       expect(materialApp.theme?.brightness, Brightness.light);
-      expect(materialApp.theme?.primaryColor, VizareColors.champagneGold);
+      expect(materialApp.theme?.primaryColor, VizareColors.champagneGoldAccessible);
     });
   });
 }

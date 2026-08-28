@@ -132,6 +132,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       );
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
         setState(() {
           _myProperties.removeWhere((p) => p.id == propertyId);
           _filterProperties();
@@ -147,7 +148,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
     final email = prefs.getString('user_email');
 
     if (email == null) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
 
@@ -168,7 +169,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
           });
         }
       } else {
-        setState(() => _isLoading = false);
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
       _logger.e("Error fetching my properties", error: e);
@@ -198,6 +199,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       MaterialPageRoute(builder: (context) => const AddPropertyPage()),
     ).then((result) {
       if (result == true) {
+        if (!mounted) return;
         setState(() => _isLoading = true);
         _fetchMyProperties();
       }
@@ -212,6 +214,7 @@ class _HomeownerPageState extends State<HomeownerPage> {
       ),
     ).then((result) {
       if (result == true) {
+        if (!mounted) return;
         setState(() => _isLoading = true);
         _fetchMyProperties();
       }

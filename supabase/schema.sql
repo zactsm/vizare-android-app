@@ -159,17 +159,27 @@ create trigger set_properties_updated_at
 before update on public.properties
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_property_types_updated_at on public.property_types;
+create trigger set_property_types_updated_at
+before update on public.property_types
+for each row execute function public.set_updated_at();
+
 create or replace function public.enforce_profile_integrity()
 returns trigger
 language plpgsql
 security definer
 as $$
 begin
+  -- Allow backend service-role, direct SQL sessions, or admin users to update profiles freely
+  if auth.uid() is null or
+     coalesce(current_setting('request.jwt.claim.role', true), '') = 'service_role' or
+     exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
+    return new;
+  end if;
+
   -- Prevent non-admin users from escalating their role
   if new.role is distinct from old.role then
-    if not exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
-      new.role := old.role;
-    end if;
+    new.role := old.role;
   end if;
 
   -- Prevent tampering with auth binding or primary email
@@ -191,19 +201,28 @@ language plpgsql
 security definer
 as $$
 begin
-  if not exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
-    if (new.status is distinct from old.status and new.status = 'approved') or
-       (new.name is distinct from old.name) or
-       (new.price is distinct from old.price) or
-       (new.description is distinct from old.description) or
-       (new.location is distinct from old.location) or
-       (new.image_path is distinct from old.image_path) or
-       (new.model_path is distinct from old.model_path) then
-      new.status := 'pending';
-    end if;
-    new.is_featured := old.is_featured;
-    new.homeowner_id := old.homeowner_id;
+  -- Allow backend service-role, direct SQL sessions, or admin users to update properties freely
+  if auth.uid() is null or
+     coalesce(current_setting('request.jwt.claim.role', true), '') = 'service_role' or
+     exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
+    return new;
   end if;
+
+  -- If a non-admin modifies property details or attempts to approve a property, force status to pending
+  if (new.status is distinct from old.status and new.status = 'approved') or
+     (new.name is distinct from old.name) or
+     (new.price is distinct from old.price) or
+     (new.description is distinct from old.description) or
+     (new.location is distinct from old.location) or
+     (new.image_path is distinct from old.image_path) or
+     (new.model_path is distinct from old.model_path) then
+    new.status := 'pending';
+  end if;
+
+  -- Non-admins cannot modify featured flag or transfer ownership
+  new.is_featured := old.is_featured;
+  new.homeowner_id := old.homeowner_id;
+
   return new;
 end;
 $$;
@@ -243,9 +262,10 @@ begin
     coalesce((new.raw_user_meta_data ->> 'has_password')::boolean, false)
   )
   on conflict (email) do update
-  set auth_user_id = excluded.auth_user_id,
+  set auth_user_id = coalesce(public.profiles.auth_user_id, excluded.auth_user_id),
       full_name = coalesce(public.profiles.full_name, excluded.full_name),
-      updated_at = now();
+      updated_at = now()
+  where public.profiles.auth_user_id is null;
   return new;
 end;
 $$;
@@ -393,12 +413,32 @@ using (
 -- ------------------------------------------------------------
 
 alter table public.profiles enable row level security;
+alter table public.property_types enable row level security;
 alter table public.properties enable row level security;
 alter table public.property_images enable row level security;
 alter table public.favorites enable row level security;
 alter table public.inquiries enable row level security;
 alter table public.support_tickets enable row level security;
 alter table public.notification_preferences enable row level security;
+
+-- Property Types Policies
+drop policy if exists "Anyone can read property types" on public.property_types;
+create policy "Anyone can read property types"
+  on public.property_types
+  for select
+  using (true);
+
+drop policy if exists "Admins can manage property types" on public.property_types;
+create policy "Admins can manage property types"
+  on public.property_types
+  for all
+  using (
+    exists (
+      select 1 from public.profiles
+      where profiles.auth_user_id = auth.uid()
+        and profiles.role = 'admin'
+    )
+  );
 
 -- Profiles Policies
 drop policy if exists "Profiles are readable" on public.profiles;
@@ -641,6 +681,36 @@ using (
   or homeowner_id in (select id from public.profiles where auth_user_id = auth.uid())
 );
 
+-- Conversation Immutability & Participant Integrity Trigger
+create or replace function public.enforce_conversation_integrity()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  -- Allow backend service-role, direct SQL sessions, or admin users to perform unrestricted updates if needed
+  if auth.uid() is null or
+     coalesce(current_setting('request.jwt.claim.role', true), '') = 'service_role' or
+     exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
+    return new;
+  end if;
+
+  -- Ensure conversation participants and property cannot be tampered with on update
+  new.id := old.id;
+  new.property_id := old.property_id;
+  new.buyer_id := old.buyer_id;
+  new.homeowner_id := old.homeowner_id;
+  new.created_at := old.created_at;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists check_conversation_integrity on public.conversations;
+create trigger check_conversation_integrity
+before update on public.conversations
+for each row execute function public.enforce_conversation_integrity();
+
 -- Messages Policies
 drop policy if exists "Messages are readable" on public.messages;
 create policy "Messages are readable" on public.messages
@@ -688,6 +758,37 @@ using (
   )
 );
 
+-- Message Immutability & Column Integrity Trigger
+create or replace function public.enforce_message_integrity()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  -- Allow backend service-role, direct SQL sessions, or admin users to perform unrestricted updates if needed
+  if auth.uid() is null or
+     coalesce(current_setting('request.jwt.claim.role', true), '') = 'service_role' or
+     exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin') then
+    return new;
+  end if;
+
+  -- Ensure critical message columns are immutable for normal clients
+  new.id := old.id;
+  new.conversation_id := old.conversation_id;
+  new.sender_id := old.sender_id;
+  new.message_text := old.message_text;
+  new.message_type := old.message_type;
+  new.created_at := old.created_at;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists check_message_integrity on public.messages;
+create trigger check_message_integrity
+before update on public.messages
+for each row execute function public.enforce_message_integrity();
+
 -- ==============================================================================
 -- 11. Audit Logs (SOC 2 Type II & ISO 27001 Compliance)
 -- ==============================================================================
@@ -724,6 +825,11 @@ create policy "Authenticated users can create audit logs"
   on public.audit_logs
   for insert to authenticated
   with check (
-    actor_id in (select id from public.profiles where auth_user_id = auth.uid())
-    or exists (select 1 from public.profiles where auth_user_id = auth.uid() and role = 'admin')
+    exists (
+      select 1 from public.profiles
+      where auth_user_id = auth.uid()
+        and id = actor_id
+        and email = actor_email
+        and role = actor_role
+    )
   );

@@ -240,4 +240,92 @@ describe('Supabase Router API Tests', () => {
     assert.match(workflowContent, /supabase\/setup-cli/);
     assert.match(workflowContent, /supabase db push/);
   });
+
+  test('Database triggers enforce profile and property integrity while allowing service-role / backend execution', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const schemaPath = path.join(__dirname, '..', 'supabase', 'schema.sql');
+    assert.strictEqual(fs.existsSync(schemaPath), true);
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+
+    // Verify enforce_profile_integrity allows service_role / auth.uid() is null
+    assert.match(schema, /create or replace function public\.enforce_profile_integrity/);
+    assert.match(schema, /auth\.uid\(\)\s+is\s+null/);
+
+    // Verify enforce_property_integrity allows service_role / auth.uid() is null
+    assert.match(schema, /create or replace function public\.enforce_property_integrity/);
+
+    // Verify migration exists
+    const migrationPath = path.join(__dirname, '..', 'supabase', 'migrations', '20260828020000_chat_security_and_trigger_integrity.sql');
+    assert.strictEqual(fs.existsSync(migrationPath), true, 'Migration 20260828020000_chat_security_and_trigger_integrity.sql must exist');
+    const migration = fs.readFileSync(migrationPath, 'utf8');
+    assert.match(migration, /enforce_profile_integrity/);
+    assert.match(migration, /enforce_property_integrity/);
+  });
+
+  test('PostgREST Message Update Column Integrity: enforce_message_integrity trigger exists and protects message text and sender_id', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const schemaPath = path.join(__dirname, '..', 'supabase', 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+
+    assert.match(schema, /create or replace function public\.enforce_message_integrity/);
+    assert.match(schema, /create trigger check_message_integrity/);
+    assert.match(schema, /new\.sender_id\s*:=\s*old\.sender_id/);
+    assert.match(schema, /new\.message_text\s*:=\s*old\.message_text/);
+    assert.match(schema, /new\.conversation_id\s*:=\s*old\.conversation_id/);
+  });
+
+  test('supabase-router.js validates conversation participation for chat endpoints to prevent BOLA / IDOR', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const routerPath = path.join(__dirname, '..', 'api', 'supabase-router.js');
+    const routerCode = fs.readFileSync(routerPath, 'utf8');
+
+    // Verify helper assertConversationParticipant exists
+    assert.match(routerCode, /async function assertConversationParticipant/);
+
+    // Verify get_messages.php uses assertConversationParticipant
+    assert.match(routerCode, /if\s*\(name\s*===\s*'get_messages\.php'\)\s*\{[\s\S]*?assertConversationParticipant/);
+
+    // Verify send_message.php uses assertConversationParticipant
+    assert.match(routerCode, /if\s*\(name\s*===\s*'send_message\.php'\)\s*\{[\s\S]*?assertConversationParticipant/);
+
+    // Verify update_viewing_status.php uses assertConversationParticipant
+    assert.match(routerCode, /if\s*\(name\s*===\s*'update_viewing_status\.php'\)\s*\{[\s\S]*?assertConversationParticipant/);
+  });
+
+  test('Database triggers and RLS policies enforce account takeover prevention, property types RLS, and conversation immutability', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const schemaPath = path.join(__dirname, '..', 'supabase', 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+
+    // SEC-01: handle_new_auth_user protected with WHERE auth_user_id is null
+    assert.match(schema, /create or replace function public\.handle_new_auth_user/);
+    assert.match(schema, /where\s+public\.profiles\.auth_user_id\s+is\s+null/);
+
+    // SEC-02: property_types RLS enabled
+    assert.match(schema, /alter table public\.property_types enable row level security/);
+    assert.match(schema, /"Anyone can read property types"/);
+    assert.match(schema, /"Admins can manage property types"/);
+
+    // SEC-03: enforce_conversation_integrity trigger exists
+    assert.match(schema, /create or replace function public\.enforce_conversation_integrity/);
+    assert.match(schema, /create trigger check_conversation_integrity/);
+    assert.match(schema, /new\.buyer_id\s*:=\s*old\.buyer_id/);
+    assert.match(schema, /new\.homeowner_id\s*:=\s*old\.homeowner_id/);
+
+    // SEC-09: audit_logs insert policy validates actor binding
+    assert.match(schema, /auth_user_id\s*=\s*auth\.uid\(\)/);
+    assert.match(schema, /id\s*=\s*actor_id/);
+
+    // Verify migration 20260828030000 exists
+    const migrationPath = path.join(__dirname, '..', 'supabase', 'migrations', '20260828030000_security_and_compliance_hardening.sql');
+    assert.strictEqual(fs.existsSync(migrationPath), true, 'Migration 20260828030000 must exist');
+  });
 });

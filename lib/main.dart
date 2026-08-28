@@ -19,14 +19,12 @@ import 'pages/homeowner_page.dart';
 import 'pages/admin_page.dart';
 import 'pages/settings/tos_page.dart';
 import 'pages/settings/privacy_policy_page.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'pages/utils/app_theme.dart';
 import 'pages/utils/role_guard.dart';
 import 'pages/utils/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
 
   // 1. Load local .env asset if bundled
   try {
@@ -54,7 +52,7 @@ void main() async {
           base.endsWith('/') ? '${base}client_config.php' : '$base/client_config.php');
       final response = await http
           .get(configUri)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         supabaseUrl ??= data['supabase_url']?.toString();
@@ -242,7 +240,7 @@ class MyApp extends StatelessWidget {
                                   top: topSafeArea,
                                   bottom: bottomSafeArea,
                                 ),
-                                textScaler: MediaQuery.of(context).textScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 2.0),
+                                textScaler: (MediaQuery.maybeOf(context)?.textScaler ?? const TextScaler.linear(1.0)).clamp(minScaleFactor: 1.0, maxScaleFactor: 2.0),
                                 devicePixelRatio: 3.0,
                               ),
                               child: child ?? const SizedBox.shrink(),

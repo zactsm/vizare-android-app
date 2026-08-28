@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/utils/app_theme.dart';
-import 'package:untitled/pages/settings/nav_bar_sandbox_page.dart';
 
 enum AdminView {
   analytics,
@@ -200,23 +199,6 @@ class AdminDrawer extends StatelessWidget {
                           icon: Icons.category_rounded,
                           isDark: isDark,
                         ),
-                        const SizedBox(height: 6),
-                        _buildActionItem(
-                          context: context,
-                          title: 'Bottom Nav Bar Tuner',
-                          subtitle: 'Visual tuning sandbox',
-                          icon: Icons.tune_rounded,
-                          isDark: isDark,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const NavBarSandboxPage(),
-                              ),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),
@@ -353,68 +335,5 @@ class AdminDrawer extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildActionItem({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-    bool isDark = true,
-  }) {
-    return VisionGlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      borderRadius: 16,
-      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF8FAFC),
-      border: Border.all(
-        color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0),
-        width: 1.0,
-      ),
-      onTap: onTap,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFE2E8F0),
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: isDark ? VizareColors.textSecondary : const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    color: isDark ? VizareColors.textPrimary : const Color(0xFF334155),
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    color: isDark ? VizareColors.textMuted : const Color(0xFF64748B),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 18,
-            color: isDark ? VizareColors.textMuted : const Color(0xFF94A3B8),
-          ),
-        ],
-      ),
-    );
-  }
 }
+

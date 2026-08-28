@@ -54,7 +54,6 @@ void main() {
       expect(find.text('Listings Management'), findsOneWidget);
       expect(find.text('User Management'), findsOneWidget);
       expect(find.text('Property Types Editor'), findsOneWidget);
-      expect(find.text('Bottom Nav Bar Tuner'), findsOneWidget);
 
       // Verify Badge count
       expect(find.text('5'), findsOneWidget);
