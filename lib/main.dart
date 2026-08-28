@@ -109,14 +109,17 @@ void main() async {
     debugPrint('Supabase credentials not yet available; proceeding to UI.');
   }
 
-  // 5. Check for existing session safely
+  // 5. Check for existing session safely using Hardware-Backed Secure Storage
   String startRoute = '/';
   try {
+    // Perform one-time legacy token migration to hardware-backed secure storage
+    await ApiService.migrateLegacyTokens();
+
     final prefs = await SharedPreferences.getInstance();
     final String? userEmail = prefs.getString('user_email');
     final String? userType = prefs.getString('user_type');
-    final String? accessToken = prefs.getString('access_token');
-    final String? refreshToken = prefs.getString('refresh_token');
+    final String? accessToken = await ApiService.getStoredAccessToken();
+    final String? refreshToken = await ApiService.getStoredRefreshToken();
 
     if (accessToken != null || refreshToken != null) {
       await ApiService.restoreSession(accessToken, refreshToken);

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/pages/utils/api_service.dart';
 
 void main() {
@@ -9,6 +11,8 @@ void main() {
 
   group('ApiService Tests', () {
     setUp(() async {
+      FlutterSecureStorage.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({});
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (ByteData? message) async {
         final key = message != null
@@ -102,12 +106,32 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
       expect(ApiService.sanitizeImageUrl(null), '');
     });
 
-    test('restoreSession and clearAuthSession manage token caching correctly', () async {
+    test('restoreSession and clearAuthSession manage secure storage correctly', () async {
       await ApiService.restoreSession('test_access_token_123', 'test_refresh_token_456');
       expect(ApiService.cachedAccessToken, 'test_access_token_123');
+      expect(await ApiService.getStoredAccessToken(), 'test_access_token_123');
+      expect(await ApiService.getStoredRefreshToken(), 'test_refresh_token_456');
 
       await ApiService.clearAuthSession();
       expect(ApiService.cachedAccessToken, isNull);
+      expect(await ApiService.getStoredAccessToken(), isNull);
+      expect(await ApiService.getStoredRefreshToken(), isNull);
+    });
+
+    test('migrateLegacyTokens migrates tokens from SharedPreferences to FlutterSecureStorage', () async {
+      SharedPreferences.setMockInitialValues({
+        'access_token': 'legacy_access_999',
+        'refresh_token': 'legacy_refresh_888',
+      });
+      FlutterSecureStorage.setMockInitialValues({});
+
+      await ApiService.migrateLegacyTokens();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('access_token'), isFalse);
+      expect(prefs.containsKey('refresh_token'), isFalse);
+      expect(await ApiService.getStoredAccessToken(), 'legacy_access_999');
+      expect(await ApiService.getStoredRefreshToken(), 'legacy_refresh_888');
     });
   });
 }

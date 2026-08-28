@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,15 @@ class ApiService {
   static const String avatarsBucket = 'avatars';
   static const String propertyAssetsBucket = 'property-assets';
   static const String supportAttachmentsBucket = 'support-attachments';
+
+  static const String _kAccessTokenKey = 'access_token';
+  static const String _kRefreshTokenKey = 'refresh_token';
+  static const String _kLegacyTokenKey = 'token';
+
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
 
   static String sanitizeImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -309,19 +319,98 @@ class ApiService {
     };
   }
 
-  static Future<void> restoreSession(
-      String? accessToken, String? refreshToken) async {
+  /// Performs seamless backwards-compatible migration of legacy plaintext tokens
+  /// from SharedPreferences into hardware-backed FlutterSecureStorage.
+  static Future<void> migrateLegacyTokens() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final legacyAccess =
+          prefs.getString(_kAccessTokenKey) ?? prefs.getString(_kLegacyTokenKey);
+      final legacyRefresh = prefs.getString(_kRefreshTokenKey);
+
+      if (legacyAccess != null && legacyAccess.isNotEmpty) {
+        final existingSecure = await _secureStorage.read(key: _kAccessTokenKey);
+        if (existingSecure == null || existingSecure.isEmpty) {
+          await _secureStorage.write(key: _kAccessTokenKey, value: legacyAccess);
+        }
+        await prefs.remove(_kAccessTokenKey);
+        await prefs.remove(_kLegacyTokenKey);
+      }
+
+      if (legacyRefresh != null && legacyRefresh.isNotEmpty) {
+        final existingSecureRefresh =
+            await _secureStorage.read(key: _kRefreshTokenKey);
+        if (existingSecureRefresh == null || existingSecureRefresh.isEmpty) {
+          await _secureStorage.write(
+              key: _kRefreshTokenKey, value: legacyRefresh);
+        }
+        await prefs.remove(_kRefreshTokenKey);
+      }
+    } catch (e) {
+      _logger.w("Legacy token migration notice: $e");
+    }
+  }
+
+  /// Securely retrieves the stored access token from hardware-backed storage.
+  static Future<String?> getStoredAccessToken() async {
+    try {
+      final token = await _secureStorage.read(key: _kAccessTokenKey);
+      if (token != null && token.isNotEmpty) {
+        _cachedAccessToken = token;
+        return token;
+      }
+    } catch (e) {
+      _logger.w("Secure storage read access_token error: $e");
+    }
+    return _cachedAccessToken;
+  }
+
+  /// Securely retrieves the stored refresh token from hardware-backed storage.
+  static Future<String?> getStoredRefreshToken() async {
+    try {
+      return await _secureStorage.read(key: _kRefreshTokenKey);
+    } catch (e) {
+      _logger.w("Secure storage read refresh_token error: $e");
+      return null;
+    }
+  }
+
+  /// Saves authentication tokens exclusively to hardware-backed secure storage.
+  static Future<void> saveAuthTokens({
+    String? accessToken,
+    String? refreshToken,
+  }) async {
     if (accessToken != null && accessToken.isNotEmpty) {
       _cachedAccessToken = accessToken;
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', accessToken);
-      } catch (_) {}
+        await _secureStorage.write(key: _kAccessTokenKey, value: accessToken);
+      } catch (e) {
+        _logger.e("Failed to securely store access_token", error: e);
+      }
     }
     if (refreshToken != null && refreshToken.isNotEmpty) {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('refresh_token', refreshToken);
+        await _secureStorage.write(key: _kRefreshTokenKey, value: refreshToken);
+      } catch (e) {
+        _logger.e("Failed to securely store refresh_token", error: e);
+      }
+    }
+
+    // Ensure legacy plaintext keys are purged from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kAccessTokenKey);
+      await prefs.remove(_kRefreshTokenKey);
+      await prefs.remove(_kLegacyTokenKey);
+    } catch (_) {}
+  }
+
+  static Future<void> restoreSession(
+      String? accessToken, String? refreshToken) async {
+    await saveAuthTokens(accessToken: accessToken, refreshToken: refreshToken);
+
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
         await Supabase.instance.client.auth.setSession(refreshToken);
       } catch (e) {
         _logger.w("Session restore notice: $e");
@@ -332,9 +421,16 @@ class ApiService {
   static Future<void> clearAuthSession() async {
     _cachedAccessToken = null;
     try {
+      await _secureStorage.delete(key: _kAccessTokenKey);
+      await _secureStorage.delete(key: _kRefreshTokenKey);
+      await _secureStorage.delete(key: _kLegacyTokenKey);
+    } catch (_) {}
+
+    try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('access_token');
-      await prefs.remove('refresh_token');
+      await prefs.remove(_kAccessTokenKey);
+      await prefs.remove(_kRefreshTokenKey);
+      await prefs.remove(_kLegacyTokenKey);
     } catch (_) {}
   }
 

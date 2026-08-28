@@ -126,6 +126,7 @@ class _DeactivateAccountPageState extends State<DeactivateAccountPage> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
+        await ApiService.clearAuthSession();
         await prefs.clear();
         try {
           await GoogleAuthService.signOut();
