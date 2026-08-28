@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const MAX_BODY_SIZE = 1024 * 1024; // 1 MB payload limit
+const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10 MB payload limit for asset uploads
 
 // In-memory sliding window rate limiter
 const rateLimitMap = new Map();
@@ -914,6 +914,46 @@ async function dispatch(name, request, admin, publicClient) {
     return [200, { message: 'Support ticket created successfully.' }];
   }
 
+  if (name === 'upload_asset.php') {
+    const bucket = String(input.bucket || 'property-assets').trim();
+    if (!['property-assets', 'avatars', 'support-attachments'].includes(bucket)) {
+      return [400, { message: 'Invalid storage bucket.' }];
+    }
+
+    if (bucket === 'property-assets' && !['homeowner', 'admin'].includes(profile.role)) {
+      return [403, { message: 'Only homeowners and admins can upload property assets.' }];
+    }
+
+    const fileData = input.file_data || '';
+    if (!fileData) {
+      return [400, { message: 'File data is required.' }];
+    }
+
+    const rawFileName = String(input.file_name || 'asset.jpg').trim();
+    const cleanFileName = rawFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const contentType = String(input.content_type || 'application/octet-stream').trim().slice(0, 100);
+
+    const userFolder = profile.auth_user_id || String(profile.id);
+    const objectPath = `${userFolder}/${Date.now()}_${cleanFileName}`;
+
+    const buffer = Buffer.from(fileData, 'base64');
+    const uploadResult = await admin.storage.from(bucket).upload(objectPath, buffer, {
+      contentType,
+      upsert: true,
+    });
+    failOn(uploadResult.error);
+
+    const isSigned = String(input.signed_url) === 'true';
+    if (isSigned) {
+      const signedRes = await admin.storage.from(bucket).createSignedUrl(objectPath, 900);
+      failOn(signedRes.error);
+      return [200, { url: signedRes.data.signedUrl, path: objectPath }];
+    }
+
+    const publicUrlRes = admin.storage.from(bucket).getPublicUrl(objectPath);
+    return [200, { url: publicUrlRes.data.publicUrl, path: objectPath }];
+  }
+
   if (name === 'add_property.php') {
     if (!['homeowner', 'admin'].includes(profile.role)) {
       return [403, { message: 'Only homeowners can add properties.' }];
@@ -1413,6 +1453,7 @@ const MUTATING_ROUTES = new Set([
   'update_profile.php',
   'send_inquiry.php',
   'create_support_ticket.php',
+  'upload_asset.php',
   'add_property.php',
   'edit_property.php',
   'delete_property.php',

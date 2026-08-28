@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
@@ -115,6 +117,9 @@ class ApiService {
   static Future<void> deletePropertyAssetByUrl(String url) =>
       _deleteFileByUrl(url, propertyAssetsBucket);
 
+  static String? _cachedAccessToken;
+  static String? get cachedAccessToken => _cachedAccessToken;
+
   static Future<String?> _uploadFile(
     PlatformFile file,
     String bucket, {
@@ -138,35 +143,72 @@ class ApiService {
         return null;
       }
 
+      final extension = file.name.split('.').last;
+      final contentType = _resolveContentType(extension);
+
+      // Strategy 1: Attempt direct upload to Supabase storage if client has active Supabase user session
       String? userId;
       try {
         userId = Supabase.instance.client.auth.currentUser?.id;
       } catch (_) {}
 
-      final extension = file.name.split('.').last;
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')}';
-      final objectPath =
-          userId == null ? fileName : '$userId/$fileName';
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          final fileName =
+              '${DateTime.now().millisecondsSinceEpoch}_${file.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')}';
+          final objectPath = '$userId/$fileName';
 
-      await Supabase.instance.client.storage.from(bucket).uploadBinary(
-            objectPath,
-            bytes,
-            fileOptions: FileOptions(
-              upsert: true,
-              contentType: _resolveContentType(extension),
-            ),
-          );
+          await Supabase.instance.client.storage.from(bucket).uploadBinary(
+                objectPath,
+                bytes,
+                fileOptions: FileOptions(
+                  upsert: true,
+                  contentType: contentType,
+                ),
+              );
 
-      if (signedUrl) {
-        return await Supabase.instance.client.storage
-            .from(bucket)
-            .createSignedUrl(objectPath, 900); // 15 minutes validity
+          if (signedUrl) {
+            return await Supabase.instance.client.storage
+                .from(bucket)
+                .createSignedUrl(objectPath, 900); // 15 minutes validity
+          }
+
+          return Supabase.instance.client.storage.from(bucket).getPublicUrl(objectPath);
+        } catch (clientErr) {
+          _logger.w("Direct Supabase storage upload failed, attempting fallback API upload: $clientErr");
+        }
       }
 
-      return Supabase.instance.client.storage.from(bucket).getPublicUrl(objectPath);
+      // Strategy 2: Upload via API gateway (/api/upload_asset.php) using service-role
+      try {
+        final base64Data = base64Encode(bytes);
+        final response = await post(
+          'upload_asset.php',
+          body: {
+            'bucket': bucket,
+            'file_name': file.name,
+            'file_data': base64Data,
+            'content_type': contentType,
+            'signed_url': signedUrl.toString(),
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final url = data['url']?.toString();
+          if (url != null && url.isNotEmpty) {
+            return url;
+          }
+        } else {
+          _logger.e("API upload returned ${response.statusCode}: ${response.body}");
+        }
+      } catch (apiErr) {
+        _logger.e("API upload failed", error: apiErr);
+      }
+
+      return null;
     } catch (e) {
-      _logger.e("Supabase Upload Error", error: e);
+      _logger.e("Upload Error", error: e);
       return null;
     }
   }
@@ -258,20 +300,42 @@ class ApiService {
     } catch (_) {
       accessToken = null;
     }
+    accessToken ??= _cachedAccessToken;
+
     return {
       ...?headers,
-      if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+      if (accessToken != null && accessToken.isNotEmpty)
+        'Authorization': 'Bearer $accessToken',
     };
   }
 
   static Future<void> restoreSession(
       String? accessToken, String? refreshToken) async {
-    if (accessToken == null || refreshToken == null) return;
-    try {
-      await Supabase.instance.client.auth.setSession(refreshToken);
-    } catch (e) {
-      _logger.w("Session restore notice: $e");
+    if (accessToken != null && accessToken.isNotEmpty) {
+      _cachedAccessToken = accessToken;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', accessToken);
+      } catch (_) {}
     }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('refresh_token', refreshToken);
+        await Supabase.instance.client.auth.setSession(refreshToken);
+      } catch (e) {
+        _logger.w("Session restore notice: $e");
+      }
+    }
+  }
+
+  static Future<void> clearAuthSession() async {
+    _cachedAccessToken = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('refresh_token');
+    } catch (_) {}
   }
 
   static final Map<String, _CachedResponse> _responseCache = {};

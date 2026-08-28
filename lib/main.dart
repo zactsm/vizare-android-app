@@ -115,6 +115,12 @@ void main() async {
     final prefs = await SharedPreferences.getInstance();
     final String? userEmail = prefs.getString('user_email');
     final String? userType = prefs.getString('user_type');
+    final String? accessToken = prefs.getString('access_token');
+    final String? refreshToken = prefs.getString('refresh_token');
+
+    if (accessToken != null || refreshToken != null) {
+      await ApiService.restoreSession(accessToken, refreshToken);
+    }
 
     bool hasSupabaseSession = false;
     if (supabaseReady) {
@@ -127,7 +133,7 @@ void main() async {
     }
 
     bool isAuthenticated = false;
-    if (userEmail != null && (hasSupabaseSession || !supabaseReady)) {
+    if (userEmail != null && (hasSupabaseSession || !supabaseReady || accessToken != null)) {
       isAuthenticated = true;
       if (userType == 'admin') {
         startRoute = '/admin';

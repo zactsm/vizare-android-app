@@ -643,6 +643,7 @@ class _AdminPageState extends State<AdminPage> {
 
   Future<void> _signOut() async {
     try {
+      await ApiService.clearAuthSession();
       await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();

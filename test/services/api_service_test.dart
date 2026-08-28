@@ -101,5 +101,13 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
       expect(ApiService.sanitizeImageUrl(''), '');
       expect(ApiService.sanitizeImageUrl(null), '');
     });
+
+    test('restoreSession and clearAuthSession manage token caching correctly', () async {
+      await ApiService.restoreSession('test_access_token_123', 'test_refresh_token_456');
+      expect(ApiService.cachedAccessToken, 'test_access_token_123');
+
+      await ApiService.clearAuthSession();
+      expect(ApiService.cachedAccessToken, isNull);
+    });
   });
 }

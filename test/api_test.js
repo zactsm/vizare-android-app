@@ -435,5 +435,22 @@ describe('Supabase Router API Tests', () => {
     assert.strictEqual(res.statusCode, 401);
     assert.match(res.body.message, /Authentication required/i);
   });
+
+  test('upload_asset.php requires authenticated session and validates bucket', async () => {
+    process.env.SUPABASE_URL = 'https://mock.supabase.co';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'mock-publishable-key-xyz';
+    process.env.SUPABASE_SECRET_KEY = 'mock-secret-key-xyz';
+
+    const req = createMockRequest({
+      method: 'POST',
+      url: '/api/upload_asset.php',
+      body: { bucket: 'property-assets', file_data: 'dGVzdA==', file_name: 'test.jpg' },
+    });
+    const res = createMockResponse();
+    await router(req, res);
+
+    assert.strictEqual(res.statusCode, 401);
+    assert.match(res.body.message, /Authentication required/i);
+  });
 });
 

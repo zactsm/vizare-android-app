@@ -132,6 +132,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
+    await ApiService.clearAuthSession();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     try {

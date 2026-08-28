@@ -58,6 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _logout() async {
     try {
+      await ApiService.clearAuthSession();
       await Supabase.instance.client.auth.signOut(
         scope: SignOutScope.local,
       );
