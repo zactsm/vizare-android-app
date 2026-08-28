@@ -360,11 +360,12 @@ describe('Supabase Router API Tests', () => {
     assert.match(csp, /script-src[^;]*ajax\.googleapis\.com/);
     assert.match(csp, /script-src[^;]*maps\.googleapis\.com/);
     assert.match(csp, /script-src[^;]*gstatic\.com/);
-    assert.match(csp, /script-src[^;]*accounts\.google\.com/);
-    assert.match(csp, /font-src[^;]*\*/);
-    assert.match(csp, /img-src[^;]*\*/);
-    assert.match(csp, /connect-src[^;]*\*/);
-    assert.match(csp, /frame-src[^;]*\*/);
+    assert.match(csp, /font-src[^;]*fonts\.gstatic\.com/);
+    assert.match(csp, /img-src[^;]*supabase\.co/);
+    assert.match(csp, /img-src[^;]*unsplash\.com/);
+    assert.match(csp, /connect-src[^;]*supabase\.co/);
+    assert.match(csp, /connect-src[^;]*api\.emailjs\.com/);
+    assert.match(csp, /frame-src[^;]*sketchfab\.com/);
 
     // Verify Permissions-Policy restrictions
     const permPolicy = headerMap['permissions-policy'];
