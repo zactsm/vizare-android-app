@@ -16,14 +16,46 @@ class ApiService {
   static String sanitizeImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
     final trimmed = url.trim();
-    if (trimmed.contains('images.unsplash.com')) {
-      if (trimmed.contains('auto=format')) {
-        return trimmed.replaceAll('auto=format', 'fm=jpg');
-      } else if (!trimmed.contains('fm=')) {
-        return trimmed.contains('?') ? '$trimmed&fm=jpg' : '$trimmed?fm=jpg';
-      }
+
+    // Normalize Unsplash URLs: remove auto=format and ensure fm=jpg is set
+    // (CanvasKit requires a concrete decodable format; webp/avif may not decode)
+    String normalized = trimmed;
+    if (normalized.contains('images.unsplash.com')) {
+      // Strip auto=format (may conflict with fm=) and ensure fm=jpg
+      normalized = normalized
+          .replaceAll(RegExp(r'[&?]auto=format'), '')
+          .replaceAll(RegExp(r'[&?]fm=[^&]*'), '');
+      normalized = normalized.contains('?')
+          ? '$normalized&fm=jpg'
+          : '$normalized?fm=jpg';
     }
-    return trimmed;
+
+    // On Flutter Web, CanvasKit uses fetch() in cors mode to load images.
+    // External image servers (Supabase Storage, Unsplash) may not return the
+    // Access-Control-Allow-Origin header needed for the browser to accept the
+    // response. Route external images through our Vercel proxy which fetches
+    // server-side and re-serves with CORS headers.
+    if (kIsWeb && _isExternalImageUrl(normalized)) {
+      final encoded = Uri.encodeComponent(normalized);
+      return '$baseUrl/image-proxy?url=$encoded';
+    }
+
+    return normalized;
+  }
+
+  /// Returns true for image URLs that require CORS proxying on web.
+  static bool _isExternalImageUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      final host = uri.host.toLowerCase();
+      return host.endsWith('.supabase.co') ||
+          host.endsWith('.supabase.com') ||
+          host == 'images.unsplash.com' ||
+          host == 'cdn.unsplash.com' ||
+          host == 'plus.unsplash.com';
+    } catch (_) {
+      return false;
+    }
   }
 
   static String get baseUrl {
