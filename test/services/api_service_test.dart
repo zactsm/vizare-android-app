@@ -78,7 +78,7 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_mock_12345
       final uri = ApiService.getUri('login.php');
       expect(uri.toString(), 'https://vizare-web.vercel.app/api/login.php');
       expect(uri.scheme, 'https');
-      expect(uri.host, 'vizare-app.vercel.app');
+      expect(uri.host, 'vizare-web.vercel.app');
       expect(uri.path, '/api/login.php');
     });
 

@@ -37,7 +37,7 @@ function validatePasswordStrength(password) {
 
 function corsHeaders(request) {
   const origin = request.headers.origin;
-  const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://vizare.app,https://vizare.vercel.app,http://localhost:3000';
+  const rawAllowed = process.env.ALLOWED_ORIGINS || 'https://vizare.app,https://vizare-web.vercel.app,https://vizare-app.vercel.app,http://localhost:3000';
   const allowedOrigins = rawAllowed
     .split(',')
     .map((s) => s.trim())
