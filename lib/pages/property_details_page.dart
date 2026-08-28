@@ -250,43 +250,14 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                 const SizedBox(height: 6),
 
                 // Price (Below title, in white/dark text)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.property.price,
-                      style: GoogleFonts.poppins(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    if (widget.property.propertyType.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: VizareColors.champagneGold
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: VizareColors.champagneGold
-                                .withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          widget.property.propertyType,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: VizareColors.champagneGold,
-                          ),
-                        ),
-                      ),
-                  ],
+                Text(
+                  widget.property.price,
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    letterSpacing: -0.3,
+                  ),
                 ),
                 const SizedBox(height: 6),
 
@@ -383,15 +354,24 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
   Widget _buildSpecsBentoGrid() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final has3D = widget.property.modelPath.isNotEmpty;
-    final nameLower = widget.property.name.toLowerCase();
-    final isVilla = nameLower.contains('villa') || nameLower.contains('mansion') || nameLower.contains('estate');
-    final isPenthouse = nameLower.contains('penthouse') || nameLower.contains('residence') || nameLower.contains('sky');
+
+    String formattedDate = 'Recent';
+    if (widget.property.createdAt.isNotEmpty) {
+      try {
+        final parsedDate = DateTime.parse(widget.property.createdAt);
+        formattedDate = DateFormat('MMM yyyy').format(parsedDate);
+      } catch (_) {
+        formattedDate = widget.property.createdAt;
+      }
+    }
 
     final specs = [
       {
-        'label': 'Architecture',
-        'value': isVilla ? 'Villa / Estate' : (isPenthouse ? 'Penthouse' : 'Modern Luxury'),
-        'icon': Icons.architecture_rounded,
+        'label': 'Property Type',
+        'value': widget.property.propertyType.isNotEmpty
+            ? widget.property.propertyType
+            : 'Modern Luxury',
+        'icon': Icons.home_work_outlined,
       },
       {
         'label': 'Spatial 3D',
@@ -399,9 +379,9 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
         'icon': has3D ? Icons.view_in_ar_rounded : Icons.photo_library_rounded,
       },
       {
-        'label': 'Status',
-        'value': widget.property.status.toUpperCase(),
-        'icon': Icons.verified_outlined,
+        'label': 'Listed',
+        'value': formattedDate,
+        'icon': Icons.calendar_today_rounded,
       },
       {
         'label': 'Experience',

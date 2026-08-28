@@ -62,6 +62,9 @@ void main() {
 
       expect(find.text('ARCHITECTURAL SPECIFICATIONS'), findsOneWidget);
       expect(find.text('Modern Sunset Villa'), findsOneWidget);
+      expect(find.text('Property Type'), findsOneWidget);
+      expect(find.text('Listed'), findsOneWidget);
+      expect(find.text('Aug 2026'), findsOneWidget);
       expect(find.text(mockPropertyWithModel.description), findsOneWidget);
 
       final arButton = find.text('EXPLORE IN 3D / AR');
